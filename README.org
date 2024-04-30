@@ -1,3 +1,20 @@
-#+title: My .dotfiles
+#+title: My .dotfiles (the universe)
 
-Here is the junkyard of dotfiles.
+These .dotfiles apply best on macOS.
+
+* Firefox
+Uses a custom ~userChrome.css~ which enables a lightweight vertical tabs setup using Sidebery
+#+attr_html: :width 500px
+#+attr_latex: :width 500px
+[[file:img/Screenshot 2024-04-29 at 22.24.16.png]]
+
+#+attr_html: :width 500px
+#+attr_latex: :width 500px
+[[file:img/Screenshot 2024-04-29 at 22.23.31.png]]
+
+
+#+attr_html: :width 500px
+#+attr_latex: :width 500px
+[[file:img/Screenshot 2024-04-29 at 22.23.17.png]]
+* DOOM Emacs
+Uses a setup that pertains to features from the ~emacs-mac~ brew package.

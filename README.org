@@ -18,3 +18,15 @@ Uses a custom ~userChrome.css~ which enables a lightweight vertical tabs setup u
 [[file:img/firefox3.png]]
 * DOOM Emacs
 Uses a setup that pertains to features from the ~emacs-mac~ brew package.
+
+#+attr_html: :width 500px
+#+attr_latex: :width 500px
+[[file:img/emacs1.png]]
+
+#+attr_html: :width 500px
+#+attr_latex: :width 500px
+[[file:img/emacs2.png]]
+
+#+attr_html: :width 500px
+#+attr_latex: :width 500px
+[[file:img/emacs3.png]]

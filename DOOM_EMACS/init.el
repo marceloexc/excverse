@@ -77,7 +77,7 @@
        ;;eshell            ; the elisp shell that works everywhere
        ;;shell             ; simple shell REPL for Emacs
        term              ; basic terminal emulator for Emacs
-       ;;vterm             ; the best terminal emulation in Emacs
+       vterm             ; the best terminal emulation in Emacs
 
        :checkers
        syntax              ; tasing you for every semicolon you forget
@@ -256,6 +256,28 @@
 ;; change org-roam directory
 (setq org-roam-directory (file-truename "~/Documents/Sync/org-roam"))
 
-(setq org-download-image-org-width 400)
 
-(setq org-download-image-html-width 400)
+;; default options for all output formats
+(setq org-pandoc-options '((standalone . t)))
+;; cancel above settings only for 'docx' format
+(setq org-pandoc-options-for-docx '((standalone . nil)))
+;; special settings for beamer-pdf and latex-pdf exporters
+(setq org-pandoc-options-for-beamer-pdf '((pdf-engine . "xelatex")))
+(setq org-pandoc-options-for-latex-pdf '((pdf-engine . "pdflatex")))
+;; special extensions for markdown_github output
+(setq org-pandoc-format-extensions '(markdown_github+pipe_tables+raw_html))
+
+;; org tidy
+(add-hook 'org-mode-hook #'org-tidy-mode)
+
+;; easy hugo setup
+(setq easy-hugo-basedir "~/Documents/Programming/marceloexc.com/marceloexc-hugo/")
+
+
+;; (setq easy-hugo-url "https://yourblogdomain")
+;; (setq easy-hugo-sshdomain "blogdomain")
+(setq easy-hugo-root "~/Documents/Programming/marceloexc.com/marceloexc-hugo/")
+;; (setq easy-hugo-previewtime "300")
+(setq easy-hugo-postdir "content")
+
+(setq easy-hugo-server-flags "-D")

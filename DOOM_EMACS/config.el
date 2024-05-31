@@ -166,7 +166,7 @@
           org-roam-ui-follow t
           org-roam-ui-update-on-save t
           org-roam-ui-open-on-start t))
-(setq olivetti-body-width 105)
+(setq olivetti-body-width 130)
 (dolist (f '(prog-mode-hook org-mode-hook text-mode-hook))
  (add-hook f #'olivetti-mode))
 
@@ -352,6 +352,12 @@
 (vertico-mouse-mode 1)
 
 
+(setq org-download-image-org-width 400)
+
+(setq org-download-image-html-width 400)
+
+
+
 ;; for latex editing
 (setq +latex-viewers '(pdf-tools))
 (defun my/resize-org-latex-overlays ()
@@ -365,7 +371,7 @@
 
 (require 'ef-themes)
 
-
+(require 'org-download)
 
 ;; org-roam package and settings:
 (use-package! org-roam
@@ -421,3 +427,12 @@
       (error "")))
   (setq org-roam-node-display-template
         (concat "${type:15} ${title:*} " (propertize "${tags:10}" 'face 'org-tag))))
+
+
+(after! org
+  (map! :leader
+        :prefix "e"
+        :desc "org-edit-latex-fragment" "l" #'org-edit-latex-fragment))
+
+
+(setq centaur-tabs-height 16)

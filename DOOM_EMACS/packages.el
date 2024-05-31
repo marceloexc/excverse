@@ -69,3 +69,7 @@
 (package! org-ros)
 (package! ef-themes)
 (package! org-appear)
+(package! ox-pandoc)
+(package! ns-auto-titlebar)
+(package! easy-hugo)
+(package! org-tidy)

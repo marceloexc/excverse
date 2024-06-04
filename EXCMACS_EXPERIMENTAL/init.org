@@ -1,0 +1,1174 @@
+#+TITLE: EXCmacs
+#+AUTHOR: Marcelo Mendez
+#+PROPERTY: header-args :tangle yes
+#+STARTUP: overview
+
+* TODO What to do next
+
+  - [ ] Change font for modeline ONLY (i really dont want monospace everywhere)
+
+  - [ ] configure auto dark/light for ef themes 
+  - [ ] Have indents properly configured in org mode (sometimes they just keep unindenting)
+
+  - [ ] Move over my entire mappings to the ~Key Bindings~ section
+
+  - I have now found out that ~+vertico/symbol-search-at-point~ is what CMD+F is doing under the hood
+
+  - Wtf this has weird indents?
+
+
+
+
+* About
+
+  This is an Emacs configuration file written in [[http://orgmode.org][Org mode]]. It is an attempt to
+  keep my =~/.emacs.d= tidy, but still be able to keep it all in one file. I
+  aim to briefly explain all my configurations as I go along!
+
+  I would not recommend using this configuration /as-is/, because it probably
+  contains a lot you don't really need. I do, however, hope people find some
+  golden nuggets that they can smuggle into their own configs.
+
+  If you really do want to try this config out, this is how I'd go about it:
+
+  Clone the repo.
+
+  #+begin_src sh :tangle no
+
+  git clone https://github.com/larstvei/dot-emacs
+
+  #+end_src
+
+  Backup your old =~/.emacs.d= (if necessary).
+
+  #+begin_src sh :tangle no
+
+  mv ~/.emacs.d ~/.emacs.d-bak
+
+  #+end_src
+
+  Backup your old =~/.emacs=-file (if necessary).
+
+  #+begin_src sh :tangle no
+
+  mv ~/.emacs ~/.emacs-bak
+
+  #+end_src
+
+  And finally
+
+  #+begin_src sh :tangle no
+
+  mv dot-emacs ~/.emacs.d
+
+  #+end_src
+
+  On first run it should install a bunch of packages (this might take a while),
+  and you might have to restart your Emacs the first time. If you experience
+  bugs, please let me know!
+
+* Meta
+
+  All changes to the configuration should be done in =init.org=, *not* in
+  =init.el=. Any changes in the =init.el= will be overwritten by saving
+  =init.org=. The =init.el= in this repo should not be tracked by git, and is
+  replaced the first time Emacs is started (assuming it has been renamed to
+  =~/.emacs.d=).
+
+  Emacs can't load =.org=-files directly, but =org-mode= provides functions to
+  extract the code blocks and write them to a file. There are multiple ways of
+  handling this; like suggested by [[http://emacs.stackexchange.com/questions/3143/can-i-use-org-mode-to-structure-my-emacs-or-other-el-configuration-file][this StackOverflow post]], one could just use
+  =org-babel-load-file=, but I had problems with byte-compilation. Previously I
+  tracked both the =org.=- and =el.=-files, but the git commits got a little
+  messy. So here is a new approach.
+
+  When this configuration is loaded for the first time, the ~init.el~ is the
+  file that is loaded. It looks like this:
+
+  #+begin_src emacs-lisp :tangle no
+
+  ;; This file replaces itself with the actual configuration at first run.
+
+  ;; We can't tangle without org!
+  (require 'org)
+  ;; Open the configuration
+  (find-file (concat user-emacs-directory "init.org"))
+  ;; tangle it
+  (org-babel-tangle)
+  ;; load it
+  (load-file (concat user-emacs-directory "init.el"))
+  ;; finally byte-compile it
+  (byte-compile-file (concat user-emacs-directory "init.el"))
+
+  #+end_src
+
+  It tangles the org-file, so that this file is overwritten with the actual
+  configuration.
+
+  There is no reason to track the =init.el= that is generated; by running the
+  following command =git= will not bother tracking it:
+
+  #+begin_src sh :tangle no
+
+  git update-index --assume-unchanged init.el
+
+  #+end_src
+
+  If one wishes to make changes to the repo-version of =init.el= start tracking
+  again with:
+
+  #+begin_src sh :tangle no
+
+  git update-index --no-assume-unchanged init.el
+
+  #+end_src
+
+  I want lexical scoping for the init-file, which can be specified in the
+  header. The first line of the configuration is as follows:
+
+  #+begin_src emacs-lisp
+
+  ;;; -*- lexical-binding: t -*-
+
+  #+end_src
+
+  The =init.el= should (after the first run) mirror the source blocks in the
+  =init.org=. We can use =C-c C-v t= to run =org-babel-tangle=, which extracts
+  the code blocks from the current file into a source-specific file (in this
+  case a =.el=-file).
+
+  To avoid doing this each time a change is made we can add a function to the
+  =after-save-hook= ensuring to always tangle and byte-compile the
+  =org=-document after changes.
+
+  #+begin_src emacs-lisp
+
+  (defun tangle-init ()
+    "If the current buffer is init.org the code-blocks are
+  tangled, and the tangled file is compiled."
+    (when (equal (buffer-file-name)
+                 (expand-file-name (concat user-emacs-directory "init.org")))
+      ;; Avoid running hooks when tangling.
+      (let ((prog-mode-hook nil))
+        (org-babel-tangle)
+        (byte-compile-file (concat user-emacs-directory "init.el")))))
+
+  (add-hook 'after-save-hook 'tangle-init)
+
+  #+end_src
+
+  I'd like to keep a few settings private, so we load a =private.el= if it
+  exists after the init-file has loaded.
+
+  #+begin_src emacs-lisp
+
+  (add-hook
+   'after-init-hook
+   (lambda ()
+     (let ((private-file (concat user-emacs-directory "private.el")))
+       (when (file-exists-p private-file)
+         (load-file private-file))
+       (when custom-file
+         (load-file custom-file))
+       (server-start))))
+
+  #+end_src
+
+** Faster startup
+
+   A common optimization is to temporarily disable garbage collection during
+   initialization. Here, we set the ~gc-cons-threshold~ to a ridiculously large
+   number, and restore the default value after initialization.
+
+   #+begin_src emacs-lisp :tangle early-init.el
+   (setq gc-cons-threshold most-positive-fixnum)
+   (add-hook 'after-init-hook
+             (lambda ()
+               (setq gc-cons-threshold (* 1024 1024 20))))
+   #+end_src
+   
+** Packages
+  
+  John Wiegley's extremely popular [[https://github.com/jwiegley/use-package][use-package]] was included in [[https://lists.gnu.org/archive/html/emacs-devel/2022-12/msg00261.html][Emacs 29]]. It
+  provides a powerful macro for isolating package configuration. After ignoring
+  this for a decade, I'll budge and give it a whirl.
+
+  #+begin_src emacs-lisp
+
+  (require 'use-package)
+  (setq use-package-always-ensure t)
+
+  #+end_src
+
+  Packages can be fetched from different mirrors, [[http://melpa.milkbox.net/#/][melpa]] is the largest archive
+  and is well maintained.
+
+  #+begin_src emacs-lisp
+
+  (setq package-archives
+        '(("GNU ELPA"     . "https://elpa.gnu.org/packages/")
+          ("MELPA Stable" . "https://stable.melpa.org/packages/")
+          ("MELPA"        . "https://melpa.org/packages/"))
+        package-archive-priorities
+        '(("GNU ELPA"     . 10)
+          ("MELPA"        . 5)
+          ("MELPA Stable" . 0)))
+
+  #+end_src
+
+* Sane defaults
+
+  These are what /I/ consider to be saner defaults.
+
+  Set =utf-8= as preferred coding system.
+
+  #+begin_src emacs-lisp
+
+  (set-language-environment "UTF-8")
+  (prefer-coding-system 'utf-8)
+
+  #+end_src
+
+  We can set variables to whatever value we'd like using =setq=.
+
+  #+begin_src emacs-lisp
+
+  (setq auto-revert-interval 1            ; Refresh buffers fast
+        default-input-method "TeX"        ; Use TeX when toggling input method
+        echo-keystrokes 0.1               ; Show keystrokes asap
+        enable-recursive-minibuffers t    ; Allow recursive minibuffers
+        frame-inhibit-implied-resize 1    ; Don't resize frame implicitly
+        inhibit-startup-screen t          ; No splash screen please
+        initial-scratch-message nil       ; Clean scratch buffer
+        recentf-max-saved-items 10000     ; Show more recent files
+        ring-bell-function 'ignore        ; Quiet
+        scroll-margin 1                   ; Space between cursor and top/bottom
+        sentence-end-double-space nil     ; No double space
+        custom-file                       ; Customizations in a separate file
+        (concat user-emacs-directory "custom.el"))
+  ;; Some mac-bindings interfere with Emacs bindings.
+  (when (boundp 'mac-pass-command-to-system)
+    (setq mac-pass-command-to-system nil))
+
+  #+end_src
+
+  Some variables are buffer-local, so changing them using =setq= will only
+  change them in a single buffer. Using =setq-default= we change the
+  buffer-local variable's default value.
+
+  #+begin_src emacs-lisp
+
+  (setq-default tab-width 4                       ; Smaller tabs
+                fill-column 79                    ; Maximum line width
+                truncate-lines t                  ; Don't fold lines
+                split-width-threshold 160         ; Split verticly by default
+                split-height-threshold nil        ; Split verticly by default
+                frame-resize-pixelwise t          ; Fine-grained frame resize
+                auto-fill-function 'do-auto-fill) ; Auto-fill-mode everywhere
+
+  #+end_src
+
+  The =load-path= specifies where Emacs should look for =.el=-files (or
+  Emacs lisp files). I have a directory called =site-lisp= where I keep all
+  extensions that have been installed manually (these are mostly my own
+  projects).
+
+  #+begin_src emacs-lisp
+
+  (let ((default-directory (concat user-emacs-directory "site-lisp/")))
+    (when (file-exists-p default-directory)
+      (setq load-path
+            (append
+             (let ((load-path (copy-sequence load-path)))
+               (normal-top-level-add-subdirs-to-load-path)) load-path))))
+
+  #+end_src
+
+  Answering /yes/ and /no/ to each question from Emacs can be tedious, a single
+  /y/ or /n/ will suffice.
+
+  #+begin_src emacs-lisp
+
+  (fset 'yes-or-no-p 'y-or-n-p)
+
+  #+end_src
+
+  To avoid file system clutter we put all auto saved files in a single
+  directory.
+
+  #+begin_src emacs-lisp
+
+  (defvar emacs-autosave-directory
+    (concat user-emacs-directory "autosaves/")
+    "This variable dictates where to put auto saves. It is set to a
+    directory called autosaves located wherever your .emacs.d/ is
+    located.")
+
+  ;; Sets all files to be backed up and auto saved in a single directory.
+  (setq backup-directory-alist
+        `((".*" . ,emacs-autosave-directory))
+        auto-save-file-name-transforms
+        `((".*" ,emacs-autosave-directory t)))
+
+  #+end_src
+
+  By default the =narrow-to-region= command is disabled and issues a
+  warning, because it might confuse new users. I find it useful sometimes,
+  and don't want to be warned.
+
+  #+begin_src emacs-lisp
+
+  (put 'narrow-to-region 'disabled nil)
+
+  #+end_src
+
+  Automaticly revert =doc-view=-buffers when the file changes on disk.
+
+  #+begin_src emacs-lisp
+
+  (add-hook 'doc-view-mode-hook 'auto-revert-mode)
+
+  #+end_src
+
+MarceloEXC talking here: I actually have a ~CUA~-ish type of setup going on in
+terms of normal keybindings.
+
+#+begin_src emacs-lisp
+(setq mac-command-key-is-meta nil ;we want it to be SUPER
+    mac-command-modifier 'super ;⌘=super-key (but can't use s-SPACE,TAB)
+    mac-right-command-modifier 'meta ; meta-f/b are hard to reach otherwise
+    mac-option-modifier 'meta    ;alt=meta=option
+    mac-right-option-modifier nil ;retain compose characters, düde
+    mac-right-control-modifier 'hyper
+    mac-emulate-three-button-mouse t ; not ideal for secondary selection :(
+    ;; mac-mouse-wheel-smooth-scroll t
+    delete-by-moving-to-trash t
+    browse-url-browser-function 'browse-url-default-macosx-browser
+    trash-directory (expand-file-name ".Trash" (getenv "HOME")))
+
+  (bind-keys ("s-s" . save-buffer)
+         ("s-a" . mark-whole-buffer)
+         ("s-c" . kill-ring-save)
+         ("s-m" . suspend-frame)
+         ("s-t" . (lambda (arg) (interactive "p")
+            (let ((mac-frame-tabbing t))
+              (if (not (eq arg 4))
+                  (make-frame)
+                (call-interactively #'find-file-other-frame)))))
+         ("s-x" . kill-region)
+         ("s-v" . yank)
+         ("s-z" . undo-tree-undo)
+         ("s-w" . kill-buffer)
+         ("s-{" . mac-previous-tab)
+         ("s-}" . mac-next-tab)
+         ("s-q" . kill-emacs)
+         ("s-f" . +vertico/symbol-search-at-point)
+         ("S-s-<left>" . mac-previous-tab)
+         ("S-<swipe-left>" . mac-previous-tab)
+         ("S-s-<right>" . mac-next-tab)
+         ("S-<swipe-right>" . mac-next-tab)
+         ("s-n" . make-frame-command)
+         ("s-|" . mac-toggle-tab-group-overview)
+         ("s-M-t" . mac-move-tab-to-new-frame)
+         ("S-s-M-<right>" . mac-move-tab-right)
+         ("S-s-M-<left>" . mac-move-tab-left))
+#+end_src
+
+And I will a single ESC key to execute ~keyboard-quit~ instead of ESC ESC ESC
+
+#+begin_src emacs-lisp
+(global-set-key (kbd "<escape>")      'keyboard-escape-quit)
+#+end_src
+
+* Visual
+  Here im adding a way to have my popup winodws controlled once and for al
+  #+begin_src emacs-lisp
+      (use-package popwin
+      :ensure t
+      :config
+      (popwin-mode 1))
+
+  (use-package goggles
+    :hook ((prog-mode text-mode) . goggles-mode)
+    :config
+    (setq-default goggles-pulse t)) ;; set to nil to disable pulsing
+  #+end_src
+
+I also hate the way EMACS treats native scrollbars...
+
+#+begin_src emacs-lisp
+
+(use-package mlscroll
+  :ensure t
+  :config
+  (setq mlscroll-shortfun-min-width 11) ; truncate which-func
+  (mlscroll-mode 1))
+#+end_src
+
+And disable the ones that come with the GUI
+
+#+begin_src emacs-lisp
+(scroll-bar-mode 0)
+
+#+end_src
+
+** TODO Theme
+
+Using ~ef-themes~
+#+begin_src emacs-lisp
+(use-package ef-themes)
+
+(require 'ef-themes)
+
+#+end_src
+
+Variables for my dark and light theme
+
+#+begin_src emacs-lisp
+(defvar light-mode-theme 'ef-cyprus)
+(defvar dark-mode-theme 'ef-autumn)
+#+end_src
+
+Now add the handler that will automatically switch between dark and light when the system theme changes
+
+   #+begin_src emacs-lisp
+
+(defun my/mac-handle-application-effective-appearance-change (_event)
+  (interactive "e")
+  (let ((appearance (plist-get (mac-application-state) :appearance)))
+    (cond ((equal appearance "NSAppearanceNameAqua")
+           (load-theme light-mode-theme))
+          ((equal appearance "NSAppearanceNameDarkAqua")
+           (load-theme dark-mode-theme)))))
+
+;; Key mapping definition
+(define-key mac-apple-event-map [application-kvo effectiveAppearance]
+  'my/mac-handle-application-effective-appearance-change)
+
+;; Call the function after init to set the theme at startup
+(add-hook 'after-init-hook
+          (lambda ()
+            (my/mac-handle-application-effective-appearance-change nil)))
+
+
+   #+end_src    
+
+** TODO Mode line
+** Font
+
+   I primarily use [[https://github.com/adobe-fonts][Adobe Fonts]]. 
+
+   My default monospace font is [[https://github.com/adobe-fonts/source-code-pro][Source Code Pro]]:
+
+   #+begin_src emacs-lisp
+
+   (when (member "JetBrains Mono" (font-family-list))
+     (set-face-attribute 'default nil :font "JetBrains Mono-15"))
+
+   #+end_src
+
+   My preferred proportional font is [[https://github.com/adobe-fonts/source-serif][Source Serif]]. In order to get
+   variable-pitch fonts where it makes sense, I use [[https://gitlab.com/jabranham/mixed-pitch][mixed-pitch]].
+** Centering with Olivetti
+
+   [[https://github.com/rnkn/olivetti][Olivetti]] is a package that simply centers the text of a buffer. It is very
+   simple and beautiful. The default width is just a bit short.
+
+   #+begin_src emacs-lisp
+
+   ;; Minor mode for a nice writing environment
+   (use-package olivetti
+     :defer t
+     :config
+     (setq-default olivetti-body-width 130))
+
+;; make it run automatically
+
+(dolist (f '(org-mode-hook text-mode-hook))
+  (add-hook f #'olivetti-mode))
+
+   #+end_src
+
+** Dashboard
+
+   Dashboard provides a nice welcome.
+
+   #+begin_src emacs-lisp
+
+   ;; A startup screen extracted from Spacemacs
+   (use-package dashboard
+     :config
+     (setq dashboard-projects-backend 'project-el
+           dashboard-banner-logo-title nil
+           dashboard-center-content t
+           dashboard-set-footer nil
+           dashboard-page-separator "\n\n\n"
+           dashboard-items '((projects . 15)
+                             (recents  . 15)
+                             (bookmarks . 5)))
+     (dashboard-setup-startup-hook))
+
+   #+end_src
+
+* Mac OS X
+
+  The package [[https://github.com/purcell/exec-path-from-shell][exec-path-from-shell]] synchronizes environment variables from the
+  shell to Emacs. This makes it a lot easier to deal with external programs on
+  macOS.
+
+  #+begin_src emacs-lisp
+
+  (use-package exec-path-from-shell
+    :if (memq window-system '(mac ns))
+    :config
+    (exec-path-from-shell-initialize))
+
+  #+end_src
+
+  I had some problems with Dired, and this seems to have solved it. I /think/
+  the solutions was from [[https://stackoverflow.com/questions/4076360/error-in-dired-sorting-on-os-x][here]], and my problems were related, but not the same.
+
+  #+begin_src emacs-lisp
+
+  (use-package ls-lisp
+    :ensure nil
+    :if (memq window-system '(mac ns))
+    :config
+    (setq ls-lisp-use-insert-directory-program nil))
+  
+  #+end_src
+
+  It is useful to be able to occasionally open the file associated with a
+  buffer in macOS Finder.
+
+  #+begin_src emacs-lisp
+
+  (use-package reveal-in-osx-finder
+    :if (memq window-system '(mac ns)))
+
+  #+end_src
+
+* TODO Modes
+
+
+looked something like this...
+#+begin_quote :tangle no
+  (dolist (mode
+           '(abbrev-mode                  ; E.g. sopl -> System.out.println
+             column-number-mode           ; Show column number in mode line
+             delete-selection-mode        ; Replace selected text
+             dirtrack-mode                ; directory tracking in *shell*
+             global-so-long-mode          ; Mitigate performance for long lines
+             recentf-mode                 ; Recently opened files
+             show-paren-mode))            ; Highlight matching parentheses
+    (funcall mode 1))
+
+#+end_quote
+
+* Version control
+
+  Have some visual indication where there are uncommitted changes.
+
+  #+begin_src emacs-lisp
+
+  ;; Highlight uncommitted changes using VC
+  (use-package diff-hl
+    :config
+    (global-diff-hl-mode 1))
+
+  #+end_src
+
+* TODO Project
+* Window management
+
+  Some keybindings (involving the option, resulting in funny symbols) for
+  window management.
+
+
+#+begin_quote :tangle no
+  (use-package windmove
+    :ensure nil
+    :bind (:map custom-bindings-map
+                ("M-˙" . windmove-left)
+                ("M-∆" . windmove-down)
+                ("M-˚" . windmove-up)
+                ("M-¬" . windmove-right)
+
+                ("M-ó" . windmove-swap-states-left)
+                ("M-ô" . windmove-swap-states-down)
+                ("M-" . windmove-swap-states-up)
+                ("M-ò" . windmove-swap-states-right))
+#+end_quote
+
+
+* Completion UI
+
+  I have transitioned from [[https://emacs-helm.github.io/helm/][Helm]] to [[http://oremacs.com/swiper/][Ivy]], and now, on to [[https://github.com/minad/vertico][Vertico]]. It improves the
+  interface calling commands (i.e. ~M-x~), finding files, switching buffers,
+  searching files and so on. Using the ~vertico-buffer-mode~ gives a more
+  Helm-like experience, where completions are given a full fledged buffer.
+
+  #+begin_src emacs-lisp
+
+  ;; VERTical Interactive COmpletion
+  (use-package vertico
+    :init
+    (vertico-mode 1)
+    :config
+    (setq vertico-count 25)
+    (setq vertico-mouse-mode 1))
+
+  #+end_src
+
+  Use the built in ~savehist-mode~ to prioritize recently used commands.
+
+  #+begin_src emacs-lisp
+
+  ;; Save minibuffer history
+  (use-package savehist
+    :init
+    (savehist-mode 1))
+
+  #+end_src
+
+  With [[https://github.com/minad/marginalia/][Marginalia]], we get better descriptions for commands inline.
+
+  #+begin_src emacs-lisp
+
+  ;; Enrich existing commands with completion annotations
+  (use-package marginalia
+    :init 
+    (marginalia-mode 1))
+
+  #+end_src
+
+** Completion
+
+   I used [[https://github.com/auto-complete/auto-complete][Auto-Complete]] for years, then I used [[http://company-mode.github.io/][company-mode]] for even more years,
+   and now I am giving [[https://github.com/minad/corfu][corfu]] a shot. I want a pretty aggressive completion
+   system, hence the no delay settings and a short prefix length.
+
+   #+begin_src emacs-lisp
+
+   ;; Modular text completion framework
+   (use-package corfu
+     :init
+     (global-corfu-mode 1)
+     (corfu-popupinfo-mode 1)
+     :config
+     (setq corfu-cycle t
+           corfu-auto t
+           corfu-auto-delay 0
+           corfu-auto-prefix 2
+           corfu-popupinfo-delay 0.5))
+
+   #+end_src
+
+   I use corfu in concert with [[https://github.com/oantolin/orderless][orderless]].
+
+  #+begin_src emacs-lisp
+
+  ;; Emacs completion style that matches multiple regexps in any order
+  (use-package orderless
+    :config
+    (setq completion-styles '(orderless basic partial-completion)
+          completion-category-overrides '((file (styles basic partial-completion)))
+          orderless-component-separator "[ |]"))
+
+  #+end_src
+
+** TODO Navigation and searching
+
+   The package [[https://github.com/minad/consult][Consult]] improves navigation and searching.
+
+
+   #+begin_quote
+
+  ;; Consulting completing-read
+  (use-package consult
+    :config
+    (setq consult-preview-key (list :debounce 0.1 'any)))
+   #+end_quote
+
+d
+
+* Spelling
+** TODO Define word
+
+   This super neat package looks up the word at point. I use it a lot!
+
+   #+begin_src emacs-lisp :tangle no
+
+   ;; display the definition of word at point
+   (use-package define-word
+     :defer t
+     :bind (:map custom-bindings-map ("C-c D" . define-word-at-point)))
+
+   #+end_src
+
+* Word Processing
+** Org
+
+  I use Org mode extensively. Some of these configurations may be unfortunate,
+  but it is a bit impractical to change, as I have years worth of org-files and
+  want to avoid having to reformat a lot of files.
+
+  One example is =org-adapt-indentation=, which changed default value in
+  version 9.5 of Org mode. Another is that I for some unknown reason decided to
+  content within source content not be indented by two spaces (which is the
+  default).
+
+  Note that I disable some safety features, so please don't copy and paste
+  mindlessly (see the documentation for =org-confirm-babel-evaluate= and
+  =org-export-allow-bind-keywords=).
+
+  #+begin_src emacs-lisp
+
+  ;; Outline-based notes management and organizer
+  (use-package org
+    :defer t
+    :config
+    (setq org-adapt-indentation t
+          org-hide-leading-stars t
+          org-hide-emphasis-markers t
+          org-pretty-entities t
+          org-src-fontify-natively t
+          org-startup-folded t
+          org-edit-src-content-indentation 0))
+
+  #+end_src
+
+*** LaTeX export
+
+   For LaTeX export, I default to using XeLaTeX for compilation, and the
+   [[https://github.com/tecosaur/engrave-faces][engrave-faces]] package for syntax highlighting source blocks after the Emacs
+   color theme.
+
+   #+begin_src emacs-lisp
+
+   ;; Convert font-lock faces to other formats
+   (use-package engrave-faces
+     :defer t)
+
+   #+end_src
+
+   I have PDFs open directly in Emacs ([[PDF Tools]]). In addition, I have support
+   for a couple of custom LaTeX classes.
+
+
+*** Babel
+
+   Add a few languages for Org babel. In addition, don't evaluate code on
+   export by default.
+
+   #+begin_src emacs-lisp
+
+   ;; Working with Code Blocks in Org
+   (use-package ob
+     :ensure nil
+     :after org
+     :config
+     (setq org-export-use-babel nil
+           org-confirm-babel-evaluate nil)
+     (org-babel-do-load-languages
+      'org-babel-load-languages
+      '((emacs-lisp . t)
+        (python . t)
+        (clojure . t))))
+
+   #+end_src
+
+   Default to use whatever interpreter is set by =python-shell-interpreter=.
+
+   #+begin_src emacs-lisp
+
+   ;; Babel Functions for Python
+   (use-package ob-python
+     :ensure nil
+     :after (ob python)
+     :config
+     (setq org-babel-python-command python-shell-interpreter))
+
+   #+end_src
+
+*** Tempo
+
+   Since version 9.2 of Org mode, typing =<s= to get a source block (and
+   similar variants) has been tucked away in the Org Tempo library, hoping that
+   users rather use =C-c C-,=. Hopefully I'll stop typing =<s= at some point,
+   and adapt the much saner =C-c C-,=.
+
+   #+begin_src emacs-lisp
+
+   ;; Template expansion for Org structures
+   (use-package org-tempo
+     :ensure nil
+     :after org)
+
+   #+end_src
+
+*** Org Modern
+
+   Touch up the appearance of org mode files with some fancy UTF-8 characters.
+   I disable ~org-modern-block-fringe~ due to [[https://github.com/minad/org-modern/issues/144][org-modern conflicting with]]
+   ~org-adapt-indentation~.
+
+   #+begin_src emacs-lisp
+
+   ;; Modern looks for Org
+   (use-package org-modern
+     :after org
+     :hook (org-mode . org-modern-mode))
+   #+end_src
+
+** Markdown
+
+  #+begin_src emacs-lisp
+
+  ;; Emacs Major mode for Markdown-formatted files
+  (use-package markdown-mode
+    :defer t)
+
+  #+end_src
+* Advice
+
+  An advice can be given to a function to make it behave differently. This
+  advice makes =eval-last-sexp= (bound to =C-x C-e=) replace the sexp with the
+  value.
+
+  #+begin_src emacs-lisp
+
+  (defadvice eval-last-sexp (around replace-sexp (arg) activate)
+    "Replace sexp when called with a prefix argument."
+    (if arg
+        (let ((pos (point)))
+          ad-do-it
+          (goto-char pos)
+          (backward-kill-sexp)
+          (forward-sexp))
+      ad-do-it))
+
+  #+end_src
+
+  When interactively changing the theme (using =M-x load-theme=), the current
+  custom theme is not disabled. This often gives weird-looking results; we can
+  advice =load-theme= to always disable themes currently enabled themes.
+
+  #+begin_src emacs-lisp
+
+  (defadvice load-theme
+      (before disable-before-load (theme &optional no-confirm no-enable) activate)
+    (mapc 'disable-theme custom-enabled-themes))
+
+  #+end_src
+
+* global-scale-mode
+
+  These functions provide something close to ~text-scale-mode~, but for every
+  buffer, including the minibuffer and mode line.
+
+  #+begin_src emacs-lisp
+
+  (let* ((default (face-attribute 'default :height))
+         (size default))
+
+    (defun global-scale-default ()
+      (interactive)
+      (global-scale-internal (setq size default)))
+
+    (defun global-scale-up ()
+      (interactive)
+      (global-scale-internal (setq size (+ size 20))))
+
+    (defun global-scale-down ()
+      (interactive)
+      (global-scale-internal (setq size (- size 20))))
+
+    (defun global-scale-internal (arg)
+      (set-face-attribute 'default (selected-frame) :height arg)
+      (set-transient-map
+       (let ((map (make-sparse-keymap)))
+         (define-key map (kbd "s-=") 'global-scale-up)
+         (define-key map (kbd "s-+") 'global-scale-up)
+         (define-key map (kbd "s--") 'global-scale-down)
+         (define-key map (kbd "s-0") 'global-scale-default) map))))
+
+  #+end_src
+
+* TODO Mode specific
+I have deleted a lot of the stuff from here! look at the github for what i shouldve kept...
+* Which key
+
+  [[https://github.com/justbur/emacs-which-key][Which key]] is nice for discoverability.
+
+  #+begin_src emacs-lisp
+
+  ;; Display available keybindings in popup
+  (use-package which-key
+    :config
+    (which-key-mode 1))
+
+  #+end_src
+
+* Bindings for built-ins
+
+ #+begin_src emacs-lisp :tangle no
+
+ (use-package emacs
+   :bind (:map custom-bindings-map
+               ("M-u" . upcase-dwim)
+               ("M-c" . capitalize-dwim)
+               ("M-l" . downcase-dwim)
+               ("M-]" . other-frame)
+               ("C-j" . newline-and-indent)
+               ("C-c s" . ispell-word)
+               ("C-c v" . visible-mode)))
+
+ #+end_src
+
+* Bindings for functions defined [[sec:defuns][above]].
+
+ #+begin_src emacs-lisp :tangle no
+
+ (use-package emacs
+   :bind (("M-p" . jump-to-previous-like-this)
+          ("M-n" . jump-to-next-like-this)
+          :map custom-bindings-map
+          ("M-,"     . jump-to-previous-like-this)
+          ("M-."     . jump-to-next-like-this)
+          ("C-x k"   . kill-this-buffer-unless-scratch)
+          ("C-c C-0" . global-scale-default)
+          ("C-c C-=" . global-scale-up)
+          ("C-c C-+" . global-scale-up)
+          ("C-c C--" . global-scale-down)
+          ("C-c j"   . cycle-spacing-delete-newlines)
+          ("C-c d"   . duplicate-thing)
+          ("<C-tab>" . tidy))
+   :config
+   (define-key custom-bindings-map (kbd "C-c .") (cycle-themes)))
+
+ #+end_src
+
+ Lastly we need to activate the map by creating and activating the
+ =minor-mode=.
+
+ #+begin_src emacs-lisp :tangle no
+
+ (define-minor-mode custom-bindings-mode
+   "A mode that activates custom-bindings."
+   :init-value t
+   :keymap custom-bindings-map)
+
+ #+end_src
+
+* TODO Key bindings
+
+Use this for all my keybindings:
+
+TODO: because my centaur tabs is in there for some reason
+
+#+begin_src emacs-lisp
+
+;;ENABLE CUA !!!!! 
+
+(use-package evil :ensure t
+  :config
+  (evil-mode 1))
+
+
+(use-package evil-leader :ensure t
+  :config
+  (global-evil-leader-mode t)
+  (evil-leader/set-leader "<SPC>")
+  (evil-leader/set-key "b b" 'buffer-list)
+  (evil-leader/set-key "v t" 'transpose-lines)
+  ;; Recent Files
+  (evil-leader/set-key "f r" 'recentf-open) ; You might need to install helm package
+                                        ;
+                                          ;; (("SPC f r" . recentf-open)))
+
+  ;; Find Files
+  (evil-leader/set-key "f f" 'find-file)
+  ;; Save File
+  (evil-leader/set-key "f s" 'save-buffer))
+
+
+(global-display-line-numbers-mode)
+
+
+
+(use-package centaur-tabs
+  :demand
+  :config
+  (centaur-tabs-mode t)
+  :bind
+  ("C-<prior>" . centaur-tabs-backward)
+  ("C-<next>" . centaur-tabs-forward))
+
+(setq centaur-tabs-height 24)
+
+(setq centaur-tabs-set-bar 'under)
+;; Note: If you're not using Spacmeacs, in order for the underline to display
+;; correctly you must add the following line:
+(setq x-underline-at-descent-line t)
+
+
+
+
+(use-package general
+  :config
+  (general-evil-setup t)
+  (defconst my-leader "SPC")
+  (general-create-definer my-leader-def
+    :prefix my-leader)
+  (general-override-mode) ;; https://github.com/noctuid/general.el/issues/99#issuecomment-360914335
+  ;; doomesque hotkeys using spacebar as prefix
+  (my-leader-def
+    :states '(motion normal visual)
+    :keymaps 'override ;; https://github.com/noctuid/general.el/issues/99#issuecomment-360914335
+
+    ;; map universal argument to SPC-u
+    "u" '(universal-argument :which-key "Universal argument")
+    ";" '(eval-region :which-key "eval-region")
+    "SPC" '(projectile-find-file :which-key "Projectile find file")
+    "C-SPC" '(projectile-find-file-other-frame :which-key "Projectile find file (new frame)")
+    "S-SPC" '(projectile-find-file-other-frame :which-key "Projectile find file (new frame)")
+    ">" '(find-file-other-frame :which-key "Find file (new frame)")
+    ;":" '(execute-extended-command :which-key "M-x")
+    "x" '(open-scratch-buffer :which-key "Open scratch buffer")
+    "d" '(dired-jump :which-key "dired-jump")
+    "/" '(+consult/ripgrep :which-key "+consult/ripgrep")
+    "?" '(consult-ripgrep :which-key "consult-ripgrep")
+    ;"[" '(+tab-bar/switch-to-prev-tab :which-key "+tab-bar/switch-to-prev-tab")
+    ;"]" '(+tab-bar/switch-to-next-tab :which-key "+tab-bar/switch-to-next-tab")
+    "v" '(vterm-toggle :which-key "+term/here")
+
+    ;; editor
+    "e" '(:ignore t :which-key "Editor")
+    "eu" '(vundo :which-key "vundo")
+    "ev" '(vundo :which-key "vundo")
+    "er" '(query-replace :which-key "query-replace")
+    ;"ec" '(consult-theme :which-key "consult-theme")
+    "ep" '(point-to-register :which-key "point-to-register")
+    "es" '(consult-register-store :which-key "consult-register-store")
+    "ej" '(jump-to-register :which-key "jump-to-register")
+    "ef" '(:ignore t :which-key "Fold")
+    "efh" '(hs-hide-block :which-key "hs-hide-block")
+    "efs" '(hs-show-block :which-key "hs-show-block")
+    "efa" '(hs-show-all :which-key "hs-show-all")
+
+    ;; consult
+    "c" '(:ignore t :which-key "consult")
+    ;"cf" '(consult-flycheck :which-key "consult-flycheck")
+    "cf" '(consult-flymake :which-key "consult-flymake")
+
+    ;; file
+    "f" '(:ignore t :which-key "File")
+    "ff" '(find-file :which-key "find-file")
+    "fr" '(recentf-open :which-key "recentf-open")
+
+    ;; buffer
+    ;"TAB" '(switch-to-prev-buffer :which-key "Prev buffer")
+    "b" '(:ignore t :which-key "Buffer")
+    "bb" '(consult-buffer :which-key "consult-buffer")
+    "b[" '(previous-buffer :which-key "Previous buffer")
+    "b]" '(next-buffer :which-key "Next buffer")
+    "bd" '(kill-current-buffer :which-key "Kill buffer")
+    "bk" '(kill-current-buffer :which-key "Kill buffer")
+    "bl" '(evil-switch-to-windows-last-buffer :which-key "Switch to last buffer")
+    "br" '(revert-buffer-no-confirm :which-key "Revert buffer")
+    "bK" '(kill-all-buffers :which-key "Kill all buffers")
+
+    ;; open
+    "o" '(:ignore t :which-key "Open")
+    "oc" '(open-init-file :which-key "Open init.el")
+
+    ;; project
+    "p" '(:ignore t :which-key "Project")
+    "pp" '(projectile-switch-project :which-key "Switch Project")
+    "po" '(projectile-find-other-file :which-key "projectile-find-other-file")
+
+    ;; help
+    "h" '(:ignore t :which-key "Help")
+    "hf" '(helpful-callable :which-key "describe-function")
+    "hk" '(helpful-key :which-key "describe-key")
+    "hv" '(helpful-variable :which-key "describe-variable")
+    "ho" '(helpful-symbol :which-key "describe-symbol")
+    "hm" '(describe-mode :which-key "describe-mode")
+    "hF" '(describe-face :which-key "describe-face")
+    "hw" '(where-is :which-key "where-is")
+    "h." '(display-local-help :which-key "display-local-help")
+
+    ;; zoom
+    ;; the hydra is nice but the rest is kind of janky, need to play around with this more
+    "=" '(text-scale-increase :which-key "text-scale-increase")
+    "-" '(text-scale-decrease :which-key "text-scale-decrease")
+    "z" '(:ignore t :which-key "zoom")
+    "z=" '(zoom-in :which-key "zoom-in")
+    "z-" '(zoom-out :which-key "zoom-out")
+    "zz" '(hydra-zoom/body :which-key "hydra-zoom")
+
+    ;; window
+    "w" '(:ignore t :which-key "Window")
+    "wd" '(evil-window-delete :which-key "Delete Window ")
+
+    ;; toggles
+    "t" '(:ignore t :which-key "Toggles")
+    "ta" '(corfu-mode :which-key "corfu-mode") ;; 'a' for autocomplete
+    "ts" '(flyspell-mode :which-key "flyspell-mode")
+    "tf" '(flyspell-mode :which-key "flyspell-mode")
+    ;"tc" '(flycheck-mode :which-key "flycheck-mode")
+    "tc" '(flymake-mode :which-key "flymake-mode")
+    "tm" '(minimap-mode :which-key "minimap-mode")
+    "tg" '(evil-goggles-mode :which-key "evil-goggles")
+    "tI" '(toggle-indent-style :which-key "Indent style")
+    "tv" '(visual-line-mode :which-key "visual-line-mode")
+
+    ;; org
+    "o" '(:ignore t :which-key "Org")
+    "oA" '(org-agenda :which-key "org-agenda")
+
+    ;; notes/org
+    "n" '(:ignore t :which-key "Notes")
+    "nf" '(org-roam-node-find :which-key "find-node")
+    "ni" '(org-roam-node-insert :which-key "insert-node")
+    "nt" '(org-roam-dailies-goto-today :which-key "org-roam-dailies-goto-today")
+    "n/" '(+consult/org-roam-ripgrep :which-key "+consult/org-roam-ripgrep")
+    "na" '(org-agenda :which-key "org-agenda")
+
+    ;; narrow
+    "N" '(:ignore t :which-key "Narrow")
+    "Nr" '(narrow-to-region :which-key "narrow-to-region")
+    "Nw" '(widen :which-key "widen")))
+
+
+
+
+
+    ;; tabs
+    ;; "TAB" '(:ignore t :which-key "Tabs")
+    ;; "TAB TAB" '(tab-bar-switch-to-tab :which-key "tab-bar-switch-to-tab")
+    ;; "TAB [" '(+tab-bar/switch-to-prev-tab :which-key "+tab-bar/switch-to-prev-tab")
+    ;; "TAB ]" '(+tab-bar/switch-to-next-tab :which-key "+tab-bar/switch-to-next-tab")
+    ;; "TAB n" '(+tab-bar/add-new :which-key "+tab-bar/add-new")
+    ;; "TAB k" '(+tab-bar/close-tab :which-key "+tab-bar/close-tab")
+    ;; "TAB d" '(+tab-bar/close-tab :which-key "+tab-bar/close-tab")
+    ;; "TAB K" '(+tab-bar/close-all-tabs-except-current :which-key "+tab-bar/close-all-tabs-except-current")
+    ;; "TAB r" '(tab-rename :which-key "tab-rename")))
+
+
+#+end_src
+
+
+** MACOS Scroliling
+#+begin_src emacs-lisp
+(use-package ultra-scroll-mac
+  :if (eq window-system 'mac)
+  ;:load-path "~/code/emacs/ultra-scroll-mac" ; if you git clone'd instead of package-vc-install
+  :init
+  (setq scroll-conservatively 101 ; important!
+        scroll-margin 0) 
+  :config
+  (ultra-scroll-mac-mode 1))
+#+end_src
+g

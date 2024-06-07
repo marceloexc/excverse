@@ -12,7 +12,14 @@
 
   - [ ] Move over my entire mappings to the ~Key Bindings~ section
 
-  - I have now found out that ~+vertico/symbol-search-at-point~ is what CMD+F is doing under the hood
+  - [ ] Whenever I kill emacs, it does NOT ask me to save all unsaved buffers
+
+  - Find out what cmd+f leads to (i think ifsearch? or something like that)i
+
+  - [ ] Have to kill org mode in order to do org-todo
+
+  - [ ] Disable evil bindings (h and l, j and k, dd for normal mode and
+    visual mode all together, etc..)
 
   - Wtf this has weird indents?
 
@@ -258,7 +265,6 @@ our early init...
   (setq auto-revert-interval 1            ; Refresh buffers fast
         default-input-method "TeX"        ; Use TeX when toggling input method
         echo-keystrokes 0.1               ; Show keystrokes asap
-        enable-recursive-minibuffers t    ; Allow recursive minibuffers
         frame-inhibit-implied-resize 1    ; Don't resize frame implicitly
         inhibit-startup-screen t          ; No splash screen please
         initial-scratch-message nil       ; Clean scratch buffer
@@ -444,15 +450,17 @@ And disable the ones that come with the GUI
 Using ~ef-themes~
 #+begin_src emacs-lisp
 (use-package ef-themes)
+(use-package modus-themes)
 
 (require 'ef-themes)
+(require 'modus-themes)
 
 #+end_src
 
 Variables for my dark and light theme
 
 #+begin_src emacs-lisp
-(defvar light-mode-theme 'ef-cyprus)
+(defvar light-mode-theme 'modus-operandi-tinted)
 (defvar dark-mode-theme 'ef-autumn)
 #+end_src
 
@@ -631,10 +639,7 @@ looked something like this...
 
 * Completion UI
 
-  I have transitioned from [[https://emacs-helm.github.io/helm/][Helm]] to [[http://oremacs.com/swiper/][Ivy]], and now, on to [[https://github.com/minad/vertico][Vertico]]. It improves the
-  interface calling commands (i.e. ~M-x~), finding files, switching buffers,
-  searching files and so on. Using the ~vertico-buffer-mode~ gives a more
-  Helm-like experience, where completions are given a full fledged buffer.
+
 
   #+begin_src emacs-lisp
 
@@ -642,9 +647,9 @@ looked something like this...
   (use-package vertico
     :init
     (vertico-mode 1)
+    (vertico-mouse-mode 1)
     :config
-    (setq vertico-count 25)
-    (setq vertico-mouse-mode 1))
+    (setq vertico-count 25))
 
   #+end_src
 
@@ -710,15 +715,14 @@ looked something like this...
    The package [[https://github.com/minad/consult][Consult]] improves navigation and searching.
 
 
-   #+begin_quote
+   #+begin_src emacs-lisp
 
   ;; Consulting completing-read
   (use-package consult
     :config
     (setq consult-preview-key (list :debounce 0.1 'any)))
-   #+end_quote
+   #+end_src
 
-d
 
 * Spelling
 ** TODO Define word
@@ -746,33 +750,108 @@ d
   content within source content not be indented by two spaces (which is the
   default).
 
-  Note that I disable some safety features, so please don't copy and paste
-  mindlessly (see the documentation for =org-confirm-babel-evaluate= and
-  =org-export-allow-bind-keywords=).
-
   #+begin_src emacs-lisp
 
-      ;; Outline-based notes management and organizer
-      (use-package org
-        :defer t
-        :config
-        (setq org-adapt-indentation t
-              org-hide-leading-stars t
-              org-hide-emphasis-markers t
-              org-pretty-entities t
-              org-src-fontify-natively t
-              org-startup-folded t
-              org-edit-src-content-indentation 0
-              org-src-preserve-indentation nil))
+    ;; Outline-based notes management and organizer
+    (use-package org
+      :ensure t
+      :hook (org-mode . (lambda ()
+                          (org-indent-mode)
+                          (visual-line-mode 1)))
+      :config
 
+      ;; enable syntax highlighting in code blocks
+      (setq org-src-fontify-natively t)
 
-    (custom-theme-set-faces
-         'user
-         `(org-level-3 ((t (:size 17))))
-         `(org-level-2 ((t (:height 1.05))))
-         `(org-level-1 ((t (:height 1.1)))))
+      ;; enable automatic line wrapping
+      (setq org-startup-truncated t)
+
+      ;; enable src indentation
+      (setq org-edit-src-content-indentation 0
+            org-src-preserve-indentation nil)
+
+      ;; hide some ugly things
+
+      (setq org-hide-leading-stars t
+            org-hide-emphasis-markers t)
+
+      ;; everything else
+
+      (setq
+       ;; Edit settings
+       org-auto-align-tags nil
+       org-tags-column 0
+       org-fold-catch-invisible-edits 'show-and-error
+       org-special-ctrl-a/e t
+       org-insert-heading-respect-content t
+       ;; Agenda styling
+       org-agenda-tags-column 0
+       org-agenda-block-separator ?─
+       org-agenda-time-grid
+       '((daily today require-timed)
+         (800 1000 1200 1400 1600 1800 2000)
+         " ┄┄┄┄┄ " "┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄")
+       org-agenda-current-time-string
+       "◀── now ─────────────────────────────────────────────────")
+ 
+        ;; everything else
+        (setq org-indirect-buffer-display 'current-window
+              org-enforce-todo-dependencies t
+              org-fontify-done-headline t
+              org-fontify-quote-and-verse-blocks t
+              org-fontify-whole-heading-line t
+              org-image-actual-width nil
+              org-imenu-depth 6
+              org-priority-faces
+              '((?A . error)
+                (?B . warning)
+                (?C . success))
+              org-todo-keywords
+              '((sequence
+                 "TODO(t)"  ; A task that needs doing & is ready to do
+                 "PROJ(p)"  ; A project, which usually contains other tasks
+                 "LOOP(r)"  ; A recurring task
+                 "STRT(s)"  ; A task that is in progress
+                 "WAIT(w)"  ; Something external is holding up this task
+                 "HOLD(h)"  ; This task is paused/on hold because of me
+                 "IDEA(i)"  ; An unconfirmed and unapproved task or notion
+                 "|"
+                 "DONE(d)"  ; Task successfully completed
+                 "KILL(k)") ; Task was cancelled, aborted, or is no longer applicable
+                (sequence
+                 "[ ](T)"   ; A task that needs doing
+                 "[-](S)"   ; Task is in progress
+                 "[?](W)"   ; Task is being held up or paused
+                 "|"
+                 "[X](D)")  ; Task was completed
+                (sequence
+                 "|"
+                 "OKAY(o)"
+                 "YES(y)"
+                 "NO(n)"))
+              org-todo-keyword-faces
+              '(("[-]"  . +org-todo-active)
+                ("STRT" . +org-todo-active)
+                ("[?]"  . +org-todo-onhold)
+                ("WAIT" . +org-todo-onhold)
+                ("HOLD" . +org-todo-onhold)
+                ("PROJ" . +org-todo-project)
+                ("NO"   . +org-todo-cancel)
+                ("KILL" . +org-todo-cancel))))
 
   #+end_src
+
+
+   Touch up the appearance of org mode files with some fancy UTF-8 characters.
+
+   #+begin_src emacs-lisp
+
+   ;; Modern looks for Org
+   (use-package org-modern
+     :after org
+     :hook (org-mode . org-modern-mode))
+
+#+end_src
 
 
    For LaTeX export, I default to using XeLaTeX for compilation, and the
@@ -838,47 +917,18 @@ d
 We will then install ~org-bullets~ for better bullets
 
 #+begin_src emacs-lisp
-(use-package org-bullets
+(use-package org-superstar
   :ensure t
-  :hook (org-mode . org-bullets-mode)
+:after org
+  :hook (org-mode . org-superstar-mode)
   :config
-  (setq org-bullets-bullet-list '("◉" "○" "◆" "◇" "▶")))
+  ;; Customize org-superstar-mode
+  (setq org-superstar-headline-bullets-list '("◉" "○" "✸" "✿"))
+  (setq org-superstar-item-bullet-alist '((?+ . ?•) (?- . ?•)))
+  ;; Enable org-superstar-mode automatically for org-mode
+  (add-hook 'org-mode-hook (lambda () (org-superstar-mode 1))))
 #+end_src
 
-
-   Touch up the appearance of org mode files with some fancy UTF-8 characters.
-
-   #+begin_src emacs-lisp
-
-   ;; Modern looks for Org
-   (use-package org-modern
-     :after org
-     :hook (org-mode . org-modern-mode))
-
-;; variables
-
-(setq
- ;; Edit settings
- org-auto-align-tags nil
- org-tags-column 0
- org-fold-catch-invisible-edits 'show-and-error
- org-special-ctrl-a/e t
- org-insert-heading-respect-content t
-
- ;; Org styling, hide markup etc.
- org-hide-emphasis-markers t
- org-pretty-entities t
-
- ;; Agenda styling
- org-agenda-tags-column 0
- org-agenda-block-separator ?─
- org-agenda-time-grid
- '((daily today require-timed)
-   (800 1000 1200 1400 1600 1800 2000)
-   " ┄┄┄┄┄ " "┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄")
- org-agenda-current-time-string
- "◀── now ─────────────────────────────────────────────────")
-   #+end_src
 
 Install ~org-toc~
 
@@ -889,68 +939,6 @@ Install ~org-toc~
   :hook (org-mode . toc-org-enable)
   :config
   (setq toc-org-hrefify-default "gh"))
-#+end_src
-
-Lastly, some more prettifiers...
-
-#+begin_src emacs-lisp
-(defun +org-init-appearance-h ()
-  "Configures the UI for `org-mode'."
-  (setq org-indirect-buffer-display 'current-window
-        org-enforce-todo-dependencies t
-        org-entities-user
-        '(("flat"  "\\flat" nil "" "" "266D" "♭")
-          ("sharp" "\\sharp" nil "" "" "266F" "♯"))
-        org-fontify-done-headline t
-        org-fontify-quote-and-verse-blocks t
-        org-fontify-whole-heading-line t
-        org-hide-leading-stars t
-        org-image-actual-width nil
-        org-imenu-depth 6
-        org-src-preserve-indentation nil
-        org-edit-src-content-indentation 0
-        org-priority-faces
-        '((?A . error)
-          (?B . warning)
-          (?C . success))
-        org-startup-indented t
-        org-tags-column 0
-        org-use-sub-superscripts '{}
-        org-startup-folded nil
-        org-todo-keywords
-        '((sequence
-           "TODO(t)"  ; A task that needs doing & is ready to do
-           "PROJ(p)"  ; A project, which usually contains other tasks
-           "LOOP(r)"  ; A recurring task
-           "STRT(s)"  ; A task that is in progress
-           "WAIT(w)"  ; Something external is holding up this task
-           "HOLD(h)"  ; This task is paused/on hold because of me
-           "IDEA(i)"  ; An unconfirmed and unapproved task or notion
-           "|"
-           "DONE(d)"  ; Task successfully completed
-           "KILL(k)") ; Task was cancelled, aborted, or is no longer applicable
-          (sequence
-           "[ ](T)"   ; A task that needs doing
-           "[-](S)"   ; Task is in progress
-           "[?](W)"   ; Task is being held up or paused
-           "|"
-           "[X](D)")  ; Task was completed
-          (sequence
-           "|"
-           "OKAY(o)"
-           "YES(y)"
-           "NO(n)"))
-        org-todo-keyword-faces
-        '(("[-]"  . +org-todo-active)
-          ("STRT" . +org-todo-active)
-          ("[?]"  . +org-todo-onhold)
-          ("WAIT" . +org-todo-onhold)
-          ("HOLD" . +org-todo-onhold)
-          ("PROJ" . +org-todo-project)
-          ("NO"   . +org-todo-cancel)
-          ("KILL" . +org-todo-cancel))))
-
-(add-hook 'org-mode-hook #'+org-init-appearance-h)
 #+end_src
 
 Also make sure to use ~org-indent-mode~
@@ -1090,9 +1078,7 @@ TODO: because my centaur tabs is in there for some reason
   (evil-leader/set-key "v t" 'transpose-lines)
   ;; Recent Files
   (evil-leader/set-key "f r" 'recentf-open) ; You might need to install helm package
-                                        ;
-                                          ;; (("SPC f r" . recentf-open)))
-
+                                     
   ;; Find Files
   (evil-leader/set-key "f f" 'find-file)
   ;; Save File

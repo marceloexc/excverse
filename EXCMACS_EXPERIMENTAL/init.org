@@ -216,7 +216,29 @@
 
   #+end_src
 
-* Sane defaults
+We will also install straight for better package availability...
+
+#+begin_src emacs-lisp
+(defvar bootstrap-version)
+(let ((bootstrap-file
+       (expand-file-name "straight/repos/straight.el/bootstrap.el" user-emacs-directory))
+      (bootstrap-version 6))
+  (unless (file-exists-p bootstrap-file)
+    (with-current-buffer
+        (url-retrieve-synchronously
+         "https://raw.githubusercontent.com/radian-software/straight.el/develop/install.el"
+         'silent 'inhibit-cookies)
+      (goto-char (point-max))
+      (eval-print-last-sexp)))
+  (load bootstrap-file nil 'nomessage))
+
+#+end_src
+
+The ~readme~ for straight states that we should also try and put this in
+our early init...
+
+
+* Sane defauilts
 
   These are what /I/ consider to be saner defaults.
 
@@ -259,8 +281,6 @@
   #+begin_src emacs-lisp
 
   (setq-default tab-width 4                       ; Smaller tabs
-                fill-column 79                    ; Maximum line width
-                truncate-lines t                  ; Don't fold lines
                 split-width-threshold 160         ; Split verticly by default
                 split-height-threshold nil        ; Split verticly by default
                 frame-resize-pixelwise t          ; Fine-grained frame resize
@@ -380,10 +400,18 @@ And I will a single ESC key to execute ~keyboard-quit~ instead of ESC ESC ESC
 (global-set-key (kbd "<escape>")      'keyboard-escape-quit)
 #+end_src
 
+
+We will also disable compilation warnings since they get VERY annoying
+
+#+begin_src emacs-lisp
+
+(setq native-comp-async-report-warnings-errors nil)
+#+end_src
+
 * Visual
   Here im adding a way to have my popup winodws controlled once and for al
   #+begin_src emacs-lisp
-      (use-package popwin
+(use-package popwin
       :ensure t
       :config
       (popwin-mode 1))
@@ -401,7 +429,7 @@ I also hate the way EMACS treats native scrollbars...
 (use-package mlscroll
   :ensure t
   :config
-  (setq mlscroll-shortfun-min-width 11) ; truncate which-func
+  (setq mlscroll-shortfun-min-width 11)
   (mlscroll-mode 1))
 #+end_src
 
@@ -409,7 +437,6 @@ And disable the ones that come with the GUI
 
 #+begin_src emacs-lisp
 (scroll-bar-mode 0)
-
 #+end_src
 
 ** TODO Theme
@@ -437,9 +464,9 @@ Now add the handler that will automatically switch between dark and light when t
   (interactive "e")
   (let ((appearance (plist-get (mac-application-state) :appearance)))
     (cond ((equal appearance "NSAppearanceNameAqua")
-           (load-theme light-mode-theme))
+           (load-theme light-mode-theme t))
           ((equal appearance "NSAppearanceNameDarkAqua")
-           (load-theme dark-mode-theme)))))
+           (load-theme dark-mode-theme t)))))
 
 ;; Key mapping definition
 (define-key mac-apple-event-map [application-kvo effectiveAppearance]
@@ -464,6 +491,8 @@ Now add the handler that will automatically switch between dark and light when t
 
    (when (member "JetBrains Mono" (font-family-list))
      (set-face-attribute 'default nil :font "JetBrains Mono-15"))
+
+(set-face-attribute 'mode-line nil :font "Helvetica-14")
 
    #+end_src
 
@@ -564,7 +593,6 @@ looked something like this...
     (funcall mode 1))
 
 #+end_quote
-
 * Version control
 
   Have some visual indication where there are uncommitted changes.
@@ -724,21 +752,28 @@ d
 
   #+begin_src emacs-lisp
 
-  ;; Outline-based notes management and organizer
-  (use-package org
-    :defer t
-    :config
-    (setq org-adapt-indentation t
-          org-hide-leading-stars t
-          org-hide-emphasis-markers t
-          org-pretty-entities t
-          org-src-fontify-natively t
-          org-startup-folded t
-          org-edit-src-content-indentation 0))
+      ;; Outline-based notes management and organizer
+      (use-package org
+        :defer t
+        :config
+        (setq org-adapt-indentation t
+              org-hide-leading-stars t
+              org-hide-emphasis-markers t
+              org-pretty-entities t
+              org-src-fontify-natively t
+              org-startup-folded t
+              org-edit-src-content-indentation 0
+              org-src-preserve-indentation nil))
+
+
+    (custom-theme-set-faces
+         'user
+         `(org-level-3 ((t (:size 17))))
+         `(org-level-2 ((t (:height 1.05))))
+         `(org-level-1 ((t (:height 1.1)))))
 
   #+end_src
 
-*** LaTeX export
 
    For LaTeX export, I default to using XeLaTeX for compilation, and the
    [[https://github.com/tecosaur/engrave-faces][engrave-faces]] package for syntax highlighting source blocks after the Emacs
@@ -752,13 +787,7 @@ d
 
    #+end_src
 
-   I have PDFs open directly in Emacs ([[PDF Tools]]). In addition, I have support
-   for a couple of custom LaTeX classes.
-
-
-*** Babel
-
-   Add a few languages for Org babel. In addition, don't evaluate code on
+  Add a few languages for Org babel. In addition, don't evaluate code on
    export by default.
 
    #+begin_src emacs-lisp
@@ -791,8 +820,6 @@ d
 
    #+end_src
 
-*** Tempo
-
    Since version 9.2 of Org mode, typing =<s= to get a source block (and
    similar variants) has been tucked away in the Org Tempo library, hoping that
    users rather use =C-c C-,=. Hopefully I'll stop typing =<s= at some point,
@@ -806,12 +833,20 @@ d
      :after org)
 
    #+end_src
+   
 
-*** Org Modern
+We will then install ~org-bullets~ for better bullets
+
+#+begin_src emacs-lisp
+(use-package org-bullets
+  :ensure t
+  :hook (org-mode . org-bullets-mode)
+  :config
+  (setq org-bullets-bullet-list '("◉" "○" "◆" "◇" "▶")))
+#+end_src
+
 
    Touch up the appearance of org mode files with some fancy UTF-8 characters.
-   I disable ~org-modern-block-fringe~ due to [[https://github.com/minad/org-modern/issues/144][org-modern conflicting with]]
-   ~org-adapt-indentation~.
 
    #+begin_src emacs-lisp
 
@@ -819,7 +854,110 @@ d
    (use-package org-modern
      :after org
      :hook (org-mode . org-modern-mode))
+
+;; variables
+
+(setq
+ ;; Edit settings
+ org-auto-align-tags nil
+ org-tags-column 0
+ org-fold-catch-invisible-edits 'show-and-error
+ org-special-ctrl-a/e t
+ org-insert-heading-respect-content t
+
+ ;; Org styling, hide markup etc.
+ org-hide-emphasis-markers t
+ org-pretty-entities t
+
+ ;; Agenda styling
+ org-agenda-tags-column 0
+ org-agenda-block-separator ?─
+ org-agenda-time-grid
+ '((daily today require-timed)
+   (800 1000 1200 1400 1600 1800 2000)
+   " ┄┄┄┄┄ " "┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄")
+ org-agenda-current-time-string
+ "◀── now ─────────────────────────────────────────────────")
    #+end_src
+
+Install ~org-toc~
+
+#+begin_src emacs-lisp
+;; Install toc-org for auto Table of Contents
+(use-package toc-org
+  :ensure t
+  :hook (org-mode . toc-org-enable)
+  :config
+  (setq toc-org-hrefify-default "gh"))
+#+end_src
+
+Lastly, some more prettifiers...
+
+#+begin_src emacs-lisp
+(defun +org-init-appearance-h ()
+  "Configures the UI for `org-mode'."
+  (setq org-indirect-buffer-display 'current-window
+        org-enforce-todo-dependencies t
+        org-entities-user
+        '(("flat"  "\\flat" nil "" "" "266D" "♭")
+          ("sharp" "\\sharp" nil "" "" "266F" "♯"))
+        org-fontify-done-headline t
+        org-fontify-quote-and-verse-blocks t
+        org-fontify-whole-heading-line t
+        org-hide-leading-stars t
+        org-image-actual-width nil
+        org-imenu-depth 6
+        org-src-preserve-indentation nil
+        org-edit-src-content-indentation 0
+        org-priority-faces
+        '((?A . error)
+          (?B . warning)
+          (?C . success))
+        org-startup-indented t
+        org-tags-column 0
+        org-use-sub-superscripts '{}
+        org-startup-folded nil
+        org-todo-keywords
+        '((sequence
+           "TODO(t)"  ; A task that needs doing & is ready to do
+           "PROJ(p)"  ; A project, which usually contains other tasks
+           "LOOP(r)"  ; A recurring task
+           "STRT(s)"  ; A task that is in progress
+           "WAIT(w)"  ; Something external is holding up this task
+           "HOLD(h)"  ; This task is paused/on hold because of me
+           "IDEA(i)"  ; An unconfirmed and unapproved task or notion
+           "|"
+           "DONE(d)"  ; Task successfully completed
+           "KILL(k)") ; Task was cancelled, aborted, or is no longer applicable
+          (sequence
+           "[ ](T)"   ; A task that needs doing
+           "[-](S)"   ; Task is in progress
+           "[?](W)"   ; Task is being held up or paused
+           "|"
+           "[X](D)")  ; Task was completed
+          (sequence
+           "|"
+           "OKAY(o)"
+           "YES(y)"
+           "NO(n)"))
+        org-todo-keyword-faces
+        '(("[-]"  . +org-todo-active)
+          ("STRT" . +org-todo-active)
+          ("[?]"  . +org-todo-onhold)
+          ("WAIT" . +org-todo-onhold)
+          ("HOLD" . +org-todo-onhold)
+          ("PROJ" . +org-todo-project)
+          ("NO"   . +org-todo-cancel)
+          ("KILL" . +org-todo-cancel))))
+
+(add-hook 'org-mode-hook #'+org-init-appearance-h)
+#+end_src
+
+Also make sure to use ~org-indent-mode~
+
+#+begin_src emacs-lisp
+(add-hook 'org-mode-hook 'org-indent-mode)
+#+end_src
 
 ** Markdown
 
@@ -830,38 +968,6 @@ d
     :defer t)
 
   #+end_src
-* Advice
-
-  An advice can be given to a function to make it behave differently. This
-  advice makes =eval-last-sexp= (bound to =C-x C-e=) replace the sexp with the
-  value.
-
-  #+begin_src emacs-lisp
-
-  (defadvice eval-last-sexp (around replace-sexp (arg) activate)
-    "Replace sexp when called with a prefix argument."
-    (if arg
-        (let ((pos (point)))
-          ad-do-it
-          (goto-char pos)
-          (backward-kill-sexp)
-          (forward-sexp))
-      ad-do-it))
-
-  #+end_src
-
-  When interactively changing the theme (using =M-x load-theme=), the current
-  custom theme is not disabled. This often gives weird-looking results; we can
-  advice =load-theme= to always disable themes currently enabled themes.
-
-  #+begin_src emacs-lisp
-
-  (defadvice load-theme
-      (before disable-before-load (theme &optional no-confirm no-enable) activate)
-    (mapc 'disable-theme custom-enabled-themes))
-
-  #+end_src
-
 * global-scale-mode
 
   These functions provide something close to ~text-scale-mode~, but for every
@@ -1160,15 +1266,17 @@ TODO: because my centaur tabs is in there for some reason
 #+end_src
 
 
-** MACOS Scroliling
+** MACOS Scrolling
 #+begin_src emacs-lisp
+(unless (package-installed-p 'ultra-scroll-mac)
+  (package-vc-install '(ultra-scroll-mac :vc-backend Git :url "https://github.com/jdtsmith/ultra-scroll-mac")))
+
 (use-package ultra-scroll-mac
   :if (eq window-system 'mac)
   ;:load-path "~/code/emacs/ultra-scroll-mac" ; if you git clone'd instead of package-vc-install
   :init
   (setq scroll-conservatively 101 ; important!
-        scroll-margin 0) 
+        scroll-margin 0)
   :config
   (ultra-scroll-mac-mode 1))
 #+end_src
-g

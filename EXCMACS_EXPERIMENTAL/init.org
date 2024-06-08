@@ -21,7 +21,8 @@
   - [ ] Disable evil bindings (h and l, j and k, dd for normal mode and
     visual mode all together, etc..)
 
-  - Wtf this has weird indents?
+  - [ ] [[https://github.com/minad/org-modern/issues/129][Org Modern replaces org superstar????]] Why?? I really dont like
+    the default bullets of ~Org-modern~ 
 
 
 
@@ -500,12 +501,15 @@ Now add the handler that will automatically switch between dark and light when t
    (when (member "JetBrains Mono" (font-family-list))
      (set-face-attribute 'default nil :font "JetBrains Mono-15"))
 
-(set-face-attribute 'mode-line nil :font "Helvetica-14")
+
+  (set-face-attribute 'mode-line nil :inherit 'variable-pitch)
+  (set-face-attribute 'mode-line-inactive nil :inherit 'variable-pitch)
+
+  ;; Set minibuffer prompt font to variable-pitch
+  (set-face-attribute 'minibuffer-prompt nil :inherit 'variable-pitch)
 
    #+end_src
 
-   My preferred proportional font is [[https://github.com/adobe-fonts/source-serif][Source Serif]]. In order to get
-   variable-pitch fonts where it makes sense, I use [[https://gitlab.com/jabranham/mixed-pitch][mixed-pitch]].
 ** Centering with Olivetti
 
    [[https://github.com/rnkn/olivetti][Olivetti]] is a package that simply centers the text of a buffer. It is very
@@ -528,7 +532,7 @@ Now add the handler that will automatically switch between dark and light when t
 
 ** Dashboard
 
-   Dashboard provides a nice welcome.
+Dashboard provides a nice welcome.
 
    #+begin_src emacs-lisp
 
@@ -546,6 +550,31 @@ Now add the handler that will automatically switch between dark and light when t
      (dashboard-setup-startup-hook))
 
    #+end_src
+** Tabs
+
+Use centaur tabs for the tab bar
+
+#+begin_src emacs-lisp
+(use-package centaur-tabs
+  :demand
+  :config
+  (centaur-tabs-mode t)
+  (setq centaur-tabs-height 16)
+  (setq centaur-tabs-set-bar 'under
+       centaur-tabs-style "slant"
+       centaur-tabs-show-navigation-buttons t
+        centaur-tabs-set-modified-marker t
+        centaur-tabs-set-bar 'under
+        centaur-tabs-show-count nil)
+  :bind
+  ("C-<prior>" . centaur-tabs-backward)
+  ("C-<next>" . centaur-tabs-forward))
+
+
+#+end_src
+
+
+
 
 * Mac OS X
 
@@ -617,30 +646,33 @@ looked something like this...
 * TODO Project
 * Window management
 
-  Some keybindings (involving the option, resulting in funny symbols) for
-  window management.
-
-
-#+begin_quote :tangle no
-  (use-package windmove
-    :ensure nil
-    :bind (:map custom-bindings-map
-                ("M-˙" . windmove-left)
-                ("M-∆" . windmove-down)
-                ("M-˚" . windmove-up)
-                ("M-¬" . windmove-right)
-
-                ("M-ó" . windmove-swap-states-left)
-                ("M-ô" . windmove-swap-states-down)
-                ("M-" . windmove-swap-states-up)
-                ("M-ò" . windmove-swap-states-right))
-#+end_quote
-
+Use ~ace-window~
+#+begin_src emacs-lisp
+(use-package ace-window
+  :ensure t
+  :bind (("M-o" . ace-window))
+  :config
+  ;; Optional: configure default action to delete window
+  ;; (setq aw-dispatch-always t)
+  ;; (setq aw-dispatch-alist
+  ;;       '((?x aw-delete-window "Delete Window")
+  ;;         (?m aw-swap-window "Swap Windows")
+  ;;         (?M aw-move-window "Move Window")
+  ;;         (?c aw-copy-window "Copy Window")
+  ;;         (?j aw-switch-buffer-in-window "Select Buffer")
+  ;;         (?n aw-flip-window)
+  ;;         (?u aw-switch-buffer-other-window "Switch Buffer Other Window")
+  ;;         (?c aw-split-window-fair "Split Fair Window")
+  ;;         (?v aw-split-window-vert "Split Vert Window")
+  ;;         (?b aw-split-window-horz "Split Horz Window")
+  ;;         (?g aw-switch-to-window "Go to Window")
+  ;;         (?e aw-execute-command-other-window "Execute Command Other Window")
+  ;;         (?f aw-toggle-frame "Toggle Frame")
+  ;;         (?w aw-delete-other-windows "Delete Other Windows")))
+  )
+#+end_src
 
 * Completion UI
-
-
-
   #+begin_src emacs-lisp
 
   ;; VERTical Interactive COmpletion
@@ -725,6 +757,15 @@ looked something like this...
 
 
 * Spelling
+
+Install ~undo-tree~
+
+#+begin_src emacs-lisp
+(use-package undo-tree
+  :ensure t
+  :init
+  (global-undo-tree-mode))
+#+end_src
 ** TODO Define word
 
    This super neat package looks up the word at point. I use it a lot!
@@ -737,6 +778,7 @@ looked something like this...
      :bind (:map custom-bindings-map ("C-c D" . define-word-at-point)))
 
    #+end_src
+
 
 * Word Processing
 ** Org
@@ -759,162 +801,82 @@ looked something like this...
                           (org-indent-mode)
                           (visual-line-mode 1)))
       :config
+       ;; enable syntax highlighting in code blocks
+       (setq org-src-fontify-natively t)
+       ;; everything else
 
-      ;; enable syntax highlighting in code blocks
-      (setq org-src-fontify-natively t)
+       (setq org-indirect-buffer-display 'current-window
+                  org-enforce-todo-dependencies t
+                  org-fontify-done-headline t
+                  org-fontify-quote-and-verse-blocks t
+                  org-fontify-whole-heading-line t
+                  org-image-actual-width nil
+                  org-imenu-depth 6
+                  org-priority-faces
+                  '((?A . error)
+                    (?B . warning)
+                    (?C . success))
+                  org-todo-keywords
+                  '((sequence
+                     "TODO(t)"  ; A task that needs doing & is ready to do
+                     "PROJ(p)"  ; A project, which usually contains other tasks
+                     "LOOP(r)"  ; A recurring task
+                     "STRT(s)"  ; A task that is in progress
+                     "WAIT(w)"  ; Something external is holding up this task
+                     "HOLD(h)"  ; This task is paused/on hold because of me
+                     "IDEA(i)"  ; An unconfirmed and unapproved task or notion
+                     "|"
+                     "DONE(d)"  ; Task successfully completed
+                     "KILL(k)") ; Task was cancelled, aborted, or is no longer applicable
+                    (sequence
+                     "[ ](T)"   ; A task that needs doing
+                     "[-](S)"   ; Task is in progress
+                     "[?](W)"   ; Task is being held up or paused
+                     "|"
+                     "[X](D)")  ; Task was completed
+                    (sequence
+                     "|"
+                     "OKAY(o)"
+                     "YES(y)"
+                     "NO(n)"))
+                  org-todo-keyword-faces
+                  '(("[-]"  . +org-todo-active)
+                    ("STRT" . +org-todo-active)
+                    ("[?]"  . +org-todo-onhold)
+                    ("WAIT" . +org-todo-onhold)
+                    ("HOLD" . +org-todo-onhold)
+                    ("PROJ" . +org-todo-project)
+                    ("NO"   . +org-todo-cancel)
+                    ("KILL" . +org-todo-cancel))))
 
-      ;; enable automatic line wrapping
-      (setq org-startup-truncated t)
-
-      ;; enable src indentation
-      (setq org-edit-src-content-indentation 0
-            org-src-preserve-indentation nil)
-
-      ;; hide some ugly things
-
-      (setq org-hide-leading-stars t
-            org-hide-emphasis-markers t)
-
-      ;; everything else
-
-      (setq
-       ;; Edit settings
-       org-auto-align-tags nil
-       org-tags-column 0
-       org-fold-catch-invisible-edits 'show-and-error
-       org-special-ctrl-a/e t
-       org-insert-heading-respect-content t
-       ;; Agenda styling
-       org-agenda-tags-column 0
-       org-agenda-block-separator ?─
-       org-agenda-time-grid
-       '((daily today require-timed)
-         (800 1000 1200 1400 1600 1800 2000)
-         " ┄┄┄┄┄ " "┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄")
-       org-agenda-current-time-string
-       "◀── now ─────────────────────────────────────────────────")
- 
-        ;; everything else
-        (setq org-indirect-buffer-display 'current-window
-              org-enforce-todo-dependencies t
-              org-fontify-done-headline t
-              org-fontify-quote-and-verse-blocks t
-              org-fontify-whole-heading-line t
-              org-image-actual-width nil
-              org-imenu-depth 6
-              org-priority-faces
-              '((?A . error)
-                (?B . warning)
-                (?C . success))
-              org-todo-keywords
-              '((sequence
-                 "TODO(t)"  ; A task that needs doing & is ready to do
-                 "PROJ(p)"  ; A project, which usually contains other tasks
-                 "LOOP(r)"  ; A recurring task
-                 "STRT(s)"  ; A task that is in progress
-                 "WAIT(w)"  ; Something external is holding up this task
-                 "HOLD(h)"  ; This task is paused/on hold because of me
-                 "IDEA(i)"  ; An unconfirmed and unapproved task or notion
-                 "|"
-                 "DONE(d)"  ; Task successfully completed
-                 "KILL(k)") ; Task was cancelled, aborted, or is no longer applicable
-                (sequence
-                 "[ ](T)"   ; A task that needs doing
-                 "[-](S)"   ; Task is in progress
-                 "[?](W)"   ; Task is being held up or paused
-                 "|"
-                 "[X](D)")  ; Task was completed
-                (sequence
-                 "|"
-                 "OKAY(o)"
-                 "YES(y)"
-                 "NO(n)"))
-              org-todo-keyword-faces
-              '(("[-]"  . +org-todo-active)
-                ("STRT" . +org-todo-active)
-                ("[?]"  . +org-todo-onhold)
-                ("WAIT" . +org-todo-onhold)
-                ("HOLD" . +org-todo-onhold)
-                ("PROJ" . +org-todo-project)
-                ("NO"   . +org-todo-cancel)
-                ("KILL" . +org-todo-cancel))))
-
+      (custom-theme-set-faces
+           'user
+           `(org-level-3 ((t (:size 17))))
+           `(org-level-2 ((t (:height 1.05))))
+           `(org-level-1 ((t (:height 1.1)))))
   #+end_src
 
+And use org-modern
 
-   Touch up the appearance of org mode files with some fancy UTF-8 characters.
-
-   #+begin_src emacs-lisp
-
-   ;; Modern looks for Org
-   (use-package org-modern
-     :after org
-     :hook (org-mode . org-modern-mode))
-
+#+begin_src emacs-lisp
+  
+(use-package org-modern
+  :ensure t
+  :custom
+  (org-modern-hide-stars nil)		; adds extra indentation
+  (org-modern-table nil)
+  (org-modern-list 
+   '(;; (?- . "-")
+     (?* . "•")
+     (?+ . "‣")))
+  (org-modern-block-name '("" . "")) ; or other chars; so top bracket is drawn promptly
+  :hook
+  (org-mode . org-modern-mode)
+  (org-agenda-finalize . org-modern-agenda))
 #+end_src
 
 
-   For LaTeX export, I default to using XeLaTeX for compilation, and the
-   [[https://github.com/tecosaur/engrave-faces][engrave-faces]] package for syntax highlighting source blocks after the Emacs
-   color theme.
-
-   #+begin_src emacs-lisp
-
-   ;; Convert font-lock faces to other formats
-   (use-package engrave-faces
-     :defer t)
-
-   #+end_src
-
-  Add a few languages for Org babel. In addition, don't evaluate code on
-   export by default.
-
-   #+begin_src emacs-lisp
-
-   ;; Working with Code Blocks in Org
-   (use-package ob
-     :ensure nil
-     :after org
-     :config
-     (setq org-export-use-babel nil
-           org-confirm-babel-evaluate nil)
-     (org-babel-do-load-languages
-      'org-babel-load-languages
-      '((emacs-lisp . t)
-        (python . t)
-        (clojure . t))))
-
-   #+end_src
-
-   Default to use whatever interpreter is set by =python-shell-interpreter=.
-
-   #+begin_src emacs-lisp
-
-   ;; Babel Functions for Python
-   (use-package ob-python
-     :ensure nil
-     :after (ob python)
-     :config
-     (setq org-babel-python-command python-shell-interpreter))
-
-   #+end_src
-
-   Since version 9.2 of Org mode, typing =<s= to get a source block (and
-   similar variants) has been tucked away in the Org Tempo library, hoping that
-   users rather use =C-c C-,=. Hopefully I'll stop typing =<s= at some point,
-   and adapt the much saner =C-c C-,=.
-
-   #+begin_src emacs-lisp
-
-   ;; Template expansion for Org structures
-   (use-package org-tempo
-     :ensure nil
-     :after org)
-
-   #+end_src
-   
-
-We will then install ~org-bullets~ for better bullets
+ Also use ~org-superstar~
 
 #+begin_src emacs-lisp
 (use-package org-superstar
@@ -930,6 +892,7 @@ We will then install ~org-bullets~ for better bullets
 #+end_src
 
 
+
 Install ~org-toc~
 
 #+begin_src emacs-lisp
@@ -941,10 +904,15 @@ Install ~org-toc~
   (setq toc-org-hrefify-default "gh"))
 #+end_src
 
-Also make sure to use ~org-indent-mode~
+Use ~org-appear~ for better editing with fontified / prettyfied
+content
 
 #+begin_src emacs-lisp
-(add-hook 'org-mode-hook 'org-indent-mode)
+
+(use-package org-appear
+	:ensure t
+	:hook (org-mode . org-appear-mode))
+	
 #+end_src
 
 ** Markdown
@@ -989,8 +957,6 @@ Also make sure to use ~org-indent-mode~
 
   #+end_src
 
-* TODO Mode specific
-I have deleted a lot of the stuff from here! look at the github for what i shouldve kept...
 * Which key
 
   [[https://github.com/justbur/emacs-which-key][Which key]] is nice for discoverability.
@@ -1063,7 +1029,7 @@ TODO: because my centaur tabs is in there for some reason
 
 #+begin_src emacs-lisp
 
-;;ENABLE CUA !!!!! 
+;;ENABLE CUA !!!!!
 
 (use-package evil :ensure t
   :config
@@ -1078,34 +1044,17 @@ TODO: because my centaur tabs is in there for some reason
   (evil-leader/set-key "v t" 'transpose-lines)
   ;; Recent Files
   (evil-leader/set-key "f r" 'recentf-open) ; You might need to install helm package
-                                     
+
   ;; Find Files
   (evil-leader/set-key "f f" 'find-file)
   ;; Save File
   (evil-leader/set-key "f s" 'save-buffer))
 
+;;let org folding work with normal mode on emacs
+(evil-define-key 'normal org-mode-map (kbd "<tab>") #'org-cycle)
+
 
 (global-display-line-numbers-mode)
-
-
-
-(use-package centaur-tabs
-  :demand
-  :config
-  (centaur-tabs-mode t)
-  :bind
-  ("C-<prior>" . centaur-tabs-backward)
-  ("C-<next>" . centaur-tabs-forward))
-
-(setq centaur-tabs-height 24)
-
-(setq centaur-tabs-set-bar 'under)
-;; Note: If you're not using Spacmeacs, in order for the underline to display
-;; correctly you must add the following line:
-(setq x-underline-at-descent-line t)
-
-
-
 
 (use-package general
   :config

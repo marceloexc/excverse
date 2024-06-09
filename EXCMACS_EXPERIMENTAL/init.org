@@ -244,8 +244,7 @@ We will also install straight for better package availability...
 
 The ~readme~ for straight states that we should also try and put this in
 our early init...
-
-
+ 
 * Sane defauilts
 
   These are what /I/ consider to be saner defaults.
@@ -498,16 +497,32 @@ Now add the handler that will automatically switch between dark and light when t
 
    #+begin_src emacs-lisp
 
-   (when (member "JetBrains Mono" (font-family-list))
-     (set-face-attribute 'default nil :font "JetBrains Mono-15"))
+      (when (member "JetBrains Mono" (font-family-list))
+        (set-face-attribute 'default nil :font "JetBrains Mono-15"))
 
 
-  (set-face-attribute 'mode-line nil :inherit 'variable-pitch)
-  (set-face-attribute 'mode-line-inactive nil :inherit 'variable-pitch)
 
-  ;; Set minibuffer prompt font to variable-pitch
-  (set-face-attribute 'minibuffer-prompt nil :inherit 'variable-pitch)
+     ;; Set attributes for mode-line
+     (set-face-attribute 'mode-line nil
+                         :background "#reff7700"
+                         :foreground "gray20"
+                         :box '(:line-width (5 . 5) :color "#ff7700" :style flat-button)
+                         :height 1.0
+                         :family (cond ((eq system-type 'darwin) "SF Compact Rounded")
+                                       ((eq window-system 'x) "Gayathri")))
 
+     ;; Set attributes for mode-line-inactive
+     (set-face-attribute 'mode-line-inactive nil
+                         :inherit 'mode-line
+                         :background "gray"
+                         :box '(:line-width (5 . 5) :color "gray"))
+
+     ;; Set attributes for minibuffer-prompt
+     (set-face-attribute 'minibuffer-prompt nil
+                         :foreground (cond ((and (eq system-type 'darwin) (display-graphic-p)) "dark magenta")
+                                           ((and (eq system-type 'darwin) (not (display-graphic-p))) "orange")
+                                           ((eq window-system 'x) "orange")
+                                           (t "cyan")))
    #+end_src
 
 ** Centering with Olivetti
@@ -575,7 +590,6 @@ Use centaur tabs for the tab bar
 
 
 
-
 * Mac OS X
 
   The package [[https://github.com/purcell/exec-path-from-shell][exec-path-from-shell]] synchronizes environment variables from the
@@ -614,22 +628,6 @@ Use centaur tabs for the tab bar
 
   #+end_src
 
-* TODO Modes
-
-
-looked something like this...
-#+begin_quote :tangle no
-  (dolist (mode
-           '(abbrev-mode                  ; E.g. sopl -> System.out.println
-             column-number-mode           ; Show column number in mode line
-             delete-selection-mode        ; Replace selected text
-             dirtrack-mode                ; directory tracking in *shell*
-             global-so-long-mode          ; Mitigate performance for long lines
-             recentf-mode                 ; Recently opened files
-             show-paren-mode))            ; Highlight matching parentheses
-    (funcall mode 1))
-
-#+end_quote
 * Version control
 
   Have some visual indication where there are uncommitted changes.
@@ -643,7 +641,6 @@ looked something like this...
 
   #+end_src
 
-* TODO Project
 * Window management
 
 Use ~ace-window~
@@ -681,7 +678,7 @@ Use ~ace-window~
     (vertico-mode 1)
     (vertico-mouse-mode 1)
     :config
-    (setq vertico-count 25))
+    (setq vertico-count 10))
 
   #+end_src
 
@@ -708,10 +705,6 @@ Use ~ace-window~
   #+end_src
 
 ** Completion
-
-   I used [[https://github.com/auto-complete/auto-complete][Auto-Complete]] for years, then I used [[http://company-mode.github.io/][company-mode]] for even more years,
-   and now I am giving [[https://github.com/minad/corfu][corfu]] a shot. I want a pretty aggressive completion
-   system, hence the no delay settings and a short prefix length.
 
    #+begin_src emacs-lisp
 
@@ -756,6 +749,37 @@ Use ~ace-window~
    #+end_src
 
 
+This is also a custom function i stole from doom emacs to have quick and easy CMD+F
+
+#+begin_src emacs-lisp
+
+(defun +default/search-buffer ()
+  "Conduct a text search on the current buffer.
+If a selection is active and multi-line, perform a search restricted to that
+region.
+If a selection is active and not multi-line, use the selection as the initial
+input and search the whole buffer for it."
+  (interactive)
+  (let (start end multiline-p)
+    (save-restriction
+      (when (region-active-p)
+        (setq start (region-beginning)
+              end   (region-end)
+              multiline-p (/= (line-number-at-pos start)
+                              (line-number-at-pos end)))
+        (deactivate-mark)
+        (when multiline-p
+          (narrow-to-region start end)))
+      (if (and (featurep 'vertico)
+               (fboundp 'consult-line))
+          (if (and start end (not multiline-p))
+              (consult-line
+               (replace-regexp-in-string
+                " " "\\\\ "
+                (rxt-quote-pcre
+                 (buffer-substring-no-properties start end))))
+            (call-interactively #'consult-line))))))
+#+end_src
 * Spelling
 
 Install ~undo-tree~
@@ -778,7 +802,6 @@ Install ~undo-tree~
      :bind (:map custom-bindings-map ("C-c D" . define-word-at-point)))
 
    #+end_src
-
 
 * Word Processing
 ** Org
@@ -856,25 +879,6 @@ Install ~undo-tree~
            `(org-level-1 ((t (:height 1.1)))))
   #+end_src
 
-And use org-modern
-
-#+begin_src emacs-lisp
-  
-(use-package org-modern
-  :ensure t
-  :custom
-  (org-modern-hide-stars nil)		; adds extra indentation
-  (org-modern-table nil)
-  (org-modern-list 
-   '(;; (?- . "-")
-     (?* . "•")
-     (?+ . "‣")))
-  (org-modern-block-name '("" . "")) ; or other chars; so top bracket is drawn promptly
-  :hook
-  (org-mode . org-modern-mode)
-  (org-agenda-finalize . org-modern-agenda))
-#+end_src
-
 
  Also use ~org-superstar~
 
@@ -890,8 +894,6 @@ And use org-modern
   ;; Enable org-superstar-mode automatically for org-mode
   (add-hook 'org-mode-hook (lambda () (org-superstar-mode 1))))
 #+end_src
-
-
 
 Install ~org-toc~
 
@@ -1029,178 +1031,177 @@ TODO: because my centaur tabs is in there for some reason
 
 #+begin_src emacs-lisp
 
-;;ENABLE CUA !!!!!
+  ;;ENABLE CUA !!!!!
 
-(use-package evil :ensure t
-  :config
-  (evil-mode 1))
-
-
-(use-package evil-leader :ensure t
-  :config
-  (global-evil-leader-mode t)
-  (evil-leader/set-leader "<SPC>")
-  (evil-leader/set-key "b b" 'buffer-list)
-  (evil-leader/set-key "v t" 'transpose-lines)
-  ;; Recent Files
-  (evil-leader/set-key "f r" 'recentf-open) ; You might need to install helm package
-
-  ;; Find Files
-  (evil-leader/set-key "f f" 'find-file)
-  ;; Save File
-  (evil-leader/set-key "f s" 'save-buffer))
-
-;;let org folding work with normal mode on emacs
-(evil-define-key 'normal org-mode-map (kbd "<tab>") #'org-cycle)
+  (use-package evil
+    :ensure t
+    :config
+    (evil-mode 1))
 
 
-(global-display-line-numbers-mode)
+  ;; (use-package evil-leader :ensure t
+  ;;   :config
+  ;;   (global-evil-leader-mode t)
+  ;;   (evil-leader/set-leader "<SPC>")
+  ;;   (evil-leader/set-key "b b" 'buffer-list)
+  ;;   (evil-leader/set-key "v t" 'transpose-lines)
+  ;;   ;; Recent Files
+  ;;   (evil-leader/set-key "f r" 'recentf-open) ; You might need to install helm package
 
-(use-package general
-  :config
-  (general-evil-setup t)
-  (defconst my-leader "SPC")
-  (general-create-definer my-leader-def
-    :prefix my-leader)
-  (general-override-mode) ;; https://github.com/noctuid/general.el/issues/99#issuecomment-360914335
-  ;; doomesque hotkeys using spacebar as prefix
-  (my-leader-def
-    :states '(motion normal visual)
-    :keymaps 'override ;; https://github.com/noctuid/general.el/issues/99#issuecomment-360914335
+  ;;   ;; Find Files
+  ;;   (evil-leader/set-key "f f" 'find-file)
+  ;;   ;; Save File
+  ;;   (evil-leader/set-key "f s" 'save-buffer))
 
-    ;; map universal argument to SPC-u
-    "u" '(universal-argument :which-key "Universal argument")
-    ";" '(eval-region :which-key "eval-region")
-    "SPC" '(projectile-find-file :which-key "Projectile find file")
-    "C-SPC" '(projectile-find-file-other-frame :which-key "Projectile find file (new frame)")
-    "S-SPC" '(projectile-find-file-other-frame :which-key "Projectile find file (new frame)")
-    ">" '(find-file-other-frame :which-key "Find file (new frame)")
-    ;":" '(execute-extended-command :which-key "M-x")
-    "x" '(open-scratch-buffer :which-key "Open scratch buffer")
-    "d" '(dired-jump :which-key "dired-jump")
-    "/" '(+consult/ripgrep :which-key "+consult/ripgrep")
-    "?" '(consult-ripgrep :which-key "consult-ripgrep")
-    ;"[" '(+tab-bar/switch-to-prev-tab :which-key "+tab-bar/switch-to-prev-tab")
-    ;"]" '(+tab-bar/switch-to-next-tab :which-key "+tab-bar/switch-to-next-tab")
-    "v" '(vterm-toggle :which-key "+term/here")
-
-    ;; editor
-    "e" '(:ignore t :which-key "Editor")
-    "eu" '(vundo :which-key "vundo")
-    "ev" '(vundo :which-key "vundo")
-    "er" '(query-replace :which-key "query-replace")
-    ;"ec" '(consult-theme :which-key "consult-theme")
-    "ep" '(point-to-register :which-key "point-to-register")
-    "es" '(consult-register-store :which-key "consult-register-store")
-    "ej" '(jump-to-register :which-key "jump-to-register")
-    "ef" '(:ignore t :which-key "Fold")
-    "efh" '(hs-hide-block :which-key "hs-hide-block")
-    "efs" '(hs-show-block :which-key "hs-show-block")
-    "efa" '(hs-show-all :which-key "hs-show-all")
-
-    ;; consult
-    "c" '(:ignore t :which-key "consult")
-    ;"cf" '(consult-flycheck :which-key "consult-flycheck")
-    "cf" '(consult-flymake :which-key "consult-flymake")
-
-    ;; file
-    "f" '(:ignore t :which-key "File")
-    "ff" '(find-file :which-key "find-file")
-    "fr" '(recentf-open :which-key "recentf-open")
-
-    ;; buffer
-    ;"TAB" '(switch-to-prev-buffer :which-key "Prev buffer")
-    "b" '(:ignore t :which-key "Buffer")
-    "bb" '(consult-buffer :which-key "consult-buffer")
-    "b[" '(previous-buffer :which-key "Previous buffer")
-    "b]" '(next-buffer :which-key "Next buffer")
-    "bd" '(kill-current-buffer :which-key "Kill buffer")
-    "bk" '(kill-current-buffer :which-key "Kill buffer")
-    "bl" '(evil-switch-to-windows-last-buffer :which-key "Switch to last buffer")
-    "br" '(revert-buffer-no-confirm :which-key "Revert buffer")
-    "bK" '(kill-all-buffers :which-key "Kill all buffers")
-
-    ;; open
-    "o" '(:ignore t :which-key "Open")
-    "oc" '(open-init-file :which-key "Open init.el")
-
-    ;; project
-    "p" '(:ignore t :which-key "Project")
-    "pp" '(projectile-switch-project :which-key "Switch Project")
-    "po" '(projectile-find-other-file :which-key "projectile-find-other-file")
-
-    ;; help
-    "h" '(:ignore t :which-key "Help")
-    "hf" '(helpful-callable :which-key "describe-function")
-    "hk" '(helpful-key :which-key "describe-key")
-    "hv" '(helpful-variable :which-key "describe-variable")
-    "ho" '(helpful-symbol :which-key "describe-symbol")
-    "hm" '(describe-mode :which-key "describe-mode")
-    "hF" '(describe-face :which-key "describe-face")
-    "hw" '(where-is :which-key "where-is")
-    "h." '(display-local-help :which-key "display-local-help")
-
-    ;; zoom
-    ;; the hydra is nice but the rest is kind of janky, need to play around with this more
-    "=" '(text-scale-increase :which-key "text-scale-increase")
-    "-" '(text-scale-decrease :which-key "text-scale-decrease")
-    "z" '(:ignore t :which-key "zoom")
-    "z=" '(zoom-in :which-key "zoom-in")
-    "z-" '(zoom-out :which-key "zoom-out")
-    "zz" '(hydra-zoom/body :which-key "hydra-zoom")
-
-    ;; window
-    "w" '(:ignore t :which-key "Window")
-    "wd" '(evil-window-delete :which-key "Delete Window ")
-
-    ;; toggles
-    "t" '(:ignore t :which-key "Toggles")
-    "ta" '(corfu-mode :which-key "corfu-mode") ;; 'a' for autocomplete
-    "ts" '(flyspell-mode :which-key "flyspell-mode")
-    "tf" '(flyspell-mode :which-key "flyspell-mode")
-    ;"tc" '(flycheck-mode :which-key "flycheck-mode")
-    "tc" '(flymake-mode :which-key "flymake-mode")
-    "tm" '(minimap-mode :which-key "minimap-mode")
-    "tg" '(evil-goggles-mode :which-key "evil-goggles")
-    "tI" '(toggle-indent-style :which-key "Indent style")
-    "tv" '(visual-line-mode :which-key "visual-line-mode")
-
-    ;; org
-    "o" '(:ignore t :which-key "Org")
-    "oA" '(org-agenda :which-key "org-agenda")
-
-    ;; notes/org
-    "n" '(:ignore t :which-key "Notes")
-    "nf" '(org-roam-node-find :which-key "find-node")
-    "ni" '(org-roam-node-insert :which-key "insert-node")
-    "nt" '(org-roam-dailies-goto-today :which-key "org-roam-dailies-goto-today")
-    "n/" '(+consult/org-roam-ripgrep :which-key "+consult/org-roam-ripgrep")
-    "na" '(org-agenda :which-key "org-agenda")
-
-    ;; narrow
-    "N" '(:ignore t :which-key "Narrow")
-    "Nr" '(narrow-to-region :which-key "narrow-to-region")
-    "Nw" '(widen :which-key "widen")))
+  ;;let org folding work with normal mode on emacs
+  (evil-define-key 'normal org-mode-map (kbd "<tab>") #'org-cycle)
 
 
+  (global-display-line-numbers-mode)
+
+  (use-package general
+    :config
+    (general-evil-setup t)
+    (defconst my-leader "SPC")
+    (general-create-definer my-leader-def
+      :prefix my-leader)
+    (general-override-mode) ;; https://github.com/noctuid/general.el/issues/99#issuecomment-360914335
+    ;; doomesque hotkeys using spacebar as prefix
+    (my-leader-def
+      :states '(motion normal visual)
+      :keymaps 'override ;; https://github.com/noctuid/general.el/issues/99#issuecomment-360914335
+
+      ;; map universal argument to SPC-u
+      "u" '(universal-argument :which-key "Universal argument")
+      ";" '(eval-region :which-key "eval-region")
+      "SPC" '(projectile-find-file :which-key "Projectile find file")
+      "C-SPC" '(projectile-find-file-other-frame :which-key "Projectile find file (new frame)")
+      "S-SPC" '(projectile-find-file-other-frame :which-key "Projectile find file (new frame)")
+      ">" '(find-file-other-frame :which-key "Find file (new frame)")
+      ;":" '(execute-extended-command :which-key "M-x")
+      "x" '(open-scratch-buffer :which-key "Open scratch buffer")
+      "d" '(dired-jump :which-key "dired-jump")
+      "/" '(+consult/ripgrep :which-key "+consult/ripgrep")
+      "?" '(consult-ripgrep :which-key "consult-ripgrep")
+      ;"[" '(+tab-bar/switch-to-prev-tab :which-key "+tab-bar/switch-to-prev-tab")
+      ;"]" '(+tab-bar/switch-to-next-tab :which-key "+tab-bar/switch-to-next-tab")
+      "v" '(vterm-toggle :which-key "+term/here")
+
+      ;; editor
+      "e" '(:ignore t :which-key "Editor")
+      "eu" '(vundo :which-key "vundo")
+      "ev" '(vundo :which-key "vundo")
+      "er" '(query-replace :which-key "query-replace")
+      ;"ec" '(consult-theme :which-key "consult-theme")
+      "ep" '(point-to-register :which-key "point-to-register")
+      "es" '(consult-register-store :which-key "consult-register-store")
+      "ej" '(jump-to-register :which-key "jump-to-register")
+      "ef" '(:ignore t :which-key "Fold")
+      "efh" '(hs-hide-block :which-key "hs-hide-block")
+      "efs" '(hs-show-block :which-key "hs-show-block")
+      "efa" '(hs-show-all :which-key "hs-show-all")
+
+      ;; consult
+      "c" '(:ignore t :which-key "consult")
+      ;"cf" '(consult-flycheck :which-key "consult-flycheck")
+      "cf" '(consult-flymake :which-key "consult-flymake")
+
+      ;; file
+      "f" '(:ignore t :which-key "File")
+      "ff" '(find-file :which-key "find-file")
+      "fr" '(recentf-open :which-key "recentf-open")
+
+      ;; buffer
+      ;"TAB" '(switch-to-prev-buffer :which-key "Prev buffer")
+      "b" '(:ignore t :which-key "Buffer")
+      "bb" '(consult-buffer :which-key "consult-buffer")
+      "b[" '(previous-buffer :which-key "Previous buffer")
+      "b]" '(next-buffer :which-key "Next buffer")
+      "bd" '(kill-current-buffer :which-key "Kill buffer")
+      "bk" '(kill-current-buffer :which-key "Kill buffer")
+      "bl" '(evil-switch-to-windows-last-buffer :which-key "Switch to last buffer")
+      "br" '(revert-buffer-no-confirm :which-key "Revert buffer")
+      "bK" '(kill-all-buffers :which-key "Kill all buffers")
+
+      ;; open
+      "o" '(:ignore t :which-key "Open")
+     "oc" '(open-init-file :which-key "Open init.el")
+
+      ;; project
+      "p" '(:ignore t :which-key "Project")
+      "pp" '(projectile-switch-project :which-key "Switch Project")
+      "po" '(projectile-find-other-file :which-key "projectile-find-other-file")
+
+      ;; help
+      "h" '(:ignore t :which-key "Help")
+      "hf" '(helpful-callable :which-key "describe-function")
+      "hk" '(helpful-key :which-key "describe-key")
+      "hv" '(helpful-variable :which-key "describe-variable")
+      "ho" '(helpful-symbol :which-key "describe-symbol")
+      "hm" '(describe-mode :which-key "describe-mode")
+      "hF" '(describe-face :which-key "describe-face")
+      "hw" '(where-is :which-key "where-is")
+      "h." '(display-local-help :which-key "display-local-help")
+
+      ;; zoom
+      ;; the hydra is nice but the rest is kind of janky, need to play around with this more
+      "=" '(text-scale-increase :which-key "text-scale-increase")
+      "-" '(text-scale-decrease :which-key "text-scale-decrease")
+      "z" '(:ignore t :which-key "zoom")
+      "z=" '(zoom-in :which-key "zoom-in")
+      "z-" '(zoom-out :which-key "zoom-out")
+      "zz" '(hydra-zoom/body :which-key "hydra-zoom")
+
+      ;; window
+      "w" '(:ignore t :which-key "Window")
+      "wd" '(evil-window-delete :which-key "Delete Window ")
+
+      ;; toggles
+      "t" '(:ignore t :which-key "Toggles")
+      "ta" '(corfu-mode :which-key "corfu-mode") ;; 'a' for autocomplete
+      "ts" '(flyspell-mode :which-key "flyspell-mode")
+      "tf" '(flyspell-mode :which-key "flyspell-mode")
+      ;"tc" '(flycheck-mode :which-key "flycheck-mode")
+      "tc" '(flymake-mode :which-key "flymake-mode")
+      "tm" '(minimap-mode :which-key "minimap-mode")
+      "tg" '(evil-goggles-mode :which-key "evil-goggles")
+      "tI" '(toggle-indent-style :which-key "Indent style")
+      "tv" '(visual-line-mode :which-key "visual-line-mode")
+
+      ;; org
+      "o" '(:ignore t :which-key "Org")
+      "oA" '(org-agenda :which-key "org-agenda")
+
+      ;; notes/org
+      "n" '(:ignore t :which-key "Notes")
+      "nf" '(org-roam-node-find :which-key "find-node")
+      "ni" '(org-roam-node-insert :which-key "insert-node")
+      "nt" '(org-roam-dailies-goto-today :which-key "org-roam-dailies-goto-today")
+      "n/" '(+consult/org-roam-ripgrep :which-key "+consult/org-roam-ripgrep")
+      "na" '(org-agenda :which-key "org-agenda")
+
+      ;; narrow
+      "N" '(:ignore t :which-key "Narrow")
+      "Nr" '(narrow-to-region :which-key "narrow-to-region")
+      "Nw" '(widen :which-key "widen")))
 
 
 
-    ;; tabs
-    ;; "TAB" '(:ignore t :which-key "Tabs")
-    ;; "TAB TAB" '(tab-bar-switch-to-tab :which-key "tab-bar-switch-to-tab")
-    ;; "TAB [" '(+tab-bar/switch-to-prev-tab :which-key "+tab-bar/switch-to-prev-tab")
-    ;; "TAB ]" '(+tab-bar/switch-to-next-tab :which-key "+tab-bar/switch-to-next-tab")
-    ;; "TAB n" '(+tab-bar/add-new :which-key "+tab-bar/add-new")
-    ;; "TAB k" '(+tab-bar/close-tab :which-key "+tab-bar/close-tab")
-    ;; "TAB d" '(+tab-bar/close-tab :which-key "+tab-bar/close-tab")
-    ;; "TAB K" '(+tab-bar/close-all-tabs-except-current :which-key "+tab-bar/close-all-tabs-except-current")
-    ;; "TAB r" '(tab-rename :which-key "tab-rename")))
+
+
+      ;; tabs
+      ;; "TAB" '(:ignore t :which-key "Tabs")
+      ;; "TAB TAB" '(tab-bar-switch-to-tab :which-key "tab-bar-switch-to-tab")
+      ;; "TAB [" '(+tab-bar/switch-to-prev-tab :which-key "+tab-bar/switch-to-prev-tab")
+      ;; "TAB ]" '(+tab-bar/switch-to-next-tab :which-key "+tab-bar/switch-to-next-tab")
+      ;; "TAB n" '(+tab-bar/add-new :which-key "+tab-bar/add-new")
+      ;; "TAB k" '(+tab-bar/close-tab :which-key "+tab-bar/close-tab")
+      ;; "TAB d" '(+tab-bar/close-tab :which-key "+tab-bar/close-tab")
+      ;; "TAB K" '(+tab-bar/close-all-tabs-except-current :which-key "+tab-bar/close-all-tabs-except-current")
+      ;; "TAB r" '(tab-rename :which-key "tab-rename")))
 
 
 #+end_src
-
-
 ** MACOS Scrolling
 #+begin_src emacs-lisp
 (unless (package-installed-p 'ultra-scroll-mac)

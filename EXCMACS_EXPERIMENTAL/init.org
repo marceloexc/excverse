@@ -93,7 +93,7 @@
   ;; load it
   (load-file (concat user-emacs-directory "init.el"))
   ;; finally byte-compile it
-  (byte-compile-file (concat user-emacs-directory "init.el"))
+  ;;(byte-compile-file (concat user-emacs-directory "init.el"))
 
   #+end_src
 
@@ -137,19 +137,15 @@
   =org=-document after changes.
 
   #+begin_src emacs-lisp
+    (defun tangle-init ()
+      "If the current buffer is init.org, the code-blocks are tangled into an .el file."
+      (when (equal (buffer-file-name)
+                   (expand-file-name (concat user-emacs-directory "init.org")))
+        ;; Avoid running hooks when tangling.
+        (let ((prog-mode-hook nil))
+          (org-babel-tangle))))
 
-  (defun tangle-init ()
-    "If the current buffer is init.org the code-blocks are
-  tangled, and the tangled file is compiled."
-    (when (equal (buffer-file-name)
-                 (expand-file-name (concat user-emacs-directory "init.org")))
-      ;; Avoid running hooks when tangling.
-      (let ((prog-mode-hook nil))
-        (org-babel-tangle)
-        (byte-compile-file (concat user-emacs-directory "init.el")))))
-
-  (add-hook 'after-save-hook 'tangle-init)
-
+    (add-hook 'after-save-hook 'tangle-init)
   #+end_src
 
   I'd like to keep a few settings private, so we load a =private.el= if it
@@ -176,10 +172,12 @@
    number, and restore the default value after initialization.
 
    #+begin_src emacs-lisp :tangle early-init.el
-   (setq gc-cons-threshold most-positive-fixnum)
-   (add-hook 'after-init-hook
-             (lambda ()
-               (setq gc-cons-threshold (* 1024 1024 20))))
+     (setq gc-cons-threshold most-positive-fixnum)
+     (add-hook 'after-init-hook
+               (lambda ()
+                 (setq gc-cons-threshold (* 1024 1024 20))))
+
+
    #+end_src
    
 ** Packages
@@ -1149,6 +1147,7 @@ Then use general...
 
 
   (use-package general
+    :no-byte-compile t
     :config
     (general-evil-setup t)
     (map
@@ -1246,15 +1245,24 @@ Then use general...
       "ts" '(flyspell-mode :which-key "flyspell-mode")
       "tf" '(treemacs :which-key "Treemacs Sidebar")
       ;"tc" '(flycheck-mode :which-key "flycheck-mode")
-      "tc" '(flymake-mode :which-key "flymake-mode")
+      "tc" '(centaur-tabs-mode :which-key "Toggle Centaur Tabs")
       "tm" '(minimap-mode :which-key "minimap-mode")
       "tg" '(evil-goggles-mode :which-key "evil-goggles")
       "tI" '(toggle-indent-style :which-key "Indent style")
       "tv" '(visual-line-mode :which-key "visual-line-mode")
+      "ti" '(org-toggle-inline-images :which-key "Toggle Inline Images")
+      "tm" '(ultra-scroll-mac-mode :which-key "Toggle Ultra Scroll Mac")
 
       ;; org
       "o" '(:ignore t :which-key "Org")
       "oA" '(org-agenda :which-key "org-agenda")
+
+
+      ;; insert
+      "i" (:ignore t :which-key "Insert")
+      "il" (org-insert-link :which-key "Insert Org Link")
+      "is" (org-insert-structure-template :which-key "Insert Org Structure Template")
+	
 
       ;; notes/org
       "n" '(:ignore t :which-key "Notes")
@@ -1272,7 +1280,7 @@ Then use general...
     (general-override-mode) ;; https://github.com/noctuid/general.el/issues/99#issuecomment-360914335
     (general-create-definer map
       :prefix "SPC")
-  
+
 
 
 

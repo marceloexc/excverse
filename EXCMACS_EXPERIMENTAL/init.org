@@ -5,28 +5,15 @@
 
 * TODO What to do next
 
-  - [ ] Change font for modeline ONLY (i really dont want monospace everywhere)
-
-  - [ ] configure auto dark/light for ef themes 
-  - [ ] Have indents properly configured in org mode (sometimes they just keep unindenting)
-
   - [ ] Move over my entire mappings to the ~Key Bindings~ section
-
-  - [ ] Whenever I kill emacs, it does NOT ask me to save all unsaved buffers
-
-  - Find out what cmd+f leads to (i think ifsearch? or something like that)i
-
-  - [ ] Have to kill org mode in order to do org-todo
-
-  - [ ] Disable evil bindings (h and l, j and k, dd for normal mode and
-    visual mode all together, etc..)
 
   - [X] [[https://github.com/minad/org-modern/issues/129][Org Modern replaces org superstar????]] Why?? I really dont like
     the default bullets of ~Org-modern~
 ** [ ] Global line numbers
 ** Automatically switching focus from buffers whenever thye appear
 ** Whenever I do org-export on an org file with src blocks, they dont get syntax highlighting 
-
+** TODO Look at svg-tag-mode
+** TODO Sometimes general will break for no fucking reason
 * About
 
   This is an Emacs configuration file written in [[http://orgmode.org][Org mode]]. It is an attempt to
@@ -223,7 +210,7 @@
           ("MELPA Stable" . 0)))
 
   #+end_src
- 
+  
 * Sane defauilts
 
   These are what /I/ consider to be saner defaults.
@@ -339,6 +326,8 @@ MarceloEXC talking here: I actually have a ~CUA~-ish type of setup going on in
 terms of normal keybindings.
 
 #+begin_src emacs-lisp
+
+  (when (eq system-type 'darwin)
   (setq mac-command-key-is-meta nil ;we want it to be SUPER
       mac-command-modifier 'super ;⌘=super-key (but can't use s-SPACE,TAB)
       mac-right-command-modifier 'meta ; meta-f/b are hard to reach otherwise
@@ -377,7 +366,7 @@ terms of normal keybindings.
            ("s-|" . mac-toggle-tab-group-overview)
            ("s-M-t" . mac-move-tab-to-new-frame)
            ("S-s-M-<right>" . mac-move-tab-right)
-           ("S-s-M-<left>" . mac-move-tab-left))
+           ("S-s-M-<left>" . mac-move-tab-left)))
 #+end_src
 
 And I will a single ESC key to execute ~keyboard-quit~ instead of ESC ESC ESC
@@ -493,22 +482,24 @@ Now add the handler that will automatically switch between dark and light when t
 
    #+begin_src emacs-lisp
 
-(defun my/mac-handle-application-effective-appearance-change (_event)
-  (interactive "e")
-  (let ((appearance (plist-get (mac-application-state) :appearance)))
-    (cond ((equal appearance "NSAppearanceNameAqua")
-           (load-theme light-mode-theme t))
-          ((equal appearance "NSAppearanceNameDarkAqua")
-           (load-theme dark-mode-theme t)))))
 
-;; Key mapping definition
-(define-key mac-apple-event-map [application-kvo effectiveAppearance]
-  'my/mac-handle-application-effective-appearance-change)
+     (when (eq system-type 'darwin)
+     (defun my/mac-handle-application-effective-appearance-change (_event)
+            (interactive "e")
+            (let ((appearance (plist-get (mac-application-state) :appearance)))
+              (cond ((equal appearance "NSAppearanceNameAqua")
+                     (load-theme light-mode-theme t))
+                    ((equal appearance "NSAppearanceNameDarkAqua")
+                     (load-theme dark-mode-theme t)))))
 
-;; Call the function after init to set the theme at startup
-(add-hook 'after-init-hook
-          (lambda ()
-            (my/mac-handle-application-effective-appearance-change nil)))
+          ;; Key mapping definition
+          (define-key mac-apple-event-map [application-kvo effectiveAppearance]
+            'my/mac-handle-application-effective-appearance-change)
+
+          ;; Call the function after init to set the theme at startup
+          (add-hook 'after-init-hook
+                    (lambda ()
+                      (my/mac-handle-application-effective-appearance-change nil))))
 
 
    #+end_src    
@@ -521,7 +512,10 @@ Now add the handler that will automatically switch between dark and light when t
    My default monospace font is [[https://github.com/adobe-fonts/source-code-pro][Source Code Pro]]:
 
    #+begin_src emacs-lisp
-     (set-face-attribute 'default nil :font "JetBrains Mono-15")
+
+
+   (when (member "JetBrains Mono" (font-family-list))
+     (set-face-attribute 'default nil :font "JetBrains Mono-15"))
    #+end_src
    
 ** Centering with Olivetti
@@ -953,6 +947,27 @@ We will use Denote for all of our notes
   :ensure t
   :init)
 #+end_src
+
+And install ~htmlize~ for exporting ORG to HTML and having our code blocks have syntax highlighting
+
+#+begin_src emacs-lisp
+  (use-package htmlize
+  :ensure t)
+#+end_src
+
+Use ~org-download~ for drag and drop images
+
+#+begin_src emacs-lisp
+  (use-package org-download
+  :ensure t)
+#+end_src
+
+and ~org-ros~ for quick screenshots
+
+#+begin_src emacs-lisp
+  (use-package org-ros
+    :ensure t)
+#+end_src
 ** Latex
 We set our default program for latex
 
@@ -1117,22 +1132,26 @@ Use this for all my keybindings:
 
 #+end_src
 
+If we're on mac, then use our own CUA keys...
+
+TODO <insert here>
+
+Otherwise, enable CUA on linux
 
 #+begin_src emacs-lisp
+  (when (eq system-type 'gnu/linux)
+  (cua-mode t))
+#+end_src
 
-  ;;ENABLE CUA !!!!!
+Then use general...
 
+#+begin_src emacs-lisp
 
 
   (use-package general
     :config
     (general-evil-setup t)
-    (defconst my-leader "SPC")
-    (general-create-definer my-leader-def
-      :prefix my-leader)
-    (general-override-mode) ;; https://github.com/noctuid/general.el/issues/99#issuecomment-360914335
-    ;; doomesque hotkeys using spacebar as prefix
-    (my-leader-def
+    (map
       :states '(motion normal visual)
       :keymaps 'override ;; https://github.com/noctuid/general.el/issues/99#issuecomment-360914335
 
@@ -1250,6 +1269,10 @@ Use this for all my keybindings:
       "Nr" '(narrow-to-region :which-key "narrow-to-region")
       "Nw" '(widen :which-key "widen")))
 
+    (general-override-mode) ;; https://github.com/noctuid/general.el/issues/99#issuecomment-360914335
+    (general-create-definer map
+      :prefix "SPC")
+  
 
 
 
@@ -1291,47 +1314,32 @@ Disable evil mode on all read only buffers
 Fixing macos scrolling....
 
 #+begin_src emacs-lisp
-  (unless (package-installed-p 'ultra-scroll-mac)
-    (package-vc-install '(ultra-scroll-mac :vc-backend Git :url "https://github.com/jdtsmith/ultra-scroll-mac")))
+    (unless (package-installed-p 'ultra-scroll-mac)
+      (package-vc-install '(ultra-scroll-mac :vc-backend Git :url "https://github.com/jdtsmith/ultra-scroll-mac")))
 
-  (use-package ultra-scroll-mac
-    :if (eq window-system 'mac)
-    ;:load-path "~/code/emacs/ultra-scroll-mac" ; if you git clone'd instead of package-vc-install
-    :init
-    (setq scroll-conservatively 101 ; important!
-          scroll-margin 0)
-    :config
-    (ultra-scroll-mac-mode 1))
+    (use-package ultra-scroll-mac
+      :if (eq window-system 'mac)
+      ;:load-path "~/code/emacs/ultra-scroll-mac" ; if you git clone'd instead of package-vc-install
+      :init
+      (setq scroll-conservatively 101 ; important!
+            scroll-margin 0)
+      :config
+      (ultra-scroll-mac-mode 1))
 
-  (defvar minibuffer-ultra-scroll-mac-mode--orig nil
-  "Stores the original value of `ultra-scroll-mac-mode'.")
+    (defvar minibuffer-ultra-scroll-mac-mode--orig nil
+    "Stores the original value of `ultra-scroll-mac-mode'.")
 
-(define-minor-mode minibuffer-ultra-scroll-mac-mode
-  "Toggle `ultra-scroll-mac-mode' only in minibuffers."
-  :init-value nil
-  :global t
-  (if minibuffer-ultra-scroll-mac-mode
-      (setq minibuffer-ultra-scroll-mac-mode--orig ultra-scroll-mac-mode
-            ultra-scroll-mac-mode nil)
-    (setq ultra-scroll-mac-mode minibuffer-ultra-scroll-mac-mode--orig)))
+  (define-minor-mode minibuffer-ultra-scroll-mac-mode
+    "Toggle `ultra-scroll-mac-mode' only in minibuffers."
+    :init-value nil
+    :global t
+    (if minibuffer-ultra-scroll-mac-mode
+        (setq minibuffer-ultra-scroll-mac-mode--orig ultra-scroll-mac-mode
+              ultra-scroll-mac-mode nil)
+      (setq ultra-scroll-mac-mode minibuffer-ultra-scroll-mac-mode--orig)))
 
-(add-hook 'minibuffer-setup-hook #'minibuffer-ultra-scroll-mac-mode)
-(add-hook 'minibuffer-exit-hook (lambda () (minibuffer-ultra-scroll-mac-mode -1)))
+  (add-hook 'minibuffer-setup-hook #'minibuffer-ultra-scroll-mac-mode)
+  (add-hook 'minibuffer-exit-hook (lambda () (minibuffer-ultra-scroll-mac-mode -1)))
 
 #+end_src
 
-
-* Screenshots????
-
-#+begin_src emacs-lisp
-  (defun screenshot-svg ()
-  "Save a screenshot of the current frame as an SVG image.
-Saves to a temp file and puts the filename in the kill ring."
-  (interactive)
-  (let* ((filename (make-temp-file "Emacs" nil ".svg"))
-         (data (x-export-frames nil 'svg)))
-    (with-temp-file filename
-      (insert data))
-    (kill-new filename)
-    (message filename)))
-#+end_src

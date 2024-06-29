@@ -9,11 +9,15 @@
 
   - [X] [[https://github.com/minad/org-modern/issues/129][Org Modern replaces org superstar????]] Why?? I really dont like
     the default bullets of ~Org-modern~
-** [ ] Global line numbers
 ** Automatically switching focus from buffers whenever thye appear
-** Whenever I do org-export on an org file with src blocks, they dont get syntax highlighting 
 ** TODO Look at svg-tag-mode
-** TODO Sometimes general will break for no fucking reason
+** DONE Sometimes general will break for no fucking reason
+** TODO Fix Org-todo - sometimes is very picky about what i can and can't do (cant set a TODO as DONE if there is a folded TODO as child)
+
+[[https://github.com/james-stoup/org-mode-better-defaults][Org Mode Better Defaults]]
+** TODO Org Agenda + Denote
+
+[[https://baty.blog/2022/keeping-my-org-agenda-updated/]]
 * About
 
   This is an Emacs configuration file written in [[http://orgmode.org][Org mode]]. It is an attempt to
@@ -228,21 +232,22 @@
 
   #+begin_src emacs-lisp
 
-  (setq auto-revert-interval 1            ; Refresh buffers fast
-        default-input-method "TeX"        ; Use TeX when toggling input method
-        echo-keystrokes 0.1               ; Show keystrokes asap
-        frame-inhibit-implied-resize 1    ; Don't resize frame implicitly
-        inhibit-startup-screen t          ; No splash screen please
-        initial-scratch-message nil       ; Clean scratch buffer
-        recentf-max-saved-items 10000     ; Show more recent files
-        ring-bell-function 'ignore        ; Quiet
-        scroll-margin 1                   ; Space between cursor and top/bottom
-        sentence-end-double-space nil     ; No double space
-        custom-file                       ; Customizations in a separate file
-        (concat user-emacs-directory "custom.el"))
-  ;; Some mac-bindings interfere with Emacs bindings.
-  (when (boundp 'mac-pass-command-to-system)
-    (setq mac-pass-command-to-system nil))
+    (setq auto-revert-interval 1            ; Refresh buffers fast
+          default-input-method "TeX"        ; Use TeX when toggling input method
+          echo-keystrokes 0.1               ; Show keystrokes asap
+          frame-inhibit-implied-resize 1    ; Don't resize frame implicitly
+          inhibit-startup-screen t          ; No splash screen please
+          initial-scratch-message nil       ; Clean scratch buffer
+          recentf-max-saved-items 10000     ; Show more recent files
+          ring-bell-function 'ignore        ; Quiet
+          scroll-margin 1                   ; Space between cursor and top/bottom
+          sentence-end-double-space nil     ; No double space
+          delete-selection-mode 1
+          custom-file                       ; Customizations in a separate file
+          (concat user-emacs-directory "custom.el"))
+    ;; Some mac-bindings interfere with Emacs bindings.
+    (when (boundp 'mac-pass-command-to-system)
+      (setq mac-pass-command-to-system nil))
 
   #+end_src
 
@@ -445,11 +450,10 @@ I also hate the way EMACS treats native scrollbars...
 
 #+begin_src emacs-lisp
 
-(use-package mlscroll
-  :ensure t
-  :config
-  (setq mlscroll-shortfun-min-width 11)
-  (mlscroll-mode 1))
+  (use-package mlscroll
+    :ensure t
+    :config
+    (mlscroll-mode 1))
 #+end_src
 
 And disable the ones that come with the GUI
@@ -838,20 +842,19 @@ Install ~undo-tree~
                           (visual-line-mode 1)))
       :config
        ;; enable syntax highlighting in code blocks
-       (setq org-src-fontify-natively t)
+      (setq org-src-fontify-natively t
+            org-hide-leading-stars t
+            org-hide-emphasis-markers t
+            org-pretty-entities t
+            org-startup-folded t
+            org-src-preserve-indentation nil)
        ;; everything else
 
        (setq org-indirect-buffer-display 'current-window
-                  org-enforce-todo-dependencies t
+                  org-enforce-todo-dependencies nil
                   org-fontify-done-headline t
                   org-fontify-quote-and-verse-blocks t
                   org-fontify-whole-heading-line t
-                  org-image-actual-width nil
-                  org-imenu-depth 6
-                  org-priority-faces
-                  '((?A . error)
-                    (?B . warning)
-                    (?C . success))
                   org-todo-keywords
                   '((sequence
                      "TODO(t)"  ; A task that needs doing & is ready to do
@@ -875,15 +878,7 @@ Install ~undo-tree~
                      "OKAY(o)"
                      "YES(y)"
                      "NO(n)"))
-                  org-todo-keyword-faces
-                  '(("[-]"  . +org-todo-active)
-                    ("STRT" . +org-todo-active)
-                    ("[?]"  . +org-todo-onhold)
-                    ("WAIT" . +org-todo-onhold)
-                    ("HOLD" . +org-todo-onhold)
-                    ("PROJ" . +org-todo-project)
-                    ("NO"   . +org-todo-cancel)
-                    ("KILL" . +org-todo-cancel))))
+                  ))
 
       (custom-theme-set-faces
            'user
@@ -1149,9 +1144,19 @@ Then use general...
 
 
   (use-package general
-  	:after evil
+  :after evil
+  :demand t
     :config
-    (general-evil-setup t)
+    (general-evil-setup t))
+
+
+  (general-override-mode) ;; https://github.com/noctuid/general.el/issues/99#issuecomment-360914335i
+
+
+   (general-create-definer map
+      :prefix "SPC")
+
+
     (map
       :states '(motion normal visual)
       :keymaps 'override ;; https://github.com/noctuid/general.el/issues/99#issuecomment-360914335
@@ -1176,10 +1181,7 @@ Then use general...
       "e" '(:ignore t :which-key "Editor")
       "eu" '(vundo :which-key "vundo")
       "ev" '(vundo :which-key "vundo")
-      "er" '(query-replace :which-key "query-replace")
-      ;"ec" '(consult-theme :which-key "consult-theme")
-      "ep" '(point-to-register :which-key "point-to-register")
-      "es" '(consult-register-store :which-key "consult-register-store")
+      "es" '(org-edit-src-code :which-key "Edit Org source code")
       "ej" '(jump-to-register :which-key "jump-to-register")
       "ef" '(:ignore t :which-key "Fold")
       "efh" '(hs-hide-block :which-key "hs-hide-block")
@@ -1207,10 +1209,6 @@ Then use general...
       "bl" '(evil-switch-to-windows-last-buffer :which-key "Switch to last buffer")
       "br" '(revert-buffer-no-confirm :which-key "Revert buffer")
       "bK" '(kill-all-buffers :which-key "Kill all buffers")
-
-      ;; open
-      "o" '(:ignore t :which-key "Open")
-     "oc" '(open-init-file :which-key "Open init.el")
 
       ;; project
       "p" '(:ignore t :which-key "Project")
@@ -1249,8 +1247,9 @@ Then use general...
       ;"tc" '(flycheck-mode :which-key "flycheck-mode")
       "tc" '(centaur-tabs-mode :which-key "Toggle Centaur Tabs")
       "tm" '(minimap-mode :which-key "minimap-mode")
+      "tn" '(display-line-numbers-mode :which-key "Toggle Line Numbers") 
       "tg" '(evil-goggles-mode :which-key "evil-goggles")
-      "tI" '(toggle-indent-style :which-key "Indent style")
+      "tI" '(org-indent-mode :which-key "Toggle Org Indent Mode")
       "tv" '(visual-line-mode :which-key "visual-line-mode")
       "ti" '(org-toggle-inline-images :which-key "Toggle Inline Images")
       "tm" '(ultra-scroll-mac-mode :which-key "Toggle Ultra Scroll Mac")
@@ -1258,13 +1257,16 @@ Then use general...
       ;; org
       "o" '(:ignore t :which-key "Org")
       "oA" '(org-agenda :which-key "org-agenda")
+       "oc" '(open-init-file :which-key "Open init.el")
+       "oe" '(org-export-dispatch :which-key "Export Org File as...")
+      "ot" '(org-todo :which-key "Org Todo Menu")
 
 
       ;; insert
-      "i" (:ignore t :which-key "Insert")
-      "il" (org-insert-link :which-key "Insert Org Link")
-      "is" (org-insert-structure-template :which-key "Insert Org Structure Template")
-	
+      "i" '(:ignore t :which-key "Insert")
+      "il" '(org-insert-link :which-key "Insert Org Link")
+      "is" '(org-insert-structure-template :which-key "Insert Org Structure Template")
+
 
       ;; notes/org
       "n" '(:ignore t :which-key "Notes")
@@ -1277,26 +1279,8 @@ Then use general...
       ;; narrow
        "N" '(:ignore t :which-key "Narrow")
       "Nr" '(narrow-to-region :which-key "narrow-to-region")
-      "Nw" '(widen :which-key "widen")))
+      "Nw" '(widen :which-key "widen"))
 
-    (general-override-mode) ;; https://github.com/noctuid/general.el/issues/99#issuecomment-360914335
-    (general-create-definer map
-      :prefix "SPC")
-
-
-
-
-
-      ;; tabs
-      ;; "TAB" '(:ignore t :which-key "Tabs")
-      ;; "TAB TAB" '(tab-bar-switch-to-tab :which-key "tab-bar-switch-to-tab")
-      ;; "TAB [" '(+tab-bar/switch-to-prev-tab :which-key "+tab-bar/switch-to-prev-tab")
-      ;; "TAB ]" '(+tab-bar/switch-to-next-tab :which-key "+tab-bar/switch-to-next-tab")
-      ;; "TAB n" '(+tab-bar/add-new :which-key "+tab-bar/add-new")
-      ;; "TAB k" '(+tab-bar/close-tab :which-key "+tab-bar/close-tab")
-      ;; "TAB d" '(+tab-bar/close-tab :which-key "+tab-bar/close-tab")
-      ;; "TAB K" '(+tab-bar/close-all-tabs-except-current :which-key "+tab-bar/close-all-tabs-except-current")
-      ;; "TAB r" '(tab-rename :which-key "tab-rename")))
 
 
 #+end_src

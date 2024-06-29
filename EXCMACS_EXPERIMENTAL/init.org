@@ -93,7 +93,7 @@
   ;; load it
   (load-file (concat user-emacs-directory "init.el"))
   ;; finally byte-compile it
-  ;;(byte-compile-file (concat user-emacs-directory "init.el"))
+  (byte-compile-file (concat user-emacs-directory "init.el"))
 
   #+end_src
 
@@ -137,15 +137,17 @@
   =org=-document after changes.
 
   #+begin_src emacs-lisp
-    (defun tangle-init ()
-      "If the current buffer is init.org, the code-blocks are tangled into an .el file."
-      (when (equal (buffer-file-name)
-                   (expand-file-name (concat user-emacs-directory "init.org")))
-        ;; Avoid running hooks when tangling.
-        (let ((prog-mode-hook nil))
-          (org-babel-tangle))))
+  (defun tangle-init ()
+    "If the current buffer is init.org the code-blocks are
+  tangled, and the tangled file is compiled."
+    (when (equal (buffer-file-name)
+                 (expand-file-name (concat user-emacs-directory "init.org")))
+      ;; Avoid running hooks when tangling.
+      (let ((prog-mode-hook nil))
+        (org-babel-tangle)
+        (byte-compile-file (concat user-emacs-directory "init.el")))))
 
-    (add-hook 'after-save-hook 'tangle-init)
+  (add-hook 'after-save-hook 'tangle-init)
   #+end_src
 
   I'd like to keep a few settings private, so we load a =private.el= if it
@@ -1147,7 +1149,7 @@ Then use general...
 
 
   (use-package general
-    :no-byte-compile t
+  	:after evil
     :config
     (general-evil-setup t)
     (map

@@ -215,7 +215,7 @@
 
   #+end_src
   
-* Sane defauilts
+* Sane defaults
 
   These are what /I/ consider to be saner defaults.
 
@@ -373,6 +373,17 @@ terms of normal keybindings.
            ("S-s-M-<left>" . mac-move-tab-left)))
 #+end_src
 
+And then some equivalents for linux systems...
+
+#+begin_src emacs-lisp
+  (when (eq system-type 'gnu/linux)
+    (bind-keys ("C-s" . save-buffer)
+               ("C-v" . yank)
+               ("C-z" . undo-tree-undo)
+               ("C-w" . kill-buffer)
+               ("C-f" . +default/search-buffer)))
+#+end_src
+
 And I will a single ESC key to execute ~keyboard-quit~ instead of ESC ESC ESC
 
 #+begin_src emacs-lisp
@@ -525,8 +536,11 @@ Now add the handler that will automatically switch between dark and light when t
    #+begin_src emacs-lisp
 
 
-   (when (member "JetBrains Mono" (font-family-list))
-     (set-face-attribute 'default nil :font "JetBrains Mono-15"))
+     (when (member "JetBrains Mono" (font-family-list))
+       (when (eq system-type 'darwin)
+         (set-face-attribute 'default nil :font "JetBrains Mono-15"))
+       (when (eq system-type 'gnu/linux)
+         (set-face-attribute 'default nil :font "JetBrains Mono-11")))
    #+end_src
    
 ** Centering with Olivetti

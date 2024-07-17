@@ -242,7 +242,6 @@
           ring-bell-function 'ignore        ; Quiet
           scroll-margin 1                   ; Space between cursor and top/bottom
           sentence-end-double-space nil     ; No double space
-          delete-selection-mode 1
           custom-file                       ; Customizations in a separate file
           (concat user-emacs-directory "custom.el"))
     ;; Some mac-bindings interfere with Emacs bindings.
@@ -1303,6 +1302,12 @@ Disable evil mode on all read only buffers
 
 #+end_src
 
+Disable some annoyances...(like delete-selection-mode and context menu mode)
+
+#+begin_src emacs-lisp
+  (context-menu-mode 1)
+  (delete-selection-mode t)
+#+end_src
 
 
 Fixing macos scrolling....

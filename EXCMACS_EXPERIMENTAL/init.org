@@ -507,6 +507,14 @@ Now add the handler that will automatically switch between dark and light when t
 
    #+end_src    
 
+...or just do a regular theme when I'm on linux (its harder to detect light/dark mode changes
+
+#+begin_src emacs-lisp
+
+
+  (if (eq system-type 'gnu/linux)
+    (load-theme 'gruvbox-dark-hard t))
+#+end_src
 ** TODO Mode line
 ** Font
 

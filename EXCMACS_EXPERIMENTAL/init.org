@@ -514,17 +514,21 @@ Now add the handler that will automatically switch between dark and light when t
           (add-hook 'after-init-hook
                     (lambda ()
                       (my/mac-handle-application-effective-appearance-change nil))))
-
-
    #+end_src    
 
 ...or just do a regular theme when I'm on linux (its harder to detect light/dark mode changes
 
 #+begin_src emacs-lisp
-
-
   (if (eq system-type 'gnu/linux)
     (load-theme 'gruvbox-dark-hard t))
+#+end_src
+
+And solaire mode for better readability
+
+#+begin_src emacs-lisp
+  (use-package solaire-mode
+    :init
+    (solaire-global-mode +1))
 #+end_src
 ** TODO Mode line
 ** Font
@@ -701,6 +705,8 @@ Use ~ace-window~
 #+end_src
 
 * Completion UI
+
+** Basic Completion packages (vertico, marginalia, etc)
   #+begin_src emacs-lisp
 
   ;; VERTical Interactive COmpletion
@@ -738,11 +744,10 @@ Use ~ace-window~
   Finally, make minibuffers scrollable
 
   #+begin_src emacs-lisp
-
-    (setq minibuffer-scroll-window t)
+(setq minibuffer-scroll-window t)
   #+end_src
   
-** Completion
+
 
    #+begin_src emacs-lisp
 
@@ -1069,7 +1074,7 @@ We set our default program for latex
       (which-key-mode 1))
 
   #+end_src
-
+  
 * Bindings for built-ins
 
  #+begin_src emacs-lisp :tangle no

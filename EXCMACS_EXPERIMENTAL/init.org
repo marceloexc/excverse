@@ -394,10 +394,14 @@ And I will a single ESC key to execute ~keyboard-quit~ instead of ESC ESC ESC
 We will also disable compilation warnings since they get VERY annoying
 
 #+begin_src emacs-lisp
-
 (setq native-comp-async-report-warnings-errors nil)
 #+end_src
 
+and finally, enable mouse support when using emacs in the terminal (-nw flag)
+
+#+begin_src emacs-lisp
+(xterm-mouse-mode)
+#+end_src
 * Visual
   Here im adding a way to have my popup winodws controlled once and for al
   #+begin_src emacs-lisp

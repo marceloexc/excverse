@@ -9,9 +9,7 @@
 
   - [X] [[https://github.com/minad/org-modern/issues/129][Org Modern replaces org superstar????]] Why?? I really dont like
     the default bullets of ~Org-modern~
-** Automatically switching focus from buffers whenever thye appear
 ** TODO Look at svg-tag-mode
-** DONE Sometimes general will break for no fucking reason
 ** TODO Fix Org-todo - sometimes is very picky about what i can and can't do (cant set a TODO as DONE if there is a folded TODO as child)
 
 [[https://github.com/james-stoup/org-mode-better-defaults][Org Mode Better Defaults]]
@@ -628,8 +626,23 @@ Installing treemacs
     :ensure t
     :config (treemacs-set-scope-type 'Tabs))
 #+end_src
+** More obvious EVIL modes
 
-* macOS specific
+This will tell me what evil mode I'm in using the title bar:
+
+#+begin_src emacs-lisp
+
+  (defun update-evil-mode-in-frame-title ()
+    "Update the frame title to include the current Evil mode."
+    (let* ((evil-mode-string (cond ((evil-insert-state-p) "INSERT")
+                                   ((evil-normal-state-p) "NORMAL")
+                                   (t "")))
+           (title (format "[%s] Emacs - %s" evil-mode-string (buffer-name) evil-mode-string )))
+      (setq frame-title-format title)))
+
+  (add-hook 'post-command-hook 'update-evil-mode-in-frame-title)
+#+end_src
+* macOS speocific
 
   The package [[https://github.com/purcell/exec-path-from-shell][exec-path-from-shell]] synchronizes environment variables from the
   shell to Emacs. This makes it a lot easier to deal with external programs on
@@ -873,7 +886,6 @@ Install ~undo-tree~
       :config
        ;; enable syntax highlighting in code blocks
       (setq org-src-fontify-natively t
-            org-hide-leading-stars t
             org-hide-emphasis-markers t
             org-pretty-entities t
             org-startup-folded t
@@ -921,16 +933,25 @@ Install ~undo-tree~
  Also use ~org-superstar~
 
 #+begin_src emacs-lisp
-(use-package org-superstar
-  :ensure t
-:after org
-  :hook (org-mode . org-superstar-mode)
-  :config
-  ;; Customize org-superstar-mode
-  (setq org-superstar-headline-bullets-list '("◉" "○" "✸" "✿"))
-  (setq org-superstar-item-bullet-alist '((?+ . ?•) (?- . ?•)))
-  ;; Enable org-superstar-mode automatically for org-mode
-  (add-hook 'org-mode-hook (lambda () (org-superstar-mode 1))))
+  (use-package org-superstar
+    :ensure t
+  :after org
+    :hook (org-mode . org-superstar-mode)
+    :config
+    ;; Customize org-superstar-mode
+    (setq org-superstar-headline-bullets-list '("◉" "○" "✸" "✿"))
+    (setq org-superstar-item-bullet-alist '((?+ . ?•) (?- . ?•)))
+
+    ;; fix to actually hide leading stars
+
+    (setq org-hide-leading-stars nil)
+    (setq org-superstar-leading-bullet ?\s)
+    (setq org-indent-mode-turns-on-hiding-stars nil)
+  
+    ;; Enable org-superstar-mode automatically for org-mode
+
+  
+    (add-hook 'org-mode-hook (lambda () (org-superstar-mode 1))))
 #+end_src
 
 Install ~org-toc~
@@ -949,9 +970,9 @@ content
 
 #+begin_src emacs-lisp
 
-(use-package org-appear
-	:ensure t
-	:hook (org-mode . org-appear-mode))
+  (use-package org-appear
+      :ensure t
+      :hook (org-mode . org-appear-mode))
 	
 #+end_src
 
@@ -992,6 +1013,37 @@ and ~org-ros~ for quick screenshots
 #+begin_src emacs-lisp
   (use-package org-ros
     :ensure t)
+#+end_src
+
+Create a function to scale down every single image in an org document
+
+#+begin_src emacs-lisp
+  (setq org-display-remote-inline-images 'download)
+  (setq org-image-actual-width 400)
+
+  (defun add-width-attributes-to-images-in-region (start end)
+    "Add #+attr_html: :width <user-input>px and #+attr_org: :width <user-input>px above all images in the selected region."
+    (interactive "r")
+    (if (use-region-p)
+        (let ((width (read-string "Enter desired image width in pixels: ")))
+          (when (string-match-p "^[0-9]+$" width)
+            (save-excursion
+              (narrow-to-region start end)
+              (goto-char (point-min))
+              (while (re-search-forward "\\[\\[\\(file:\\|http\\|https\\)?:?.*?\\(\\.png\\|\\.jpg\\|\\.jpeg\\|\\.gif\\|\\.svg\\)\\]\\(\\[.*?\\]\\)?\\]" nil t)
+                (save-excursion
+                  (goto-char (match-beginning 0))
+                  (let ((attrs-exist (save-excursion
+                                       (forward-line -2)
+                                       (looking-at "^[ \t]*#\\+attr_html: :width [0-9]+px\n[ \t]*#\\+attr_org: :width [0-9]+px$"))))
+                    (unless attrs-exist
+                      (let ((indentation (current-indentation)))
+                        (beginning-of-line)
+                        (insert (make-string indentation ?\s) (format "#+attr_html: :width %spx\n" width)
+                                (make-string indentation ?\s) (format "#+attr_org: :width %spx\n" width)))))))
+              (widen))
+            (message "Width attributes added to images in the selected region.")))
+      (message "No region selected. Please select a region first.")))
 #+end_src
 ** Latex
 We set our default program for latex

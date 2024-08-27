@@ -408,12 +408,6 @@ and finally, enable mouse support when using emacs in the terminal (-nw flag)
             :config
             (popwin-mode 1))
 
-        (use-package goggles
-          :hook ((prog-mode text-mode) . goggles-mode)
-          :config
-          (setq-default goggles-pulse t)) ;; set to nil to disable pulsing
-
-
       (use-package pulsar
     :ensure t
     :config
@@ -642,7 +636,7 @@ This will tell me what evil mode I'm in using the title bar:
 
   (add-hook 'post-command-hook 'update-evil-mode-in-frame-title)
 #+end_src
-* macOS speocific
+* macOS specific
 
   The package [[https://github.com/purcell/exec-path-from-shell][exec-path-from-shell]] synchronizes environment variables from the
   shell to Emacs. This makes it a lot easier to deal with external programs on
@@ -927,6 +921,10 @@ Install ~undo-tree~
            `(org-level-3 ((t (:size 17))))
            `(org-level-2 ((t (:height 1.05))))
            `(org-level-1 ((t (:height 1.1)))))
+
+    (custom-set-faces
+     '(org-meta-line ((t (:height 0.8))))
+     '(org-document-info-keyword ((t (:height 0.8)))))
   #+end_src
 
 
@@ -939,7 +937,7 @@ Install ~undo-tree~
     :hook (org-mode . org-superstar-mode)
     :config
     ;; Customize org-superstar-mode
-    (setq org-superstar-headline-bullets-list '("◉" "○" "✸" "✿"))
+    (setq org-superstar-headline-bullets-list '("◉" "○" "◇" "✿"))
     (setq org-superstar-item-bullet-alist '((?+ . ?•) (?- . ?•)))
 
     ;; fix to actually hide leading stars
@@ -1044,6 +1042,17 @@ Create a function to scale down every single image in an org document
               (widen))
             (message "Width attributes added to images in the selected region.")))
       (message "No region selected. Please select a region first.")))
+#+end_src
+
+Hiding keylines:
+
+#+begin_src emacs-lisp 
+  (defun my/org-hide-keywords ()
+    (save-excursion
+      (goto-char (point-min))
+      (while (re-search-forward "^#\\+\\(.*\\):" nil t)
+        (org-fold-region (line-beginning-position) (line-end-position) t))))
+
 #+end_src
 ** Latex
 We set our default program for latex

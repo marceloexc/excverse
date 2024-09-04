@@ -423,7 +423,10 @@ I also hate the way EMACS treats native scrollbars...
 
   (use-package mlscroll
     :ensure t
-    :config
+    :init
+    (setq mlscroll-width-chars 15)
+    (setq mlscroll-border 2)
+    :config 
     (mlscroll-mode 1))
 #+end_src
 
@@ -438,7 +441,7 @@ And disable the ones that come with the GUI
    #+begin_src emacs-lisp
      (when (member "JetBrains Mono" (font-family-list))
             (when (eq system-type 'darwin)
-              (set-face-attribute 'default nil :font "Berkeley Mono-14"))
+              (set-face-attribute 'default nil :font "Berkeley Mono-15"))
             (when (eq system-type 'gnu/linux)
               (set-face-attribute 'default nil :font "JetBrains Mono-11")))
    #+end_src
@@ -589,21 +592,22 @@ Dash board provides a nice welcome.
 Use centaur tabs for the tab bar
 
 #+begin_src emacs-lisp
-   (use-package centaur-tabs
-     :demand
-     :config
-     (centaur-tabs-mode t)
-     (setq centaur-tabs-height 16
-           centaur-tabs-set-bar 'under
-           centaur-tabs-show-navigation-buttons t
-           centaur-tabs-set-modified-marker t
-           centaur-tabs-set-bar 'under
-           centaur-tabs-show-count nil
-           centaur-tabs-set-icons t)
+  (use-package centaur-tabs
+    :demand
+    :config
+    (centaur-tabs-mode t)
+    (setq centaur-tabs-height 18
+          centaur-tabs-set-bar 'under
+          centaur-tabs-show-navigation-buttons t
+          centaur-tabs-set-modified-marker t
+          centaur-tabs-set-bar 'under
+          centaur-tabs-show-count nil
+          centaur-tabs-style "bar"
+          centaur-tabs-set-icons t)
 
-     :bind
-     ("C-<prior>" . centaur-tabs-backward)
-     ("C-<next>" . centaur-tabs-forward))
+    :bind
+    ("C-<prior>" . centaur-tabs-backward)
+    ("C-<next>" . centaur-tabs-forward))
 
 
 #+end_src
@@ -1067,8 +1071,9 @@ We set our default program for latex
 
 #+begin_src emacs-lisp
 
-  (use-package easy-hugo
-    :init)
+    (use-package easy-hugo
+      :init
+      (setq easy-hugo-server-flags "-D"))
 #+end_src
 * global-scale-mode
 
@@ -1235,7 +1240,12 @@ Then use general...
         "nh" '(org-html-export-as-html :which-key "Export Org file as HTML")
         "ns" '(org-edit-src-code :which-key "Edit Org source code")
         "nm" '(easy-hugo-menu :which-key "Open Easy Hugo Menu")
+        "nt" '(org-todo :which-key "Set TODO Keyword")
+        "nd" '(org-deadline :which-key "Set Org Deadline")
 
+        ;;r - restart mode only
+        "r" '(:ignore t :which-key "Restart Emacs")
+        "rr" '(restart-emacs :which-key "Confirm restart")
 
         ;;w for window
         "w" '(:ignores t :which-key "Window"))

@@ -2,7 +2,6 @@
 #+AUTHOR: Marcelo Mendez
 #+PROPERTY: header-args :tangle yes
 #+STARTUP: overview
-
 * TODO What to do next
 
   - [ ] Move over my entire mappings to the ~Key Bindings~ section
@@ -434,16 +433,71 @@ And disable the ones that come with the GUI
   (scroll-bar-mode 0)
   (tool-bar-mode 0)
 #+end_src
+** Font
+
+   #+begin_src emacs-lisp
+     (when (member "JetBrains Mono" (font-family-list))
+            (when (eq system-type 'darwin)
+              (set-face-attribute 'default nil :font "Berkeley Mono-14"))
+            (when (eq system-type 'gnu/linux)
+              (set-face-attribute 'default nil :font "JetBrains Mono-11")))
+   #+end_src
+
+#+begin_src emacs-lisp
+  (defun +my-set-custom-fonts ()
+    (when (eq system-type 'darwin)
+      ;; Mode line font settings
+      (set-face-attribute 'mode-line nil
+                          :family "SF Pro Text"
+                          :height 130
+                          :weight 'normal
+                          :box `(:line-width 7 :color ,(face-background 'mode-line) :style nil))
+
+      (set-face-attribute 'mode-line-inactive nil
+                          :family "SF Pro Text"
+                          :height 130
+                          :weight 'normal
+                          :box `(:line-width 7 :color ,(face-background 'mode-line-inactive) :style nil))
+
+      ;; Centaur tabs font settings
+      (set-face-attribute 'centaur-tabs-default nil
+                          :family "SF Pro Text"
+                          :height 130
+                          :weight 'normal)
+      (set-face-attribute 'centaur-tabs-selected nil
+                          :family "SF Pro Text"
+                          :height 130
+                          :weight 'normal)
+      (set-face-attribute 'centaur-tabs-unselected nil
+                          :family "SF Pro Text"
+                          :height 130
+                          :weight 'normal)
+      (set-face-attribute 'centaur-tabs-selected-modified nil
+                          :family "SF Pro Text"
+                          :height 130
+                          :weight 'normal)
+      (set-face-attribute 'centaur-tabs-unselected-modified nil
+                          :family "SF Pro Text"
+                          :height 130
+                          :weight 'normal)))
+#+end_src
+
+Sometimes, the modeline doenst keep its settings...
+#+begin_src emacs-lisp
+  ;;(add-hook 'window-configuration-change-hook '+my-set-custom-fonts)
+#+end_src
 
 ** TODO Theme
 
-Using ~ef-themes~
 #+begin_src emacs-lisp
-(use-package ef-themes)
-(use-package modus-themes)
-(use-package gruvbox-theme)
-(require 'ef-themes)
-(require 'modus-themes)
+  (use-package ef-themes)
+  (use-package modus-themes)
+  (use-package doom-themes
+    :ensure t
+    :init
+    (doom-themes-org-config))
+  (require 'ef-themes)
+  (require 'modus-themes)
 
 #+end_src
 
@@ -451,31 +505,30 @@ Variables for my dark and light theme
 
 #+begin_src emacs-lisp
 (defvar light-mode-theme 'modus-operandi-tinted)
-(defvar dark-mode-theme 'gruvbox-dark-hard)
+(defvar dark-mode-theme 'doom-peacock)
 #+end_src
 
 Now add the handler that will automatically switch between dark and light when the system theme changes
 
    #+begin_src emacs-lisp
-
-
      (when (eq system-type 'darwin)
-     (defun my/mac-handle-application-effective-appearance-change (_event)
-            (interactive "e")
-            (let ((appearance (plist-get (mac-application-state) :appearance)))
-              (cond ((equal appearance "NSAppearanceNameAqua")
-                     (load-theme light-mode-theme t))
-                    ((equal appearance "NSAppearanceNameDarkAqua")
-                     (load-theme dark-mode-theme t)))))
+          (defun my/mac-handle-application-effective-appearance-change (_event)
+                 (interactive "e")
+                 (let ((appearance (plist-get (mac-application-state) :appearance)))
+                   (cond ((equal appearance "NSAppearanceNameAqua")
+                          (load-theme light-mode-theme t))
+                         ((equal appearance "NSAppearanceNameDarkAqua")
+                          (load-theme dark-mode-theme t)))
+                   (+my-set-custom-fonts)))
 
-          ;; Key mapping definition
-          (define-key mac-apple-event-map [application-kvo effectiveAppearance]
-            'my/mac-handle-application-effective-appearance-change)
+               ;; Key mapping definition
+               (define-key mac-apple-event-map [application-kvo effectiveAppearance]
+                 'my/mac-handle-application-effective-appearance-change)
 
-          ;; Call the function after init to set the theme at startup
-          (add-hook 'after-init-hook
-                    (lambda ()
-                      (my/mac-handle-application-effective-appearance-change nil))))
+               ;; Call the function after init to set the theme at startup
+               (add-hook 'after-init-hook
+                         (lambda ()
+                           (my/mac-handle-application-effective-appearance-change nil))))
    #+end_src    
 
 ...or just do a regular theme when I'm on linux (its harder to detect light/dark mode changes
@@ -492,23 +545,6 @@ And solaire mode for better readability
     :init
     (solaire-global-mode +1))
 #+end_src
-** TODO Mode line
-** Font
-
-   I primarily use [[https://github.com/adobe-fonts][Adobe Fonts]]. 
-
-   My default monospace font is [[https://github.com/adobe-fonts/source-code-pro][Source Code Pro]]:
-
-   #+begin_src emacs-lisp
-
-
-     (when (member "JetBrains Mono" (font-family-list))
-       (when (eq system-type 'darwin)
-         (set-face-attribute 'default nil :font "JetBrains Mono-15"))
-       (when (eq system-type 'gnu/linux)
-         (set-face-attribute 'default nil :font "JetBrains Mono-11")))
-   #+end_src
-   
 ** Centering with Olivetti
 
    [[https://github.com/rnkn/olivetti][Olivetti]] is a package that simply centers the text of a buffer. It is very
@@ -739,7 +775,7 @@ Use ~ace-window~
 
   #+end_src
 
-** TODO Navigation and searching
+** Navigation and searching
 
    The package [[https://github.com/minad/consult][Consult]] improves navigation and searching.
 
@@ -1027,19 +1063,12 @@ We set our default program for latex
 
   #+end_src
 
-
-  
 ** Easy integration with hugo
 
 #+begin_src emacs-lisp
 
   (use-package easy-hugo
-    :init
-    (setq easy-hugo-basedir "~/Documents/Programming/marceloexc.com/marceloexc-hugo/"
-        easy-hugo-root "~/Documents/Programming/marceloexc.com/marceloexc-hugo/"
-        easy-hugo-postdir "content"
-        easy-hugo-server-flags "-D")
-  :bind ("C-c C-k" . easy-hugo-menu))
+    :init)
 #+end_src
 * global-scale-mode
 
@@ -1089,106 +1118,127 @@ We set our default program for latex
       (which-key-mode 1))
 
   #+end_src 
-* Bindings for built-ins
-
- #+begin_src emacs-lisp :tangle no
-
- (use-package emacs
-   :bind (:map custom-bindings-map
-               ("M-u" . upcase-dwim)
-               ("M-c" . capitalize-dwim)
-               ("M-l" . downcase-dwim)
-               ("M-]" . other-frame)
-               ("C-j" . newline-and-indent)
-               ("C-c s" . ispell-word)
-               ("C-c v" . visible-mode)))
-
- #+end_src
-
-* Bindings for functions defined [[sec:defuns][above]].
-
- #+begin_src emacs-lisp :tangle no
-
- (use-package emacs
-   :bind (("M-p" . jump-to-previous-like-this)
-          ("M-n" . jump-to-next-like-this)
-          :map custom-bindings-map
-          ("M-,"     . jump-to-previous-like-this)
-          ("M-."     . jump-to-next-like-this)
-          ("C-x k"   . kill-this-buffer-unless-scratch)
-          ("C-c C-0" . global-scale-default)
-          ("C-c C-=" . global-scale-up)
-          ("C-c C-+" . global-scale-up)
-          ("C-c C--" . global-scale-down)
-          ("C-c j"   . cycle-spacing-delete-newlines)
-          ("C-c d"   . duplicate-thing)
-          ("<C-tab>" . tidy))
-   :config
-   (define-key custom-bindings-map (kbd "C-c .") (cycle-themes)))
-
- #+end_src
-
- Lastly we need to activate the map by creating and activating the
- =minor-mode=.
-
- #+begin_src emacs-lisp :tangle no
-
- (define-minor-mode custom-bindings-mode
-   "A mode that activates custom-bindings."
-   :init-value t
-   :keymap custom-bindings-map)
-
- #+end_src
-
 * TODO Key bindings
 
 Use this for all my keybindings:
-
-#+begin_src emacs-lisp
-  (use-package ergoemacs-mode
-    :config
-    (setq ergoemacs-theme nil
-          ergoemacs-keyboard-layout "us")
-    (ergoemacs-mode 1))
-#+end_src
 
 If we're on mac, then use our own CUA keys...
 
 TODO <insert here>
 
 Otherwise, enable CUA on linux
-
 #+begin_src emacs-lisp
+  (cua-mode t)
+  (setq cua-auto-tabify-rectanlges nil)
+  (transient-mark-mode 1)
+  (setq cua-keep-region-after-copy t)
+
+  (when (eq system-type 'darwin)
+    (setq mac-command-key-is-meta nil ;we want it to be SUPER
+      mac-command-modifier 'super ;⌘=super-key (but can't use s-SPACE,TAB)
+      mac-right-command-modifier 'meta ; meta-f/b are hard to reach otherwise
+      mac-option-modifier 'meta    ;alt=meta=option
+      mac-right-option-modifier nil ;retain compose characters, düde
+      mac-right-control-modifier 'hyper
+      mac-emulate-three-button-mouse t ; not ideal for secondary selection :(
+      ;; mac-mouse-wheel-smooth-scroll t
+      delete-by-moving-to-trash t
+      browse-url-browser-function 'browse-url-default-macosx-browser
+      trash-directory (expand-file-name ".Trash" (getenv "HOME")))
+
+    (bind-keys ("s-s" . save-buffer)
+           ("s-a" . mark-whole-buffer)
+           ("s-`" . list-buffers)
+           ("s-c" . kill-ring-save)
+           ("s-m" . suspend-frame)
+           ("s-t" . (lambda (arg) (interactive "p")
+              (let ((mac-frame-tabbing t))
+                (if (not (eq arg 4))
+                    (make-frame)
+                  (call-interactively #'find-file-other-frame)))))
+           ("s-x" . kill-region)
+           ("s-v" . yank)
+           ("s-z" . undo-tree-undo)
+           ("s-Z" . undo-tree-redo)
+           ("s-w" . kill-buffer)
+           ("s-{" . mac-previous-tab)
+           ("s-}" . mac-next-tab)
+           ("s-q" . kill-emacs)
+           ("s-f" . +default/search-buffer)
+           ("s-`" . other-window)
+           ("s-/" . comment-line)
+           ("S-s-<left>" . mac-previous-tab)
+           ("S-<swipe-left>" . mac-previous-tab)
+           ("S-s-<right>" . mac-next-tab)
+           ("S-<swipe-right>" . mac-next-tab)
+           ("s-n" . make-frame-command)
+           ("s-|" . mac-toggle-tab-group-overview)
+           ("s-M-t" . mac-move-tab-to-new-frame)
+           ("S-s-M-<right>" . mac-move-tab-right)
+           ("S-s-M-<left>" . mac-move-tab-left)))
+
   (when (eq system-type 'gnu/linux)
-  (cua-mode t))
+    (bind-keys
+     ("C-s" . save-buffer)
+     ("C-a" . mark-whole-buffer)
+     ("C-`" . list-buffers)
+     ("C-c" . kill-ring-save)
+     ("C-m" . suspend-frame)
+     ("C-t" . (lambda (arg) (interactive "p")
+                (if (not (eq arg 4))
+                    (make-frame)
+                  (call-interactively #'find-file-other-frame))))
+     ("C-x" . kill-region)
+     ("C-v" . yank)
+     ("C-z" . undo-tree-undo)
+     ("C-Z" . undo-tree-redo)
+     ("C-w" . kill-buffer)
+     ("C-{" . previous-buffer)
+     ("C-}" . next-buffer)
+     ("C-q" . save-buffers-kill-terminal)
+     ("C-f" . isearch-forward)
+     ("C-`" . other-window)
+     ("C-/" . comment-line)
+     ("C-n" . make-frame-command)))
+
 #+end_src
 
 Then use general...
 
 #+begin_src emacs-lisp
   (use-package general
-    :demand t)
+      :demand t)
+
   (general-create-definer map
-    :prefix "s-r")
+        :prefix "M-a")
 
-  (map
-   :keymaps override
-   "f" '(:ignore t :which-key "File")
+      ;; Define your keybindings
+      (map
+        :keymaps 'override
+
+        "d" '(delete-window :which-key "Delete Window ")
+
+        "b" '(:ignore t :which-key "Buffer")
+        "bb" '(consult-buffer :which-key "consult-buffer")
+        "bk" '(kill-current-buffer :which-key "Kill buffer")
+        "bl" '(evil-switch-to-windows-last-buffer :which-key "Switch to last buffer")
+        "br" '(revert-buffer-no-confirm :which-key "Revert buffer")
+        "bK" '(kill-all-buffers :which-key "Kill all buffers")
+
+        ;;f for files
+        "f" '(:ignore t :which-key "File")
         "ff" '(find-file :which-key "find-file")
-        "fr" '(recentf-open :which-key "recentf-open"))
+        "fr" '(recentf-open :which-key "recentf-open")
 
-  ;; Define some custom keybindings using the leader key
-  (define-key my-leader-map (kbd "f") 'find-file)
-  (define-key my-leader-map (kbd "s") 'save-buffer)
-  (define-key my-leader-map (kbd "k") 'kill-buffer)
-  (define-key my-leader-map (kbd "b") 'switch-to-buffer)
-  (define-key my-leader-map (kbd "w") 'other-window)
+        ;;n for notes (org mode, etc)
+        "n" '(:ignore t :which-key "Notes")
+        "nh" '(org-html-export-as-html :which-key "Export Org file as HTML")
+        "ns" '(org-edit-src-code :which-key "Edit Org source code")
+        "nm" '(easy-hugo-menu :which-key "Open Easy Hugo Menu")
 
-  ;; Additional ergoemacs customizations
-  (setq ergoemacs-use-menus t)
-  (setq ergoemacs-smart-paste t)
 
-  (ido-mode 1)
+        ;;w for window
+        "w" '(:ignores t :which-key "Window"))
 #+end_src
 
 Disable some annoyances...(like delete-selection-mode and context menu mode)

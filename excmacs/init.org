@@ -2,7 +2,6 @@
 #+AUTHOR: Marcelo Mendez
 #+PROPERTY: header-args :tangle yes
 #+STARTUP: overview
-
 * TODO What to do next
 
   - [ ] Move over my entire mappings to the ~Key Bindings~ section
@@ -329,46 +328,12 @@ terms of normal keybindings.
 
 #+begin_src emacs-lisp
 
+  ;; when on mac
   (when (eq system-type 'darwin)
-  (setq mac-command-key-is-meta nil ;we want it to be SUPER
-      mac-command-modifier 'super ;⌘=super-key (but can't use s-SPACE,TAB)
-      mac-right-command-modifier 'meta ; meta-f/b are hard to reach otherwise
-      mac-option-modifier 'meta    ;alt=meta=option
-      mac-right-option-modifier nil ;retain compose characters, düde
-      mac-right-control-modifier 'hyper
-      mac-emulate-three-button-mouse t ; not ideal for secondary selection :(
-      ;; mac-mouse-wheel-smooth-scroll t
-      delete-by-moving-to-trash t
-      browse-url-browser-function 'browse-url-default-macosx-browser
-      trash-directory (expand-file-name ".Trash" (getenv "HOME")))
-
-    (bind-keys ("s-s" . save-buffer)
-           ("s-a" . mark-whole-buffer)
-           ("s-`" . list-buffers)
-           ("s-c" . kill-ring-save)
-           ("s-m" . suspend-frame)
-           ("s-t" . (lambda (arg) (interactive "p")
-              (let ((mac-frame-tabbing t))
-                (if (not (eq arg 4))
-                    (make-frame)
-                  (call-interactively #'find-file-other-frame)))))
-           ("s-x" . kill-region)
-           ("s-v" . yank)
-           ("s-z" . undo-tree-undo)
-           ("s-w" . kill-buffer)
-           ("s-{" . mac-previous-tab)
-           ("s-}" . mac-next-tab)
-           ("s-q" . kill-emacs)
-           ("s-f" . +default/search-buffer)
-           ("S-s-<left>" . mac-previous-tab)
-           ("S-<swipe-left>" . mac-previous-tab)
-           ("S-s-<right>" . mac-next-tab)
-           ("S-<swipe-right>" . mac-next-tab)
-           ("s-n" . make-frame-command)
-           ("s-|" . mac-toggle-tab-group-overview)
-           ("s-M-t" . mac-move-tab-to-new-frame)
-           ("S-s-M-<right>" . mac-move-tab-right)
-           ("S-s-M-<left>" . mac-move-tab-left)))
+    (setq mac-command-modifier 'meta) ; set cmd to meta
+    (setq mac-option-modifier nil)
+    (add-to-list 'default-frame-alist '(ns-transparent-titlebar . t)) ; configure title bar
+    (add-to-list 'default-frame-alist '(ns-appearance . 'nil)))
 #+end_src
 
 And then some equivalents for linux systems...
@@ -458,7 +423,10 @@ I also hate the way EMACS treats native scrollbars...
 
   (use-package mlscroll
     :ensure t
-    :config
+    :init
+    (setq mlscroll-width-chars 15)
+    (setq mlscroll-border 2)
+    :config 
     (mlscroll-mode 1))
 #+end_src
 
@@ -468,16 +436,71 @@ And disable the ones that come with the GUI
   (scroll-bar-mode 0)
   (tool-bar-mode 0)
 #+end_src
+** Font
+
+   #+begin_src emacs-lisp
+     (when (member "JetBrains Mono" (font-family-list))
+            (when (eq system-type 'darwin)
+              (set-face-attribute 'default nil :font "Berkeley Mono-15"))
+            (when (eq system-type 'gnu/linux)
+              (set-face-attribute 'default nil :font "JetBrains Mono-11")))
+   #+end_src
+
+#+begin_src emacs-lisp
+  (defun +my-set-custom-fonts ()
+    (when (eq system-type 'darwin)
+      ;; Mode line font settings
+      (set-face-attribute 'mode-line nil
+                          :family "SF Pro Text"
+                          :height 130
+                          :weight 'normal
+                          :box `(:line-width 7 :color ,(face-background 'mode-line) :style nil))
+
+      (set-face-attribute 'mode-line-inactive nil
+                          :family "SF Pro Text"
+                          :height 130
+                          :weight 'normal
+                          :box `(:line-width 7 :color ,(face-background 'mode-line-inactive) :style nil))
+
+      ;; Centaur tabs font settings
+      (set-face-attribute 'centaur-tabs-default nil
+                          :family "SF Pro Text"
+                          :height 130
+                          :weight 'normal)
+      (set-face-attribute 'centaur-tabs-selected nil
+                          :family "SF Pro Text"
+                          :height 130
+                          :weight 'normal)
+      (set-face-attribute 'centaur-tabs-unselected nil
+                          :family "SF Pro Text"
+                          :height 130
+                          :weight 'normal)
+      (set-face-attribute 'centaur-tabs-selected-modified nil
+                          :family "SF Pro Text"
+                          :height 130
+                          :weight 'normal)
+      (set-face-attribute 'centaur-tabs-unselected-modified nil
+                          :family "SF Pro Text"
+                          :height 130
+                          :weight 'normal)))
+#+end_src
+
+Sometimes, the modeline doenst keep its settings...
+#+begin_src emacs-lisp
+  ;;(add-hook 'window-configuration-change-hook '+my-set-custom-fonts)
+#+end_src
 
 ** TODO Theme
 
-Using ~ef-themes~
 #+begin_src emacs-lisp
-(use-package ef-themes)
-(use-package modus-themes)
-(use-package gruvbox-theme)
-(require 'ef-themes)
-(require 'modus-themes)
+  (use-package ef-themes)
+  (use-package modus-themes)
+  (use-package doom-themes
+    :ensure t
+    :init
+    (doom-themes-org-config))
+  (require 'ef-themes)
+  (require 'modus-themes)
 
 #+end_src
 
@@ -485,31 +508,30 @@ Variables for my dark and light theme
 
 #+begin_src emacs-lisp
 (defvar light-mode-theme 'modus-operandi-tinted)
-(defvar dark-mode-theme 'gruvbox-dark-hard)
+(defvar dark-mode-theme 'doom-peacock)
 #+end_src
 
 Now add the handler that will automatically switch between dark and light when the system theme changes
 
    #+begin_src emacs-lisp
-
-
      (when (eq system-type 'darwin)
-     (defun my/mac-handle-application-effective-appearance-change (_event)
-            (interactive "e")
-            (let ((appearance (plist-get (mac-application-state) :appearance)))
-              (cond ((equal appearance "NSAppearanceNameAqua")
-                     (load-theme light-mode-theme t))
-                    ((equal appearance "NSAppearanceNameDarkAqua")
-                     (load-theme dark-mode-theme t)))))
+          (defun my/mac-handle-application-effective-appearance-change (_event)
+                 (interactive "e")
+                 (let ((appearance (plist-get (mac-application-state) :appearance)))
+                   (cond ((equal appearance "NSAppearanceNameAqua")
+                          (load-theme light-mode-theme t))
+                         ((equal appearance "NSAppearanceNameDarkAqua")
+                          (load-theme dark-mode-theme t)))
+                   (+my-set-custom-fonts)))
 
-          ;; Key mapping definition
-          (define-key mac-apple-event-map [application-kvo effectiveAppearance]
-            'my/mac-handle-application-effective-appearance-change)
+               ;; Key mapping definition
+               (define-key mac-apple-event-map [application-kvo effectiveAppearance]
+                 'my/mac-handle-application-effective-appearance-change)
 
-          ;; Call the function after init to set the theme at startup
-          (add-hook 'after-init-hook
-                    (lambda ()
-                      (my/mac-handle-application-effective-appearance-change nil))))
+               ;; Call the function after init to set the theme at startup
+               (add-hook 'after-init-hook
+                         (lambda ()
+                           (my/mac-handle-application-effective-appearance-change nil))))
    #+end_src    
 
 ...or just do a regular theme when I'm on linux (its harder to detect light/dark mode changes
@@ -526,23 +548,6 @@ And solaire mode for better readability
     :init
     (solaire-global-mode +1))
 #+end_src
-** TODO Mode line
-** Font
-
-   I primarily use [[https://github.com/adobe-fonts][Adobe Fonts]]. 
-
-   My default monospace font is [[https://github.com/adobe-fonts/source-code-pro][Source Code Pro]]:
-
-   #+begin_src emacs-lisp
-
-
-     (when (member "JetBrains Mono" (font-family-list))
-       (when (eq system-type 'darwin)
-         (set-face-attribute 'default nil :font "JetBrains Mono-15"))
-       (when (eq system-type 'gnu/linux)
-         (set-face-attribute 'default nil :font "JetBrains Mono-11")))
-   #+end_src
-   
 ** Centering with Olivetti
 
    [[https://github.com/rnkn/olivetti][Olivetti]] is a package that simply centers the text of a buffer. It is very
@@ -587,21 +592,22 @@ Dash board provides a nice welcome.
 Use centaur tabs for the tab bar
 
 #+begin_src emacs-lisp
-   (use-package centaur-tabs
-     :demand
-     :config
-     (centaur-tabs-mode t)
-     (setq centaur-tabs-height 16
-           centaur-tabs-set-bar 'under
-           centaur-tabs-show-navigation-buttons t
-           centaur-tabs-set-modified-marker t
-           centaur-tabs-set-bar 'under
-           centaur-tabs-show-count nil
-           centaur-tabs-set-icons t)
+  (use-package centaur-tabs
+    :demand
+    :config
+    (centaur-tabs-mode t)
+    (setq centaur-tabs-height 18
+          centaur-tabs-set-bar 'under
+          centaur-tabs-show-navigation-buttons t
+          centaur-tabs-set-modified-marker t
+          centaur-tabs-set-bar 'under
+          centaur-tabs-show-count nil
+          centaur-tabs-style "bar"
+          centaur-tabs-set-icons t)
 
-     :bind
-     ("C-<prior>" . centaur-tabs-backward)
-     ("C-<next>" . centaur-tabs-forward))
+    :bind
+    ("C-<prior>" . centaur-tabs-backward)
+    ("C-<next>" . centaur-tabs-forward))
 
 
 #+end_src
@@ -619,22 +625,6 @@ Installing treemacs
     :after (treemacs)
     :ensure t
     :config (treemacs-set-scope-type 'Tabs))
-#+end_src
-** More obvious EVIL modes
-
-This will tell me what evil mode I'm in using the title bar:
-
-#+begin_src emacs-lisp
-
-  (defun update-evil-mode-in-frame-title ()
-    "Update the frame title to include the current Evil mode."
-    (let* ((evil-mode-string (cond ((evil-insert-state-p) "INSERT")
-                                   ((evil-normal-state-p) "NORMAL")
-                                   (t "")))
-           (title (format "[%s] Emacs - %s" evil-mode-string (buffer-name) evil-mode-string )))
-      (setq frame-title-format title)))
-
-  (add-hook 'post-command-hook 'update-evil-mode-in-frame-title)
 #+end_src
 * macOS specific
 
@@ -789,7 +779,7 @@ Use ~ace-window~
 
   #+end_src
 
-** TODO Navigation and searching
+** Navigation and searching
 
    The package [[https://github.com/minad/consult][Consult]] improves navigation and searching.
 
@@ -1077,19 +1067,13 @@ We set our default program for latex
 
   #+end_src
 
-
-  
 ** Easy integration with hugo
 
 #+begin_src emacs-lisp
 
-  (use-package easy-hugo
-    :init
-    (setq easy-hugo-basedir "~/Documents/Programming/marceloexc.com/marceloexc-hugo/"
-        easy-hugo-root "~/Documents/Programming/marceloexc.com/marceloexc-hugo/"
-        easy-hugo-postdir "content"
-        easy-hugo-server-flags "-D")
-  :bind ("C-c C-k" . easy-hugo-menu))
+    (use-package easy-hugo
+      :init
+      (setq easy-hugo-server-flags "-D"))
 #+end_src
 * global-scale-mode
 
@@ -1138,260 +1122,133 @@ We set our default program for latex
     
       (which-key-mode 1))
 
-  #+end_src
-  
-* Bindings for built-ins
-
- #+begin_src emacs-lisp :tangle no
-
- (use-package emacs
-   :bind (:map custom-bindings-map
-               ("M-u" . upcase-dwim)
-               ("M-c" . capitalize-dwim)
-               ("M-l" . downcase-dwim)
-               ("M-]" . other-frame)
-               ("C-j" . newline-and-indent)
-               ("C-c s" . ispell-word)
-               ("C-c v" . visible-mode)))
-
- #+end_src
-
-* Bindings for functions defined [[sec:defuns][above]].
-
- #+begin_src emacs-lisp :tangle no
-
- (use-package emacs
-   :bind (("M-p" . jump-to-previous-like-this)
-          ("M-n" . jump-to-next-like-this)
-          :map custom-bindings-map
-          ("M-,"     . jump-to-previous-like-this)
-          ("M-."     . jump-to-next-like-this)
-          ("C-x k"   . kill-this-buffer-unless-scratch)
-          ("C-c C-0" . global-scale-default)
-          ("C-c C-=" . global-scale-up)
-          ("C-c C-+" . global-scale-up)
-          ("C-c C--" . global-scale-down)
-          ("C-c j"   . cycle-spacing-delete-newlines)
-          ("C-c d"   . duplicate-thing)
-          ("<C-tab>" . tidy))
-   :config
-   (define-key custom-bindings-map (kbd "C-c .") (cycle-themes)))
-
- #+end_src
-
- Lastly we need to activate the map by creating and activating the
- =minor-mode=.
-
- #+begin_src emacs-lisp :tangle no
-
- (define-minor-mode custom-bindings-mode
-   "A mode that activates custom-bindings."
-   :init-value t
-   :keymap custom-bindings-map)
-
- #+end_src
-
+  #+end_src 
 * TODO Key bindings
 
 Use this for all my keybindings:
-
-#+begin_src emacs-lisp
-      (use-package evil
-      :ensure t
-      :config
-      (evil-mode 1))
-
-  ;;only enable evil on things that are for text editing
-    (mapc
-   (lambda (hook) (add-hook hook (lambda () (evil-local-mode))))
-   '(prog-mode-hook text-mode-hook))
-
-
-    ;;let org folding work with normal mode on emacs
-    (evil-define-key 'normal org-mode-map (kbd "<tab>") #'org-cycle)
-
-  ;;experiment..
-
-(setq evil-normal-state-cursor '(box "light blue")
-      evil-insert-state-cursor '(bar "medium sea green")
-      evil-visual-state-cursor '(hollow "orange"))
-
-#+end_src
 
 If we're on mac, then use our own CUA keys...
 
 TODO <insert here>
 
 Otherwise, enable CUA on linux
-
 #+begin_src emacs-lisp
+  (cua-mode t)
+  (setq cua-auto-tabify-rectanlges nil)
+  (transient-mark-mode 1)
+  (setq cua-keep-region-after-copy t)
+
+  (when (eq system-type 'darwin)
+    (setq mac-command-key-is-meta nil ;we want it to be SUPER
+      mac-command-modifier 'super ;⌘=super-key (but can't use s-SPACE,TAB)
+      mac-right-command-modifier 'meta ; meta-f/b are hard to reach otherwise
+      mac-option-modifier 'meta    ;alt=meta=option
+      mac-right-option-modifier nil ;retain compose characters, düde
+      mac-right-control-modifier 'hyper
+      mac-emulate-three-button-mouse t ; not ideal for secondary selection :(
+      ;; mac-mouse-wheel-smooth-scroll t
+      delete-by-moving-to-trash t
+      browse-url-browser-function 'browse-url-default-macosx-browser
+      trash-directory (expand-file-name ".Trash" (getenv "HOME")))
+
+    (bind-keys ("s-s" . save-buffer)
+           ("s-a" . mark-whole-buffer)
+           ("s-`" . list-buffers)
+           ("s-c" . kill-ring-save)
+           ("s-m" . suspend-frame)
+           ("s-t" . (lambda (arg) (interactive "p")
+              (let ((mac-frame-tabbing t))
+                (if (not (eq arg 4))
+                    (make-frame)
+                  (call-interactively #'find-file-other-frame)))))
+           ("s-x" . kill-region)
+           ("s-v" . yank)
+           ("s-z" . undo-tree-undo)
+           ("s-Z" . undo-tree-redo)
+           ("s-w" . kill-buffer)
+           ("s-{" . mac-previous-tab)
+           ("s-}" . mac-next-tab)
+           ("s-q" . kill-emacs)
+           ("s-f" . +default/search-buffer)
+           ("s-`" . other-window)
+           ("s-/" . comment-line)
+           ("S-s-<left>" . mac-previous-tab)
+           ("S-<swipe-left>" . mac-previous-tab)
+           ("S-s-<right>" . mac-next-tab)
+           ("S-<swipe-right>" . mac-next-tab)
+           ("s-n" . make-frame-command)
+           ("s-|" . mac-toggle-tab-group-overview)
+           ("s-M-t" . mac-move-tab-to-new-frame)
+           ("S-s-M-<right>" . mac-move-tab-right)
+           ("S-s-M-<left>" . mac-move-tab-left)))
+
   (when (eq system-type 'gnu/linux)
-  (cua-mode t))
+    (bind-keys
+     ("C-s" . save-buffer)
+     ("C-a" . mark-whole-buffer)
+     ("C-`" . list-buffers)
+     ("C-c" . kill-ring-save)
+     ("C-m" . suspend-frame)
+     ("C-t" . (lambda (arg) (interactive "p")
+                (if (not (eq arg 4))
+                    (make-frame)
+                  (call-interactively #'find-file-other-frame))))
+     ("C-x" . kill-region)
+     ("C-v" . yank)
+     ("C-z" . undo-tree-undo)
+     ("C-Z" . undo-tree-redo)
+     ("C-w" . kill-buffer)
+     ("C-{" . previous-buffer)
+     ("C-}" . next-buffer)
+     ("C-q" . save-buffers-kill-terminal)
+     ("C-f" . isearch-forward)
+     ("C-`" . other-window)
+     ("C-/" . comment-line)
+     ("C-n" . make-frame-command)))
+
 #+end_src
 
 Then use general...
 
 #+begin_src emacs-lisp
-
-
   (use-package general
-  :after evil
-  :demand t
-    :config
-    (general-evil-setup t))
+      :demand t)
 
+  (general-create-definer map
+        :prefix "M-a")
 
-  (general-override-mode) ;; https://github.com/noctuid/general.el/issues/99#issuecomment-360914335i
+      ;; Define your keybindings
+      (map
+        :keymaps 'override
 
+        "d" '(delete-window :which-key "Delete Window ")
 
-   (general-create-definer map
-      :prefix "SPC")
+        "b" '(:ignore t :which-key "Buffer")
+        "bb" '(consult-buffer :which-key "consult-buffer")
+        "bk" '(kill-current-buffer :which-key "Kill buffer")
+        "bl" '(evil-switch-to-windows-last-buffer :which-key "Switch to last buffer")
+        "br" '(revert-buffer-no-confirm :which-key "Revert buffer")
+        "bK" '(kill-all-buffers :which-key "Kill all buffers")
 
+        ;;f for files
+        "f" '(:ignore t :which-key "File")
+        "ff" '(find-file :which-key "find-file")
+        "fr" '(recentf-open :which-key "recentf-open")
 
-    (map
-      :states '(motion normal visual)
-      :keymaps 'override ;; https://github.com/noctuid/general.el/issues/99#issuecomment-360914335
+        ;;n for notes (org mode, etc)
+        "n" '(:ignore t :which-key "Notes")
+        "nh" '(org-html-export-as-html :which-key "Export Org file as HTML")
+        "ns" '(org-edit-src-code :which-key "Edit Org source code")
+        "nm" '(easy-hugo-menu :which-key "Open Easy Hugo Menu")
+        "nt" '(org-todo :which-key "Set TODO Keyword")
+        "nd" '(org-deadline :which-key "Set Org Deadline")
 
-      ;; map universal argument to SPC-u
-      "u" '(universal-argument :which-key "Universal argument")
-      ";" '(eval-region :which-key "eval-region")
-      "SPC" '(projectile-find-file :which-key "Projectile find file")
-      "C-SPC" '(projectile-find-file-other-frame :which-key "Projectile find file (new frame)")
-      "S-SPC" '(projectile-find-file-other-frame :which-key "Projectile find file (new frame)")
-      ">" '(find-file-other-frame :which-key "Find file (new frame)")
-      ;":" '(execute-extended-command :which-key "M-x")
-      "x" '(open-scratch-buffer :which-key "Open scratch buffer")
-      "d" '(dired-jump :which-key "dired-jump")
-      "/" '(+consult/ripgrep :which-key "+consult/ripgrep")
-      "?" '(consult-ripgrep :which-key "consult-ripgrep")
-      ;"[" '(+tab-bar/switch-to-prev-tab :which-key "+tab-bar/switch-to-prev-tab")
-      ;"]" '(+tab-bar/switch-to-next-tab :which-key "+tab-bar/switch-to-next-tab")
-      "v" '(vterm-toggle :which-key "+term/here")
+        ;;r - restart mode only
+        "r" '(:ignore t :which-key "Restart Emacs")
+        "rr" '(restart-emacs :which-key "Confirm restart")
 
-      ;; editor
-      "e" '(:ignore t :which-key "Editor")
-      "eu" '(vundo :which-key "vundo")
-      "ev" '(vundo :which-key "vundo")
-      "es" '(org-edit-src-code :which-key "Edit Org source code")
-      "ej" '(jump-to-register :which-key "jump-to-register")
-      "ef" '(:ignore t :which-key "Fold")
-      "efh" '(hs-hide-block :which-key "hs-hide-block")
-      "efs" '(hs-show-block :which-key "hs-show-block")
-      "efa" '(hs-show-all :which-key "hs-show-all")
-
-      ;; consult
-      "c" '(:ignore t :which-key "consult")
-      ;"cf" '(consult-flycheck :which-key "consult-flycheck")
-      "cf" '(consult-flymake :which-key "consult-flymake")
-
-      ;; file
-      "f" '(:ignore t :which-key "File")
-      "ff" '(find-file :which-key "find-file")
-      "fr" '(recentf-open :which-key "recentf-open")
-
-      ;; buffer
-      ;"TAB" '(switch-to-prev-buffer :which-key "Prev buffer")
-      "b" '(:ignore t :which-key "Buffer")
-      "bb" '(consult-buffer :which-key "consult-buffer")
-      "b[" '(previous-buffer :which-key "Previous buffer")
-      "b]" '(next-buffer :which-key "Next buffer")
-      "bd" '(kill-current-buffer :which-key "Kill buffer")
-      "bk" '(kill-current-buffer :which-key "Kill buffer")
-      "bl" '(evil-switch-to-windows-last-buffer :which-key "Switch to last buffer")
-      "br" '(revert-buffer-no-confirm :which-key "Revert buffer")
-      "bK" '(kill-all-buffers :which-key "Kill all buffers")
-
-      ;; project
-      "p" '(:ignore t :which-key "Project")
-      "pp" '(projectile-switch-project :which-key "Switch Project")
-      "po" '(projectile-find-other-file :which-key "projectile-find-other-file")
-
-      ;; help
-      "h" '(:ignore t :which-key "Help")
-      "hf" '(helpful-callable :which-key "describe-function")
-      "hk" '(helpful-key :which-key "describe-key")
-      "hv" '(helpful-variable :which-key "describe-variable")
-      "ho" '(helpful-symbol :which-key "describe-symbol")
-      "hm" '(describe-mode :which-key "describe-mode")
-      "hF" '(describe-face :which-key "describe-face")
-      "hw" '(where-is :which-key "where-is")
-      "h." '(display-local-help :which-key "display-local-help")
-
-      ;; zoom
-      ;; the hydra is nice but the rest is kind of janky, need to play around with this more
-      "=" '(text-scale-increase :which-key "text-scale-increase")
-      "-" '(text-scale-decrease :which-key "text-scale-decrease")
-      "z" '(:ignore t :which-key "zoom")
-      "z=" '(zoom-in :which-key "zoom-in")
-      "z-" '(zoom-out :which-key "zoom-out")
-      "zz" '(hydra-zoom/body :which-key "hydra-zoom")
-
-      ;; window
-      "w" '(:ignore t :which-key "Window")
-      "wd" '(evil-window-delete :which-key "Delete Window ")
-
-      ;; toggles
-      "t" '(:ignore t :which-key "Toggles")
-      "ta" '(corfu-mode :which-key "corfu-mode") ;; 'a' for autocomplete
-      "ts" '(flyspell-mode :which-key "flyspell-mode")
-      "tf" '(treemacs :which-key "Treemacs Sidebar")
-      ;"tc" '(flycheck-mode :which-key "flycheck-mode")
-      "tc" '(centaur-tabs-mode :which-key "Toggle Centaur Tabs")
-      "tm" '(minimap-mode :which-key "minimap-mode")
-      "tn" '(display-line-numbers-mode :which-key "Toggle Line Numbers") 
-      "tg" '(evil-goggles-mode :which-key "evil-goggles")
-      "tI" '(org-indent-mode :which-key "Toggle Org Indent Mode")
-      "tv" '(visual-line-mode :which-key "visual-line-mode")
-      "ti" '(org-toggle-inline-images :which-key "Toggle Inline Images")
-      "tm" '(ultra-scroll-mac-mode :which-key "Toggle Ultra Scroll Mac")
-
-      ;; org
-      "o" '(:ignore t :which-key "Org")
-      "oA" '(org-agenda :which-key "org-agenda")
-       "oc" '(open-init-file :which-key "Open init.el")
-       "oe" '(org-export-dispatch :which-key "Export Org File as...")
-      "ot" '(org-todo :which-key "Org Todo Menu")
-
-
-      ;; insert
-      "i" '(:ignore t :which-key "Insert")
-      "il" '(org-insert-link :which-key "Insert Org Link")
-      "is" '(org-insert-structure-template :which-key "Insert Org Structure Template")
-
-
-      ;; notes/org
-      "n" '(:ignore t :which-key "Notes")
-      "nf" '(org-roam-node-find :which-key "find-node")
-      "ni" '(org-roam-node-insert :which-key "insert-node")
-      "nt" '(org-roam-dailies-goto-today :which-key "org-roam-dailies-goto-today")
-      "n/" '(+consult/org-roam-ripgrep :which-key "+consult/org-roam-ripgrep")
-      "na" '(org-agenda :which-key "org-agenda")
-
-      ;; narrow
-       "N" '(:ignore t :which-key "Narrow")
-      "Nr" '(narrow-to-region :which-key "narrow-to-region")
-      "Nw" '(widen :which-key "widen"))
-
-
-
-#+end_src
-
-
-Disable evil mode on all read only buffers
-
-#+begin_src emacs-lisp
-
-    (defun my-disable-evil-in-read-only-buffers ()
-    "Disable `evil-mode` in read-only buffers."
-    (when buffer-read-only
-      (evil-local-mode -1)))
-
-    ;; Add to the hooks for opening files and switching major modes
-  (add-hook 'find-file-hook 'my-disable-evil-in-read-only-buffers)
-  (add-hook 'after-change-major-mode-hook 'my-disable-evil-in-read-only-buffers)
-
-    (add-hook 'view-mode-hook 'my-disable-evil-in-read-only-buffers)
-
+        ;;w for window
+        "w" '(:ignores t :which-key "Window"))
 #+end_src
 
 Disable some annoyances...(like delete-selection-mode and context menu mode)

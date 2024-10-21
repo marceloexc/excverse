@@ -490,64 +490,6 @@ Sometimes, the modeline doenst keep its settings...
   ;;(add-hook 'window-configuration-change-hook '+my-set-custom-fonts)
 #+end_src
 
-** TODO Theme
-
-#+begin_src emacs-lisp
-  (use-package ef-themes)
-  (use-package modus-themes)
-  (use-package doom-themes
-    :ensure t
-    :init
-    (doom-themes-org-config))
-  (require 'ef-themes)
-  (require 'modus-themes)
-
-#+end_src
-
-Variables for my dark and light theme
-
-#+begin_src emacs-lisp
-(defvar light-mode-theme 'modus-operandi-tinted)
-(defvar dark-mode-theme 'doom-peacock)
-#+end_src
-
-Now add the handler that will automatically switch between dark and light when the system theme changes
-
-   #+begin_src emacs-lisp
-     (when (eq system-type 'darwin)
-          (defun my/mac-handle-application-effective-appearance-change (_event)
-                 (interactive "e")
-                 (let ((appearance (plist-get (mac-application-state) :appearance)))
-                   (cond ((equal appearance "NSAppearanceNameAqua")
-                          (load-theme light-mode-theme t))
-                         ((equal appearance "NSAppearanceNameDarkAqua")
-                          (load-theme dark-mode-theme t)))
-                   (+my-set-custom-fonts)))
-
-               ;; Key mapping definition
-               (define-key mac-apple-event-map [application-kvo effectiveAppearance]
-                 'my/mac-handle-application-effective-appearance-change)
-
-               ;; Call the function after init to set the theme at startup
-               (add-hook 'after-init-hook
-                         (lambda ()
-                           (my/mac-handle-application-effective-appearance-change nil))))
-   #+end_src    
-
-...or just do a regular theme when I'm on linux (its harder to detect light/dark mode changes
-
-#+begin_src emacs-lisp
-  (if (eq system-type 'gnu/linux)
-    (load-theme 'gruvbox-dark-hard t))
-#+end_src
-
-And solaire mode for better readability
-
-#+begin_src emacs-lisp
-  (use-package solaire-mode
-    :init
-    (solaire-global-mode +1))
-#+end_src
 ** Centering with Olivetti
 
    [[https://github.com/rnkn/olivetti][Olivetti]] is a package that simply centers the text of a buffer. It is very
@@ -625,6 +567,73 @@ Installing treemacs
     :after (treemacs)
     :ensure t
     :config (treemacs-set-scope-type 'Tabs))
+#+end_src
+** TODO Theme
+
+set custom themes as safe (so that we don't get annoyed by a prompt to trust our theme
+
+#+begin_src emacs-lisp
+
+  (custom-set-variables
+   '(custom-safe-themes t))
+
+#+end_src
+
+install auto dark
+
+#+begin_src emacs-lisp
+  (use-package auto-dark
+    :ensure t
+    :custom
+    (auto-dark-themes '((doom-peacock) (modus-operandi-tinted)))
+
+    :hook
+    (auto-dark-dark-mode
+     . (lambda ()
+         (+my-set-custom-fonts)
+          ))
+    (auto-dark-light-mode
+     . (lambda ()
+          (+my-set-custom-fonts)
+          ))
+    :init (auto-dark-mode))
+
+  (+my-set-custom-fonts)
+#+end_src
+
+#+begin_src emacs-lisp
+  (use-package ef-themes)
+  (use-package modus-themes)
+  (use-package doom-themes
+    :ensure t
+    :init
+    (doom-themes-org-config))
+  (require 'ef-themes)
+  (require 'modus-themes)
+
+#+end_src
+
+Variables for my dark and light theme
+
+#+begin_src emacs-lisp
+(defvar light-mode-theme 'modus-operandi-tinted)
+(defvar dark-mode-theme 'doom-peacock)
+#+end_src
+
+
+...or just do a regular theme when I'm on linux (its harder to detect light/dark mode changes
+
+#+begin_src emacs-lisp
+  (if (eq system-type 'gnu/linux)
+    (load-theme 'gruvbox-dark-hard t))
+#+end_src
+
+And solaire mode for better readability
+
+#+begin_src emacs-lisp
+  (use-package solaire-mode
+    :init
+    (solaire-global-mode +1))
 #+end_src
 * macOS specific
 
@@ -846,6 +855,13 @@ Install ~undo-tree~
      :bind (:map custom-bindings-map ("C-c D" . define-word-at-point)))
 
    #+end_src
+* Programming
+** Languages
+*** Swift
+
+#+begin_src emacs-lisp
+  (use-package swift-mode)
+#+end_src
 
 * Word Processing
 ** Org
@@ -1237,11 +1253,13 @@ Then use general...
 
         ;;n for notes (org mode, etc)
         "n" '(:ignore t :which-key "Notes")
-        "nh" '(org-html-export-as-html :which-key "Export Org file as HTML")
+        "nh" '(org-html-export-to-html :which-key "Export Org file as HTML")
         "ns" '(org-edit-src-code :which-key "Edit Org source code")
         "nm" '(easy-hugo-menu :which-key "Open Easy Hugo Menu")
         "nt" '(org-todo :which-key "Set TODO Keyword")
         "nd" '(org-deadline :which-key "Set Org Deadline")
+        "ne" '(org-emphasize :which-key "Emphasize selected text")
+        "nl" '(org-insert-link :whick-key "Insert Org Link")
 
         ;;r - restart mode only
         "r" '(:ignore t :which-key "Restart Emacs")
@@ -1262,32 +1280,36 @@ Disable some annoyances...(like delete-selection-mode and context menu mode)
 Fixing macos scrolling....
 
 #+begin_src emacs-lisp
-    (unless (package-installed-p 'ultra-scroll-mac)
-      (package-vc-install '(ultra-scroll-mac :vc-backend Git :url "https://github.com/jdtsmith/ultra-scroll-mac")))
+	(unless (package-installed-p 'ultra-scroll-mac)
+	  (package-vc-install '(ultra-scroll-mac :vc-backend Git :url "https://github.com/jdtsmith/ultra-scroll-mac")))
 
-    (use-package ultra-scroll-mac
-      :if (eq window-system 'mac)
-      ;:load-path "~/code/emacs/ultra-scroll-mac" ; if you git clone'd instead of package-vc-install
-      :init
-      (setq scroll-conservatively 101 ; important!
-            scroll-margin 0)
-      :config
-      (ultra-scroll-mac-mode 1))
+	(use-package ultra-scroll-mac
+	  :if (eq window-system 'mac)
+	  ;:load-path "~/code/emacs/ultra-scroll-mac" ; if you git clone'd instead of package-vc-install
+	  :init
+	  (setq scroll-conservatively 101 ; important!
+			scroll-margin 0)
+	  :config
+	  (ultra-scroll-mac-mode 1))
 
-    (defvar minibuffer-ultra-scroll-mac-mode--orig nil
-    "Stores the original value of `ultra-scroll-mac-mode'.")
+	(defvar minibuffer-ultra-scroll-mac-mode--orig nil
+	"Stores the original value of `ultra-scroll-mac-mode'.")
 
   (define-minor-mode minibuffer-ultra-scroll-mac-mode
-    "Toggle `ultra-scroll-mac-mode' only in minibuffers."
-    :init-value nil
-    :global t
-    (if minibuffer-ultra-scroll-mac-mode
-        (setq minibuffer-ultra-scroll-mac-mode--orig ultra-scroll-mac-mode
-              ultra-scroll-mac-mode nil)
-      (setq ultra-scroll-mac-mode minibuffer-ultra-scroll-mac-mode--orig)))
+	"Toggle `ultra-scroll-mac-mode' only in minibuffers."
+	:init-value nil
+	:global t
+	(if minibuffer-ultra-scroll-mac-mode
+		(setq minibuffer-ultra-scroll-mac-mode--orig ultra-scroll-mac-mode
+			  ultra-scroll-mac-mode nil)
+	  (setq ultra-scroll-mac-mode minibuffer-ultra-scroll-mac-mode--orig)))
 
   (add-hook 'minibuffer-setup-hook #'minibuffer-ultra-scroll-mac-mode)
   (add-hook 'minibuffer-exit-hook (lambda () (minibuffer-ultra-scroll-mac-mode -1)))
 
+
 #+end_src
+
+
+
 

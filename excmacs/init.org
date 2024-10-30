@@ -443,7 +443,7 @@ And disable the ones that come with the GUI
             (when (eq system-type 'darwin)
               (set-face-attribute 'default nil :font "Berkeley Mono-15"))
             (when (eq system-type 'gnu/linux)
-              (set-face-attribute 'default nil :font "JetBrains Mono-11")))
+              (set-face-attribute 'default nil :font "JetBrains Mono-10.5")))
    #+end_src
 
 #+begin_src emacs-lisp
@@ -585,7 +585,7 @@ install auto dark
   (use-package auto-dark
     :ensure t
     :custom
-    (auto-dark-themes '((doom-peacock) (modus-operandi-tinted)))
+    (auto-dark-themes '((modus-vivendi-deuteranopia) (modus-operandi-tinted)))
 
     :hook
     (auto-dark-dark-mode
@@ -611,21 +611,6 @@ install auto dark
   (require 'ef-themes)
   (require 'modus-themes)
 
-#+end_src
-
-Variables for my dark and light theme
-
-#+begin_src emacs-lisp
-(defvar light-mode-theme 'modus-operandi-tinted)
-(defvar dark-mode-theme 'doom-peacock)
-#+end_src
-
-
-...or just do a regular theme when I'm on linux (its harder to detect light/dark mode changes
-
-#+begin_src emacs-lisp
-  (if (eq system-type 'gnu/linux)
-    (load-theme 'gruvbox-dark-hard t))
 #+end_src
 
 And solaire mode for better readability
@@ -1217,7 +1202,7 @@ Otherwise, enable CUA on linux
      ("C-{" . previous-buffer)
      ("C-}" . next-buffer)
      ("C-q" . save-buffers-kill-terminal)
-     ("C-f" . isearch-forward)
+     ("C-f" . +default/search-buffer)
      ("C-`" . other-window)
      ("C-/" . comment-line)
      ("C-n" . make-frame-command)))

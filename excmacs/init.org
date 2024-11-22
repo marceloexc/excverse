@@ -353,6 +353,22 @@ And I will a single ESC key to execute ~keyboard-quit~ instead of ESC ESC ESC
 (global-set-key (kbd "<escape>")      'keyboard-escape-quit)
 #+end_src
 
+lets try dirvish...
+
+#+begin_src emacs-lisp
+  (use-package dirvish
+    :init
+    (dirvish-override-dired-mode)
+    :config
+
+    (setq dirvish-attributes '(all-the-icons))
+    (setq delete-by-moving-to-trash t)
+    (setq dirvish-use-header-line nil)
+    (setq dirvish-use-mode-line nil)
+    (setq dired-listing-switches "-l --almost-all --human-readable --group-directories-first --no-group")
+    (dirvish-side-follow-mode 1))
+#+end_src
+
 
 We will also disable compilation warnings since they get VERY annoying
 
@@ -561,6 +577,7 @@ Installing treemacs
   (use-package treemacs
     :ensure t
     :defer t
+    :config (progn (treemacs-follow-mode t))
     :init)
 
   (use-package treemacs-tab-bar ;;treemacs-tab-bar if you use tab-bar-mode

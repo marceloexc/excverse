@@ -389,6 +389,11 @@ easy dired hacks...
     (add-hook 'dired-mode-hook 'all-the-icons-dired-mode))
 #+end_src
 
+enable flyspell mode for word spell checking
+#+begin_src emacs-lisp
+  (flyspell-mode 1)
+#+end_src
+
 We will also disable compilation warnings since they get VERY annoying
 
 #+begin_src emacs-lisp
@@ -569,20 +574,34 @@ Sometimes, the modeline doenst keep its settings...
 Dash board provides a nice welcome.
 
    #+begin_src emacs-lisp
+     ;; Optimize ffap loading which dashboard depends on
+     (setq ffap-require-prefix t)  ; Only activate ffap features when explicitly requested
+     (with-eval-after-load 'ffap
+       (setq ffap-machine-p-known 'reject)  ; Disable remote file name completion
+       (setq ffap-url-regexp nil))          ; Disable URL features
 
-   ;; A startup screen extracted from Spacemacs
-   (use-package dashboard
-     :config
-     (setq dashboard-projects-backend 'project-el
-           dashboard-banner-logo-title nil
-           dashboard-center-content t
-           dashboard-set-footer nil
-           dashboard-page-separator "\n\n\n"
-           dashboard-items '((projects . 15)
-                             (recents  . 15)
-                             (bookmarks . 5)))
-     (dashboard-setup-startup-hook))
-
+     ;; Dashboard configuration
+     (use-package dashboard
+       :init  ; Use :init instead of :config for better performance
+       (setq dashboard-projects-backend 'project-el
+             dashboard-banner-logo-title nil
+             dashboard-center-content t
+             dashboard-set-footer nil
+             dashboard-page-separator "\n\n\n"
+             dashboard-items '((projects . 15)
+                              (recents  . 15)
+                              (bookmarks . 5))
+             ;; Prevent dashboard from loading unnecessary dependencies at startup
+             dashboard-init-info ""              ; Disable initial info message
+             dashboard-set-heading-icons nil     ; Disable heading icons
+             dashboard-set-file-icons nil)       ; Disable file icons initially
+  
+       ;; Load icons later if you need them
+       (with-eval-after-load 'dashboard
+         (setq dashboard-set-heading-icons t
+               dashboard-set-file-icons t))
+  
+       (dashboard-setup-startup-hook))
    #+end_src
 ** Tabs
 
@@ -600,7 +619,10 @@ Use centaur tabs for the tab bar
           centaur-tabs-icon-type 'all-the-icons
           centaur-tabs-show-count nil
           centaur-tabs-style "bar"
-          centaur-tabs-set-icons t)
+          centaur-tabs-set-icons t
+          centaur-tabs-excluded-prefixes '("*")
+          centaur-tabs-exclude-buffers '("*compile*" "*compilation*""*dashboard*"))
+  
 
     :bind
     ("C-<prior>" . centaur-tabs-backward)
@@ -1134,6 +1156,40 @@ We set our default program for latex
 
 #+begin_src emacs-lisp
   (setq org-latex-create-formula-image-program 'dvisvgm)
+
+  (defun my/text-scale-adjust-latex-previews ()
+    (pcase major-mode
+      ('latex-mode
+       (dolist (ov (overlays-in (point-min) (point-max)))
+         (if (eq (overlay-get ov 'category)
+                 'preview-overlay)
+             (my/zoom-latex-preview ov))))
+      ('org-mode
+       (dolist (ov (overlays-in (point-min) (point-max)))
+         (if (eq (overlay-get ov 'org-overlay-type)
+                 'org-latex-overlay)
+             (my/zoom-latex-preview ov))))))
+
+  (defun my/zoom-latex-preview (ov)
+    (overlay-put
+     ov 'display
+     (cons 'image
+           (plist-put
+            (cdr (overlay-get ov 'display))
+            :scale (+ 1.0 (* 0.25 text-scale-mode-amount))))))
+
+  (add-hook 'text-scale-mode-hook #'my/text-scale-adjust-latex-previews)
+
+  
+#+end_src
+
+add fragtog support
+
+#+begin_src emacs-lisp
+  (use-package org-fragtog
+  :after org  )
+
+  (add-hook 'org-mode-hook 'org-fragtog-mode)
 #+end_src
 ** Markdown
 

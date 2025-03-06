@@ -920,6 +920,14 @@ Install ~undo-tree~
 
    #+end_src
 * Programming
+
+Treesitter
+#+begin_src emacs-lisp
+  (use-package treesit-auto
+    :config
+    (global-treesit-auto-mode))
+#+end_src
+
 ** Languages
 *** Swift
 
@@ -941,7 +949,33 @@ Install ~undo-tree~
 	 ("\\.erb\\'" . web-mode)
 	 ("\\.mustache\\'" . web-mode)
 	 ("\\.html\\'" . web-mode)
-	 ("\\.djhtml\\'" . web-mode)))'
+	 ("\\.djhtml\\'" . web-mode)))
+#+end_src
+
+#+begin_src emacs-lisp
+  (define-derived-mode astro-mode web-mode "astro")
+  (setq auto-mode-alist
+        (append '((".*\\.astro\\'" . astro-mode))
+                auto-mode-alist))
+#+end_src
+
+#+begin_src emacs-lisp
+  (use-package eglot
+  :ensure t
+  :config
+  (add-to-list 'eglot-server-programs
+               '(astro-mode . ("astro-ls" "--stdio"
+                               :initializationOptions
+                               (:typescript (:tsdk "./node_modules/typescript/lib")))))
+  :init
+  ;; auto start eglot for astro-mode
+  (add-hook 'astro-mode-hook 'eglot-ensure))
+#+end_src
+
+*** Processing
+
+#+begin_src emacs-lisp
+  (use-package processing-mode)
 #+end_src
 * Word Processing
 ** Org
@@ -1294,6 +1328,8 @@ Otherwise, enable CUA on linux
   (setq cua-auto-tabify-rectanlges nil)
   (transient-mark-mode 1)
   (setq cua-keep-region-after-copy t)
+
+  (define-key key-translation-map (kbd "ESC") (kbd "C-g"))
 
   (when (eq system-type 'darwin)
     (setq mac-command-key-is-meta nil ;we want it to be SUPER

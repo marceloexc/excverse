@@ -2,19 +2,7 @@
 #+AUTHOR: Marcelo Mendez
 #+PROPERTY: header-args :tangle yes
 #+STARTUP: overview
-* TODO What to do next
 
-  - [ ] Move over my entire mappings to the ~Key Bindings~ section
-
-  - [X] [[https://github.com/minad/org-modern/issues/129][Org Modern replaces org superstar????]] Why?? I really dont like
-    the default bullets of ~Org-modern~
-** TODO Look at svg-tag-mode
-** TODO Fix Org-todo - sometimes is very picky about what i can and can't do (cant set a TODO as DONE if there is a folded TODO as child)
-
-[[https://github.com/james-stoup/org-mode-better-defaults][Org Mode Better Defaults]]
-** TODO Org Agenda + Denote
-
-[[https://baty.blog/2022/keeping-my-org-agenda-updated/]]
 * About
 
   This is an Emacs configuration file written in [[http://orgmode.org][Org mode]]. It is an attempt to
@@ -218,7 +206,7 @@
   
 
   #+end_src
-
+  
 * Sane defaults
 
   These are what /I/ consider to be saner defaults.
@@ -749,32 +737,18 @@ And solaire mode for better readability
 
   #+end_src
 
-* Window management
+  
+** TODO Rename the parent header as "Project Management"
 
-Use ~ace-window~
+Use projectile 
 #+begin_src emacs-lisp
-(use-package ace-window
-  :ensure t
-  :bind (("M-o" . ace-window))
-  :config
-  ;; Optional: configure default action to delete window
-  ;; (setq aw-dispatch-always t)
-  ;; (setq aw-dispatch-alist
-  ;;       '((?x aw-delete-window "Delete Window")
-  ;;         (?m aw-swap-window "Swap Windows")
-  ;;         (?M aw-move-window "Move Window")
-  ;;         (?c aw-copy-window "Copy Window")
-  ;;         (?j aw-switch-buffer-in-window "Select Buffer")
-  ;;         (?n aw-flip-window)
-  ;;         (?u aw-switch-buffer-other-window "Switch Buffer Other Window")
-  ;;         (?c aw-split-window-fair "Split Fair Window")
-  ;;         (?v aw-split-window-vert "Split Vert Window")
-  ;;         (?b aw-split-window-horz "Split Horz Window")
-  ;;         (?g aw-switch-to-window "Go to Window")
-  ;;         (?e aw-execute-command-other-window "Execute Command Other Window")
-  ;;         (?f aw-toggle-frame "Toggle Frame")
-  ;;         (?w aw-delete-other-windows "Delete Other Windows")))
-  )
+  (use-package projectile
+    :diminish projectile-mode
+    :config (projectile-mode)
+    :bind-keymap
+    ("C-c p" . projectile-command-map)
+    :init
+    (setq projectile-switch-project-action #'projectile-dired))
 #+end_src
 
 * Completion UI
@@ -819,8 +793,6 @@ Use ~ace-window~
   #+begin_src emacs-lisp
 (setq minibuffer-scroll-window t)
   #+end_src
-  
-
 
    #+begin_src emacs-lisp
 
@@ -926,6 +898,13 @@ Treesitter
   (use-package treesit-auto
     :config
     (global-treesit-auto-mode))
+
+  (use-package tree-sitter-langs
+    :after tree-sitter ; Ensure `tree-sitter` is loaded first
+    :demand t
+    :config
+    (setq tree-sitter-langs-installed-langs '(c c++ emacs-lisp go python rust))
+    (tree-sitter-langs-install-grammars))
 #+end_src
 
 ** Languages
@@ -976,6 +955,10 @@ Treesitter
 
 #+begin_src emacs-lisp
   (use-package processing-mode)
+  (use-package auto-virtualenv
+    :config
+    (setq auto-virtualenv-verbose t) (setq auto-virtualenv-reload-lsp t)
+    (auto-virtualenv-setup))
 #+end_src
 * Word Processing
 ** Org
@@ -1177,22 +1160,6 @@ Hiding keylines:
 
 #+end_src
 
-automatically add some frontmatters to every newly created org document
-
-#+begin_src emacs-lisp
-  (define-skeleton my-org-file-frontmatter
-    "Front matter for new org files."
-    "Title: "
-    "#+TITLE: " str \n
-    "#+AUTHOR: " (skeleton-read "Author: " user-full-name) \n
-    "#+DATE: " '(call-interactively 'org-time-stamp) "\n\n")
-
-  (auto-insert-mode 1)
-
-  (add-to-list 'auto-insert-alist '("\\.org\\'" . my-org-file-frontmatter))
-
-#+end_src
-
 finally, org mouse
 
 #+begin_src emacs-lisp
@@ -1381,7 +1348,6 @@ Otherwise, enable CUA on linux
      ("C-a" . mark-whole-buffer)
      ("C-`" . list-buffers)
      ("C-c" . kill-ring-save)
-     ("C-m" . suspend-frame)
      ("C-t" . (lambda (arg) (interactive "p")
                 (if (not (eq arg 4))
                     (make-frame)
@@ -1442,6 +1408,13 @@ Then use general...
         "r" '(:ignore t :which-key "Restart Emacs")
         "rr" '(restart-emacs :which-key "Confirm restart")
 
+        ;;l - Language server (with eglop
+        "la" '(eglot-code-actions :which-key "Code Actions")
+        "lr" '(eglot-rename :which-key "Rename in Project")
+        "lh" '(eldoc :which-key "Eldoc")
+        "ld" '(xref-find-definitions-at-mouse :which-key "Find def")
+        "lR" '(eglot-reconnect :which-key "reconnect")
+
         ;;w for window
         "w" '(:ignores t :which-key "Window"))
 #+end_src
@@ -1452,7 +1425,6 @@ Disable some annoyances...(like delete-selection-mode and context menu mode)
   (context-menu-mode 1)
   (delete-selection-mode t)
 #+end_src
-
 
 Fixing macos scrolling....
 

@@ -1032,7 +1032,15 @@ Treesitter
 
   #+end_src
 
+Set some default directories when note taking
 
+#+begin_src emacs-lisp
+  (with-eval-after-load 'org
+    (setq org-directory "~/Documents/Notes")
+    (setq org-default-notes-file (concat org-directory "/captured.org")))
+  ;; this will ALWAYS be how my structure will be!
+#+end_src
+  
  Also use ~org-superstar~
 
 #+begin_src emacs-lisp
@@ -1380,7 +1388,7 @@ Then use general...
       (map
         :keymaps 'override
 
-        "d" '(delete-window :which-key "Delete Window ")
+        "d" '(dired :which-key "Dired ")
 
         "b" '(:ignore t :which-key "Buffer")
         "bb" '(consult-buffer :which-key "consult-buffer")
@@ -1416,7 +1424,16 @@ Then use general...
         "lR" '(eglot-reconnect :which-key "reconnect")
 
         ;;w for window
-        "w" '(:ignores t :which-key "Window"))
+        "w" '(:ignores t :which-key "Window")
+        "wd" '(delete-window :which-key "Delete Window")
+        "wa" '(split-window-right :which-key "Vertical Split")
+        "ws" '(split-window-below :which-key "Horizontal Split")
+        "ww" '(other-window :which-key "Other Window")
+
+
+
+
+        )
 #+end_src
 
 Disable some annoyances...(like delete-selection-mode and context menu mode)

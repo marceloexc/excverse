@@ -379,7 +379,7 @@ easy dired hacks...
 
 enable flyspell mode for word spell checking
 #+begin_src emacs-lisp
-  (flyspell-mode 1)
+  ;; (flyspell-mode 1)
 #+end_src
 
 We will also disable compilation warnings since they get VERY annoying
@@ -651,7 +651,7 @@ install auto dark
   (use-package auto-dark
     :ensure t
     :custom
-    (auto-dark-themes '((modus-vivendi-deuteranopia) (modus-operandi-tinted)))
+    (auto-dark-themes '((ef-elea-dark) (modus-operandi-tinted)))
 
     :hook
     (auto-dark-dark-mode
@@ -665,6 +665,13 @@ install auto dark
     :init (auto-dark-mode))
 
   (+my-set-custom-fonts)
+#+end_src
+
+install autothemer
+
+#+begin_src emacs-lisp
+  (unless (package-installed-p 'autothemer)
+        (package-vc-install '(autothemer :vc-backend Git :url "https://github.com/jasonm23/autothemer")))
 #+end_src
 
 #+begin_src emacs-lisp
@@ -892,21 +899,6 @@ Install ~undo-tree~
 
    #+end_src
 * Programming
-
-Treesitter
-#+begin_src emacs-lisp
-  (use-package treesit-auto
-    :config
-    (global-treesit-auto-mode))
-
-  (use-package tree-sitter-langs
-    :after tree-sitter ; Ensure `tree-sitter` is loaded first
-    :demand t
-    :config
-    (setq tree-sitter-langs-installed-langs '(c c++ emacs-lisp go python rust))
-    (tree-sitter-langs-install-grammars))
-#+end_src
-
 ** Languages
 *** Swift
 
@@ -956,9 +948,9 @@ Treesitter
 #+begin_src emacs-lisp
   (use-package processing-mode)
   (use-package auto-virtualenv
+    :hook (python-mode . auto-virtualenv-setup)
     :config
-    (setq auto-virtualenv-verbose t) (setq auto-virtualenv-reload-lsp t)
-    (auto-virtualenv-setup))
+    (setq auto-virtualenv-verbose t) (setq auto-virtualenv-reload-lsp t))
 #+end_src
 * Word Processing
 ** Org
@@ -1232,7 +1224,13 @@ add fragtog support
   (setq grip-preview-use-webkit t))  ;; Requires Emacs 27 or later
 
   #+end_src
+** Spellchecking
 
+#+begin_src emacs-lisp
+
+  (add-hook 'org-mode-hook 'turn-on-flyspell)
+
+#+end_src
 ** Easy integration with hugo
 
 #+begin_src emacs-lisp
@@ -1416,6 +1414,12 @@ Then use general...
         "r" '(:ignore t :which-key "Restart Emacs")
         "rr" '(restart-emacs :which-key "Confirm restart")
 
+        ;;t - toggling stuff
+        "t" '(:ignore t :which-key "Toggles")
+        "tt" '(treemacs :which-key "Toggle Treemacs")
+        "te" '(display-line-numbers-mode :which-key "Toggle Line Numbers")
+        "to" '(olivetti :which-key "Toggle Olivetti")
+	  
         ;;l - Language server (with eglop
         "la" '(eglot-code-actions :which-key "Code Actions")
         "lr" '(eglot-rename :which-key "Rename in Project")
@@ -1446,32 +1450,34 @@ Disable some annoyances...(like delete-selection-mode and context menu mode)
 Fixing macos scrolling....
 
 #+begin_src emacs-lisp
-	(unless (package-installed-p 'ultra-scroll-mac)
-	  (package-vc-install '(ultra-scroll-mac :vc-backend Git :url "https://github.com/jdtsmith/ultra-scroll-mac")))
+    (unless (package-installed-p 'ultra-scroll-mac)
+      (package-vc-install '(ultra-scroll-mac :vc-backend Git :url "https://github.com/jdtsmith/ultra-scroll-mac")))
 
-	(use-package ultra-scroll-mac
-	  :if (eq window-system 'mac)
-	  ;:load-path "~/code/emacs/ultra-scroll-mac" ; if you git clone'd instead of package-vc-install
-	  :init
-	  (setq scroll-conservatively 101 ; important!
-			scroll-margin 0)
-	  :config
-	  (ultra-scroll-mac-mode 1))
+    (use-package ultra-scroll-mac
+      :if (eq window-system 'mac)
+      ;:load-path "~/code/emacs/ultra-scroll-mac" ; if you git clone'd instead of package-vc-install
+      :init
+      (setq scroll-conservatively 101 ; important!
+            scroll-margin 0)
+      :config
+      (ultra-scroll-mac-mode 1))
 
-	(defvar minibuffer-ultra-scroll-mac-mode--orig nil
-	"Stores the original value of `ultra-scroll-mac-mode'.")
+    (defvar minibuffer-ultra-scroll-mac-mode--orig nil
+    "Stores the original value of `ultra-scroll-mac-mode'.")
 
   (define-minor-mode minibuffer-ultra-scroll-mac-mode
-	"Toggle `ultra-scroll-mac-mode' only in minibuffers."
-	:init-value nil
-	:global t
-	(if minibuffer-ultra-scroll-mac-mode
-		(setq minibuffer-ultra-scroll-mac-mode--orig ultra-scroll-mac-mode
-			  ultra-scroll-mac-mode nil)
-	  (setq ultra-scroll-mac-mode minibuffer-ultra-scroll-mac-mode--orig)))
+    "Toggle `ultra-scroll-mac-mode' only in minibuffers."
+    :init-value nil
+    :global t
+    (if minibuffer-ultra-scroll-mac-mode
+        (setq minibuffer-ultra-scroll-mac-mode--orig ultra-scroll-mac-mode
+              ultra-scroll-mac-mode nil)
+      (setq ultra-scroll-mac-mode minibuffer-ultra-scroll-mac-mode--orig)))
 
-  (add-hook 'minibuffer-setup-hook #'minibuffer-ultra-scroll-mac-mode)
-  (add-hook 'minibuffer-exit-hook (lambda () (minibuffer-ultra-scroll-mac-mode -1)))
+  (when (eq system-type 'darwin)
+    (add-hook 'minibuffer-setup-hook #'minibuffer-ultra-scroll-mac-mode)
+    (add-hook 'minibuffer-exit-hook (lambda () (minibuffer-ultra-scroll-mac-mode -1)))
+    )
 
 
 #+end_src

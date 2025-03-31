@@ -534,7 +534,52 @@ And disable the ones that come with the GUI
       (set-face-attribute 'centaur-tabs-unselected-modified nil
                           :family "SF Pro Text"
                           :height 130
-                          :weight 'normal)))
+                          :weight 'normal))
+
+   (when (eq system-type 'gnu/linux)
+
+      (set-face-attribute 'mode-line nil
+                          :family "Cantarell"
+                          :height 100
+                          :weight 'normal
+                          :box `(:line-width 7 :color ,(face-background 'mode-line) :style nil))
+
+      (set-face-attribute 'mode-line-inactive nil
+                          :family "Cantarell"
+                          :height 100
+                          :weight 'normal
+                          :box `(:line-width 7 :color ,(face-background 'mode-line-inactive) :style nil))
+
+      ;; Centaur tabs font settings
+      (set-face-attribute 'centaur-tabs-default nil
+                          :family "Cantarell"
+                          :height 100
+                          :weight 'normal)
+      (set-face-attribute 'centaur-tabs-selected nil
+                          :family "Cantarell"
+                          :height 100
+                          :weight 'normal)
+      (set-face-attribute 'centaur-tabs-unselected nil
+                          :family "Cantarell"
+                          :height 100
+                          :weight 'normal)
+      (set-face-attribute 'centaur-tabs-selected-modified nil
+                          :family "Cantarell"
+                          :height 100
+                          :weight 'normal)
+      (set-face-attribute 'centaur-tabs-unselected-modified nil
+                          :family "Cantarell"
+                          :height 100
+                          :weight 'normal))
+
+
+
+    )
+
+
+
+
+ 
 #+end_src
 
 Sometimes, the modeline doenst keep its settings...

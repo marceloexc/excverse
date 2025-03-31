@@ -345,7 +345,11 @@ And then some equivalents for linux systems...
 And I will a single ESC key to execute ~keyboard-quit~ instead of ESC ESC ESC
 
 #+begin_src emacs-lisp
-(global-set-key (kbd "<escape>")      'keyboard-escape-quit)
+  (if (display-graphic-p)
+      ;; Graphical environment: ESC -> keyboard-escape-quit
+      (global-set-key (kbd "<escape>") 'keyboard-escape-quit)
+    ;; Terminal environment: ESC -> C-g
+    (global-set-key (kbd "<escape>") 'keyboard-quit))
 #+end_src
 
 easy dired hacks...
@@ -1287,7 +1291,7 @@ add fragtog support
       (which-key-mode 1))
 
   #+end_src 
-* TODO Key bindings
+* Key bindings
 
 Use this for all my keybindings:
 
@@ -1302,7 +1306,7 @@ Otherwise, enable CUA on linux
   (transient-mark-mode 1)
   (setq cua-keep-region-after-copy t)
 
-  (define-key key-translation-map (kbd "ESC") (kbd "C-g"))
+  ;; (define-key key-translation-map (kbd "ESC") (kbd "C-g"))
 
   (when (eq system-type 'darwin)
     (setq mac-command-key-is-meta nil ;we want it to be SUPER
@@ -1371,6 +1375,10 @@ Otherwise, enable CUA on linux
      ("C-/" . comment-line)
      ("C-n" . make-frame-command)))
 
+
+  (when (not (display-graphic-p))
+    (setq xterm-extra-capabilities '(meta))
+    (setq xterm-extra-capabilities '(modifyOtherKeys)))
 #+end_src
 
 Then use general...
@@ -1481,3 +1489,7 @@ Fixing macos scrolling....
 
 
 #+end_src
+
+
+
+

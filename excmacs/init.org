@@ -992,6 +992,15 @@ Install ~undo-tree~
   (add-hook 'astro-mode-hook 'eglot-ensure))
 #+end_src
 
+*** GTK Blueprints
+#+begin_src emacs-lisp
+  (unless (package-installed-p 'blueprint-mode)
+    (package-vc-install '(blueprint-mode :vc-backend Git :url "https://github.com/DrBluefall/blueprint-mode")))
+
+
+  (add-to-list 'eglot-server-programs 
+     '(blueprint-mode . ("blueprint-compiler" "lsp")))
+#+end_src
 *** Processing
 
 #+begin_src emacs-lisp
@@ -1441,13 +1450,8 @@ Then use general...
 
         "d" '(dired :which-key "Dired ")
 
-        "b" '(:ignore t :which-key "Buffer")
-        "bb" '(consult-buffer :which-key "consult-buffer")
-        "bk" '(kill-current-buffer :which-key "Kill buffer")
-        "bl" '(evil-switch-to-windows-last-buffer :which-key "Switch to last buffer")
-        "br" '(revert-buffer-no-confirm :which-key "Revert buffer")
-        "bK" '(kill-all-buffers :which-key "Kill all buffers")
-
+        "b" '(consult-buffer :which-key "consult-buffer")
+	  
         ;;f for files
         "f" '(:ignore t :which-key "File")
         "ff" '(find-file :which-key "find-file")
@@ -1472,7 +1476,7 @@ Then use general...
         "tt" '(treemacs :which-key "Toggle Treemacs")
         "te" '(display-line-numbers-mode :which-key "Toggle Line Numbers")
         "to" '(olivetti :which-key "Toggle Olivetti")
-	  
+
         ;;l - Language server (with eglop
         "la" '(eglot-code-actions :which-key "Code Actions")
         "lr" '(eglot-rename :which-key "Rename in Project")

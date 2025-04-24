@@ -701,7 +701,7 @@ install auto dark
     :ensure t
     :custom
     (auto-dark-themes '((ef-elea-dark) (modus-operandi-tinted)))
-
+    :config (setq auto-dark-allow-osascript t)
     :hook
     (auto-dark-dark-mode
      . (lambda ()
@@ -1510,8 +1510,13 @@ Fixing macos scrolling....
     (unless (package-installed-p 'ultra-scroll-mac)
       (package-vc-install '(ultra-scroll-mac :vc-backend Git :url "https://github.com/jdtsmith/ultra-scroll-mac")))
 
+  ;; function that returns true if we are running on emacs-mac exclusively
+  (defun carbon-emacs-p ()
+    (string-match-p "Carbon" (emacs-version)))
+
+
     (use-package ultra-scroll-mac
-      :if (eq window-system 'mac)
+      :if (carbon-emacs-p)
       ;:load-path "~/code/emacs/ultra-scroll-mac" ; if you git clone'd instead of package-vc-install
       :init
       (setq scroll-conservatively 101 ; important!
@@ -1531,7 +1536,7 @@ Fixing macos scrolling....
               ultra-scroll-mac-mode nil)
       (setq ultra-scroll-mac-mode minibuffer-ultra-scroll-mac-mode--orig)))
 
-  (when (eq system-type 'darwin)
+  (if (carbon-emacs-p)
     (add-hook 'minibuffer-setup-hook #'minibuffer-ultra-scroll-mac-mode)
     (add-hook 'minibuffer-exit-hook (lambda () (minibuffer-ultra-scroll-mac-mode -1)))
     )

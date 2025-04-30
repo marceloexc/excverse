@@ -495,7 +495,7 @@ And disable the ones that come with the GUI
             (when (eq system-type 'darwin)
               (set-face-attribute 'default nil :font "Berkeley Mono-15"))
             (when (eq system-type 'gnu/linux)
-              (set-face-attribute 'default nil :font "JetBrains Mono-10.5")))
+              (set-face-attribute 'default nil :font "Berkeley Mono-10.5")))
    #+end_src
 
 #+begin_src emacs-lisp

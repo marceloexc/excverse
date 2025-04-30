@@ -400,6 +400,12 @@ make some adjustments to the modeline
               'mouse-buffer-menu)
 #+end_src
 
+docview scrolling should be continuous (i.e., when scrolling through PDFs)
+
+#+begin_src emacs-lisp
+  (setq doc-view-continuous t)
+#+end_src
+
 add minions mode for a non cluttered menu bar
 
 #+begin_src emacs-lisp
@@ -487,6 +493,13 @@ And disable the ones that come with the GUI
 #+begin_src emacs-lisp
   (scroll-bar-mode 0)
   (tool-bar-mode 0)
+#+end_src
+
+For quickly switching packages, use ~buffer-expose~
+
+#+begin_src emacs-lisp
+
+  (use-package buffer-expose)
 #+end_src
 ** Font
 
@@ -652,14 +665,15 @@ Use centaur tabs for the tab bar
     (setq centaur-tabs-height 18
           centaur-tabs-show-navigation-buttons t
           centaur-tabs-set-modified-marker t
-          centaur-tabs-set-bar 'under
+          centaur-tabs-set-bar 'over
           centaur-tabs-icon-type 'all-the-icons
+          centaur-tabs-label-fixed-length 10
           centaur-tabs-show-count nil
           centaur-tabs-style "bar"
           centaur-tabs-set-icons t
           centaur-tabs-excluded-prefixes '("*")
           centaur-tabs-exclude-buffers '("*compile*" "*compilation*""*dashboard*"))
-  
+
 
     :bind
     ("C-<prior>" . centaur-tabs-backward)
@@ -701,7 +715,7 @@ install auto dark
     :ensure t
     :custom
     (auto-dark-themes '((ef-elea-dark) (modus-operandi-tinted)))
-
+    :config (setq auto-dark-allow-osascript t)
     :hook
     (auto-dark-dark-mode
      . (lambda ()
@@ -1010,6 +1024,23 @@ Install ~undo-tree~
     :config
     (setq auto-virtualenv-verbose t) (setq auto-virtualenv-reload-lsp t))
 #+end_src
+*** Supercollider
+
+#+begin_src emacs-lisp
+
+  ;; its quite a process to get sclang installed, so just make it optional whenever user has a
+  ;; .scd buffer
+
+  (add-hook 'find-file-hook
+            (lambda ()
+              (when (string-match "\\.scd\\'" (buffer-file-name))
+                (add-to-list 'load-path "/Users/marceloexc/Library/Application Support/SuperCollider/downloaded-quarks/scel/el")
+                (require 'sclang)
+                (setq exec-path (append exec-path '("/Applications/SuperCollider.app/Contents/MacOS/")))
+                (message "Supercollider running! "))))
+
+
+#+end_src
 * Word Processing
 ** Org
 
@@ -1036,6 +1067,7 @@ Install ~undo-tree~
             org-hide-emphasis-markers t
             org-pretty-entities t
             org-startup-folded t
+            org-support-shift-select t
             org-src-preserve-indentation nil)
        ;; everything else
 
@@ -1089,6 +1121,12 @@ Set some default directories when note taking
     (setq org-directory "~/Documents/Notes")
     (setq org-default-notes-file (concat org-directory "/captured.org")))
   ;; this will ALWAYS be how my structure will be!
+
+  (setq org-capture-templates
+        '(("t" "Quick Thoughts" entry
+           (file "~/Documents/Notes/Captured.org")
+           "* %?\nEntered on %U\n")))
+
 #+end_src
   
  Also use ~org-superstar~
@@ -1389,7 +1427,7 @@ Otherwise, enable CUA on linux
            ("s-v" . yank)
            ("s-z" . undo-tree-undo)
            ("s-Z" . undo-tree-redo)
-           ("s-w" . kill-buffer)
+           ("s-w" . kill-this-buffer)
            ("s-{" . mac-previous-tab)
            ("s-}" . mac-next-tab)
            ("s-q" . kill-emacs)
@@ -1401,6 +1439,7 @@ Otherwise, enable CUA on linux
            ("S-s-<right>" . mac-next-tab)
            ("S-<swipe-right>" . mac-next-tab)
            ("s-n" . make-frame-command)
+           ("M-<tab>" . buffer-expose)
            ("s-|" . mac-toggle-tab-group-overview)
            ("s-M-t" . mac-move-tab-to-new-frame)
            ("S-s-M-<right>" . mac-move-tab-right)
@@ -1451,7 +1490,7 @@ Then use general...
         "d" '(dired :which-key "Dired ")
 
         "b" '(consult-buffer :which-key "consult-buffer")
-	  
+
         ;;f for files
         "f" '(:ignore t :which-key "File")
         "ff" '(find-file :which-key "find-file")
@@ -1475,7 +1514,8 @@ Then use general...
         "t" '(:ignore t :which-key "Toggles")
         "tt" '(treemacs :which-key "Toggle Treemacs")
         "te" '(display-line-numbers-mode :which-key "Toggle Line Numbers")
-        "to" '(olivetti :which-key "Toggle Olivetti")
+        "to" '(olivetti-mode :which-key "Toggle Olivetti")
+        "tm" '(demap-toggle :which-key "Toggle minimap")
 
         ;;l - Language server (with eglop
         "la" '(eglot-code-actions :which-key "Code Actions")
@@ -1510,8 +1550,13 @@ Fixing macos scrolling....
     (unless (package-installed-p 'ultra-scroll-mac)
       (package-vc-install '(ultra-scroll-mac :vc-backend Git :url "https://github.com/jdtsmith/ultra-scroll-mac")))
 
+  ;; function that returns true if we are running on emacs-mac exclusively
+  (defun carbon-emacs-p ()
+    (string-match-p "Carbon" (emacs-version)))
+
+
     (use-package ultra-scroll-mac
-      :if (eq window-system 'mac)
+      :if (carbon-emacs-p)
       ;:load-path "~/code/emacs/ultra-scroll-mac" ; if you git clone'd instead of package-vc-install
       :init
       (setq scroll-conservatively 101 ; important!
@@ -1531,7 +1576,7 @@ Fixing macos scrolling....
               ultra-scroll-mac-mode nil)
       (setq ultra-scroll-mac-mode minibuffer-ultra-scroll-mac-mode--orig)))
 
-  (when (eq system-type 'darwin)
+  (if (carbon-emacs-p)
     (add-hook 'minibuffer-setup-hook #'minibuffer-ultra-scroll-mac-mode)
     (add-hook 'minibuffer-exit-hook (lambda () (minibuffer-ultra-scroll-mac-mode -1)))
     )

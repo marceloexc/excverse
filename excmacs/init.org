@@ -504,7 +504,7 @@ For quickly switching packages, use ~buffer-expose~
 ** Font
 
    #+begin_src emacs-lisp
-     (when (member "JetBrains Mono" (font-family-list))
+     (when (member "Berkeley Mono" (font-family-list))
             (when (eq system-type 'darwin)
               (set-face-attribute 'default nil :font "Berkeley Mono-15"))
             (when (eq system-type 'gnu/linux)
@@ -513,6 +513,7 @@ For quickly switching packages, use ~buffer-expose~
 
 #+begin_src emacs-lisp
   (defun +my-set-custom-fonts ()
+    (interactive)
     (when (eq system-type 'darwin)
       ;; Mode line font settings
       (set-face-attribute 'mode-line nil
@@ -592,7 +593,7 @@ For quickly switching packages, use ~buffer-expose~
 
 
 
- 
+
 #+end_src
 
 Sometimes, the modeline doenst keep its settings...

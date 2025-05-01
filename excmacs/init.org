@@ -966,6 +966,26 @@ Install ~undo-tree~
 
    #+end_src
 * Programming
+** Git
+
+Use magit for git
+
+#+begin_src emacs-lisp
+
+  (use-package magit
+    :ensure t
+    :config
+    (setq magit-display-buffer-function #'magit-display-buffer-fullframe-status-v1
+  		magit-diff-refine-hunk 'all))
+#+end_src
+
+Use forge
+
+#+begin_src emacs-lisp
+  (use-package forge
+    :after magit
+    :ensure t)
+#+end_src
 ** Languages
 *** Swift
 

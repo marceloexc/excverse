@@ -371,6 +371,19 @@ easy dired hacks...
 
   (add-hook 'dired-mode-hook 'visual-line-mode)
 
+  ;;lets see if this works...
+  (defun my-dired-open-file-in-new-buffer ()
+    "Open file at point in a new buffer, keeping Dired open."
+    (interactive)
+    (let ((file (dired-get-file-for-visit)))
+      (when (file-regular-p file)
+        (find-file-other-window file)
+        (delete-other-windows)))) ; makes it fullscreen
+  (define-key dired-mode-map (kbd "o") #'my-dired-open-file-in-new-buffer)
+
+
+  ;;end
+
   (when (require 'all-the-icons nil t)
     (add-hook 'dired-mode-hook 'all-the-icons-dired-mode))
 #+end_src
@@ -407,7 +420,6 @@ add minions mode for a non cluttered menu bar
     :ensure t
     :config
     (setq
-      minions-mode-line-lighter "[+]"
       minions-direct '(flycheck-mode pyvenv-mode))
     (minions-mode 1))
 #+end_src
@@ -492,7 +504,7 @@ And disable the ones that come with the GUI
 For quickly switching packages, use ~buffer-expose~
 
 #+begin_src emacs-lisp
-  (use-package buffer-expose)
+ ;; (use-package buffer-expose)
 #+end_src
 
 use nerd-icons instead of all-the-icons (i have some issue with it)
@@ -657,6 +669,25 @@ Dash board provides a nice welcome.
   
        (dashboard-setup-startup-hook))
    #+end_src
+
+** Toolbar
+
+Remove some useless (to me) toolbar items 
+#+begin_src emacs-lisp
+  (define-key global-map [menu-bar tools encryption-decryption] nil t)
+
+  (define-key global-map [menu-bar tools calendar] nil t)
+  (define-key global-map [menu-bar tools simple-calculator] nil t)
+  (define-key global-map [menu-bar tools gdb] nil t)
+  (define-key global-map [menu-bar tools gnus] nil t)
+  (define-key global-map [menu-bar tools calc] nil t)
+  (define-key global-map [menu-bar tools semantic] nil t)
+  (define-key global-map [menu-bar tools rmail] nil t)
+  (define-key global-map [menu-bar tools compose-mail] nil t)
+
+
+  
+#+end_src
 ** Tabs
 
 Use centaur tabs for the tab bar
@@ -666,17 +697,18 @@ Use centaur tabs for the tab bar
     :demand
     :config
     (centaur-tabs-mode t)
-    (setq centaur-tabs-height 18
+    (setq centaur-tabs-height 24
           centaur-tabs-show-navigation-buttons t
           centaur-tabs-set-modified-marker t
           centaur-tabs-set-bar 'over
           centaur-tabs-icon-type 'nerd-icons
-          centaur-tabs-label-fixed-length 10
+          centaur-tabs-label-fixed-length 14
           centaur-tabs-show-count nil
           centaur-tabs-style "bar"
           centaur-tabs-set-icons t
-          centaur-tabs-excluded-prefixes '("*")
-          centaur-tabs-exclude-buffers '("*compile*" "*compilation*""*dashboard*"))
+          ;;centaur-tabs-excluded-prefixes '("*")
+          centaur-tabs-exclude-buffers '("*Minibuf-1*" "*which-key*")
+          )
 
 
     :bind
@@ -684,6 +716,86 @@ Use centaur tabs for the tab bar
     ("C-<next>" . centaur-tabs-forward))
 
 
+  (defun my-centaur-tabs-buffer-groups ()
+    "Custom groupings for Centaur Tabs."
+    (list
+     (cond
+      ;; Only specific utility modes go to 'Fundamental'
+      ((member (buffer-name) '("*compile*" "*Minibuf-1*" "*dashboard*" "*Messages*" "*helm*" "*scratch*"  "*Async-native-compile-log*" "*Compile-Log*"))
+       "Fundamental")
+      ;; Everything else goes to 'Main'
+      (t "Main"))))
+
+
+
+  (defun centaur-tabs-hide-tab (x)
+    "Do no to show buffer X in tabs."
+    (let ((name (format "%s" x)))
+      (or
+       ;; Current window is not dedicated window.
+       (window-dedicated-p (selected-window))
+
+       ;; Buffer name not match below blacklist.
+       (string-prefix-p "*epc" name)
+       (string-prefix-p "*helm" name)
+       (string-prefix-p "*Helm" name)
+       (string-prefix-p "*which" name)
+       (string-prefix-p "*Compile-Log*" name)
+       (string-prefix-p "*lsp" name)
+       (string-prefix-p "*company" name)
+       (string-prefix-p "*Flycheck" name)
+       (string-prefix-p "*tramp" name)
+       (string-prefix-p " *Mini" name)
+       (string-prefix-p "*straight" name)
+       (string-prefix-p "*which" name)
+       (string-prefix-p " *temp" name)
+       (string-prefix-p "*mybuf" name)
+       (string-prefix-p "*Org" name)
+
+       ;; Is not magit buffer.
+       (and (string-prefix-p "magit" name)
+            (not (file-name-extension name)))
+       )))
+
+  (setq centaur-tabs-buffer-groups-function 'my-centaur-tabs-buffer-groups)
+  (setq centaur-tabs-hide-tab-function 'centaur-tabs-hide-tab)
+#+end_src
+** Mode line
+
+Add an "X" to the modeline to close the window. Only shows up when there are more than two windows on current buffer
+
+#+begin_src emacs-lisp
+  (defun my/close-clicked-window (event)
+    "Close the window that was clicked on."
+    (interactive "e")
+    (let ((window (posn-window (event-start event))))
+      (when (window-live-p window)
+        (delete-window window))))
+
+  (defvar my/close-window-modeline-map
+    (let ((map (make-sparse-keymap)))
+      (define-key map [mode-line mouse-1] 'my/close-clicked-window)
+      map)
+    "Keymap for the close window button in the mode line.")
+
+  (defun my/close-window-modeline-construct ()
+    "Construct a clickable [×] for the mode line to close windows.
+  Only appears when there are multiple windows in the frame."
+    (if (> (count-windows) 1)
+        (propertize " ☒ "
+                    'local-map my/close-window-modeline-map
+                    'mouse-face 'mode-line-highlight
+                    'face '(:foreground "red" :height 150)
+                    'help-echo "Click to close this window")
+      ""))
+
+  ;; Insert at the beginning of the mode-line-format
+  (setq-default mode-line-format
+                (cons '(:eval (my/close-window-modeline-construct))
+                      mode-line-format))
+
+  ;; Force update of all mode lines
+  (force-mode-line-update t)
 #+end_src
 ** Treemacs
 Installing treemacs
@@ -744,6 +856,7 @@ install autothemer
 #+begin_src emacs-lisp
   (use-package ef-themes)
   (use-package modus-themes)
+  (use-package adwaita-dark-theme)
   (use-package doom-themes
     :ensure t
     :init
@@ -869,22 +982,24 @@ Use projectile
   #+end_src
 
    #+begin_src emacs-lisp
-
-   ;; Modular text completion framework
-   (use-package corfu
-     :init
-     (global-corfu-mode 1)
-     (corfu-popupinfo-mode 1)
-     :config
-     (setq corfu-cycle t
-           corfu-auto t
-           corfu-auto-delay 0
-           corfu-auto-prefix 2
-           corfu-popupinfo-delay 0.5))
-
+     (use-package company
+       :ensure t
+       :hook (after-init . global-company-mode) ; Enable globally after startup
+       :bind ("M-/" . company-complete)       ; Quick trigger key
+       :custom
+       (company-minimum-prefix-length 2)       ; Start suggesting after 2 chars
+       (company-idle-delay 0.2)                ; Faster suggestions (default: 0.5)
+       (company-selection-wrap-around t)       ; Wrap around candidate list
+       (company-tooltip-limit 10)              ; Show fewer candidates initially
+       (company-dabbrev-downcase nil)          ; Case-sensitive suggestions
+       (company-require-match 'never)          ; Allow arbitrary input
+       (company-show-numbers t)                ; Show numbers for quick selection
+       (company-frontends                      ; Cleaner UI
+        '(company-pseudo-tooltip-frontend      ; Default popup
+          company-echo-metadata-frontend)))    ; Show docs in echo area
    #+end_src
 
-   I use corfu in concert with [[https://github.com/oantolin/orderless][orderless]].
+   I use corfu in concert with [[https://github.com/oantolin/orderless][orderless]]. 
 
   #+begin_src emacs-lisp
 
@@ -1463,7 +1578,7 @@ Otherwise, enable CUA on linux
            ("S-s-<right>" . mac-next-tab)
            ("S-<swipe-right>" . mac-next-tab)
            ("s-n" . make-frame-command)
-           ("M-<tab>" . buffer-expose)
+           ;; ("M-<tab>" . buffer-expose)
            ("s-|" . mac-toggle-tab-group-overview)
            ("s-M-t" . mac-move-tab-to-new-frame)
            ("S-s-M-<right>" . mac-move-tab-right)

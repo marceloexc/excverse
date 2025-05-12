@@ -1267,30 +1267,30 @@ Set some default directories when note taking
            "* %?\nEntered on %U\n")))
 
 #+end_src
-  
- Also use ~org-superstar~
+
+use org-modern to make everything pretty
 
 #+begin_src emacs-lisp
-  (use-package org-superstar
-    :ensure t
-    :after org
-    :hook (org-mode . org-superstar-mode)
-    :config
-    ;; Customize org-superstar-mode
-    (setq org-superstar-headline-bullets-list '("◉" "○" "◇" "✿"))
-    (setq org-superstar-item-bullet-alist '((?+ . ?•) (?- . ?•)))
+  (use-package org-modern
+      :ensure t
+      :after org
+      :config
 
-    ;; fix to actually hide leading stars
+      (setq org-hide-leading-stars t)
+      (setq org-indent-mode-turns-on-hiding-stars nil)
 
-    (setq org-hide-leading-stars nil)
-    (setq org-superstar-leading-bullet ?\s)
-    (setq org-indent-mode-turns-on-hiding-stars nil)
-
-    ;; Enable org-superstar-mode automatically for org-mode
+      (setq org-modern-fold-stars '(("◉" . "◉")
+                                 ("○" . "○")
+                                 ("◇" . "◇")
+                                 ("✿" . "✿")))
 
 
-    (add-hook 'org-mode-hook (lambda () (org-superstar-mode 1))))
+      )
+
+  (with-eval-after-load 'org (global-org-modern-mode))
 #+end_src
+
+ Also use ~org-superstar~
 
 Install ~org-toc~
 

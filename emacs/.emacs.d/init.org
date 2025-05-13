@@ -1686,39 +1686,40 @@ Disable some annoyances...(like delete-selection-mode and context menu mode)
 Fixing macos scrolling....
 
 #+begin_src emacs-lisp
-    (unless (package-installed-p 'ultra-scroll-mac)
-      (package-vc-install '(ultra-scroll-mac :vc-backend Git :url "https://github.com/jdtsmith/ultra-scroll-mac")))
+      (unless (package-installed-p 'ultra-scroll)
+        (package-vc-install '(ultra-scroll :vc-backend Git :url  "https://github.com/jdtsmith/ultra-scroll")))
 
-  ;; function that returns true if we are running on emacs-mac exclusively
-  (defun carbon-emacs-p ()
-    (string-match-p "Carbon" (emacs-version)))
+    ;; function that returns true if we are running on emacs-mac exclusively
+    (defun carbon-emacs-p ()
+      (string-match-p "Carbon" (emacs-version)))
 
 
-    (use-package ultra-scroll-mac
-      :if (carbon-emacs-p)
-      ;:load-path "~/code/emacs/ultra-scroll-mac" ; if you git clone'd instead of package-vc-install
-      :init
-      (setq scroll-conservatively 101 ; important!
-            scroll-margin 0)
-      :config
-      (ultra-scroll-mac-mode 1))
+      (use-package ultra-scroll-mac
+        :if (carbon-emacs-p)
+        ;:load-path "~/code/emacs/ultra-scroll-mac" ; if you git clone'd instead of package-vc-install
+        :init
+        (setq scroll-conservatively 3 ; important!
+              scroll-margin 0)
+        :config
+        (ultra-scroll-mac-mode 1))
 
-    (defvar minibuffer-ultra-scroll-mac-mode--orig nil
-    "Stores the original value of `ultra-scroll-mac-mode'.")
 
-  (define-minor-mode minibuffer-ultra-scroll-mac-mode
-    "Toggle `ultra-scroll-mac-mode' only in minibuffers."
-    :init-value nil
-    :global t
-    (if minibuffer-ultra-scroll-mac-mode
-        (setq minibuffer-ultra-scroll-mac-mode--orig ultra-scroll-mac-mode
-              ultra-scroll-mac-mode nil)
-      (setq ultra-scroll-mac-mode minibuffer-ultra-scroll-mac-mode--orig)))
+      (defvar minibuffer-ultra-scroll-mac-mode--orig nil
+      "Stores the original value of `ultra-scroll-mac-mode'.")
 
-  (if (carbon-emacs-p)
-    (add-hook 'minibuffer-setup-hook #'minibuffer-ultra-scroll-mac-mode)
-    (add-hook 'minibuffer-exit-hook (lambda () (minibuffer-ultra-scroll-mac-mode -1)))
-    )
+    (define-minor-mode minibuffer-ultra-scroll-mac-mode
+      "Toggle `ultra-scroll-mac-mode' only in minibuffers."
+      :init-value nil
+      :global t
+      (if minibuffer-ultra-scroll-mac-mode
+          (setq minibuffer-ultra-scroll-mac-mode--orig ultra-scroll-mac-mode
+                ultra-scroll-mac-mode nil)
+        (setq ultra-scroll-mac-mode minibuffer-ultra-scroll-mac-mode--orig)))
+
+    (if (carbon-emacs-p)
+      (add-hook 'minibuffer-setup-hook #'minibuffer-ultra-scroll-mac-mode)
+      (add-hook 'minibuffer-exit-hook (lambda () (minibuffer-ultra-scroll-mac-mode -1)))
+      )
 
 
 #+end_src

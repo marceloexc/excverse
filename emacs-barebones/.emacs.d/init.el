@@ -116,3 +116,39 @@ input and search the whole buffer for it."
                 (rxt-quote-pcre
                  (buffer-substring-no-properties start end))))
             (call-interactively #'consult-line))))))
+
+
+;; Define a prefix key map for "M-a"
+(define-prefix-command 'my-prefix-map)
+(global-set-key (kbd "M-a") 'my-prefix-map)
+
+;; Top-level bindings
+(define-key my-prefix-map (kbd "d") 'dired)
+(define-key my-prefix-map (kbd "b") 'ido-switch-buffer)
+
+;; File submenu
+(define-prefix-command 'my-file-map)
+(define-key my-prefix-map (kbd "f") 'my-file-map)
+(define-key my-file-map (kbd "f") 'find-file)
+(define-key my-file-map (kbd "r") 'recentf-open-files)
+
+;; Notes submenu
+(define-prefix-command 'my-notes-map)
+(define-key my-prefix-map (kbd "n") 'my-notes-map)
+(define-key my-notes-map (kbd "s") 'org-edit-src-code)
+(define-key my-notes-map (kbd "d") 'org-deadline)
+(define-key my-notes-map (kbd "e") 'org-emphasize)
+(define-key my-notes-map (kbd "l") 'org-insert-link)
+
+;; Restart submenu
+(define-prefix-command 'my-restart-map)
+(define-key my-prefix-map (kbd "r") 'my-restart-map)
+(define-key my-restart-map (kbd "r") 'restart-emacs)
+
+;; Window submenu
+(define-prefix-command 'my-window-map)
+(define-key my-prefix-map (kbd "w") 'my-window-map)
+(define-key my-window-map (kbd "d") 'delete-window)
+(define-key my-window-map (kbd "a") 'split-window-right)
+(define-key my-window-map (kbd "s") 'split-window-below)
+(define-key my-window-map (kbd "w") 'other-window)

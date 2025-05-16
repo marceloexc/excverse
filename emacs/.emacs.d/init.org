@@ -1277,7 +1277,8 @@ use org-modern to make everything pretty
       :config
 
       (setq org-hide-leading-stars t)
-      (setq org-indent-mode-turns-on-hiding-stars nil)
+      ;; (setq org-indent-mode-turns-on-hiding-stars nil)
+      (setq org-modern-hide-stars nil)
 
       (setq org-modern-fold-stars '(("◉" . "◉")
                                  ("○" . "○")

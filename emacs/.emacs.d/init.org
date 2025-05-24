@@ -5,51 +5,25 @@
 
 * About
 
-  This is an Emacs configuration file written in [[http://orgmode.org][Org mode]]. It is an attempt to
-  keep my =~/.emacs.d= tidy, but still be able to keep it all in one file. I
-  aim to briefly explain all my configurations as I go along!
+Welcome to my Emacs configuration! The entire init file is written in Org mode, to keep it literate and easy to modify! I got inspired from [[https://github.com/larstvei/dot-emacs][this config]], and you might see some similarities.
 
-  I would not recommend using this configuration /as-is/, because it probably
-  contains a lot you don't really need. I do, however, hope people find some
-  golden nuggets that they can smuggle into their own configs.
+I try to make this config easy to set up, so it should work on a normal Emacs install without many dependencies. Try it out /!!/
 
-  If you really do want to try this config out, this is how I'd go about it:
+Since I use so many machines, I do use ~GNU stow~ to manage my dotfiles and have them all symlinked together. To install it with ~stow~, use
 
-  Clone the repo.
+#+begin_src sh :tangle no
+  brew install git stow
 
-  #+begin_src sh :tangle no
+  git clone https://github.com/marceloexc/excverse
 
-  git clone https://github.com/larstvei/dot-emacs
+  cd excverse/
 
-  #+end_src
+  stow -t "$HOME" emacs # or, just move everything inside of emacs/.emacs.d into ~/.emacs.d/ if you don't want to use stow
+#+end_src
 
-  Backup your old =~/.emacs.d= (if necessary).
-
-  #+begin_src sh :tangle no
-
-  mv ~/.emacs.d ~/.emacs.d-bak
-
-  #+end_src
-
-  Backup your old =~/.emacs=-file (if necessary).
-
-  #+begin_src sh :tangle no
-
-  mv ~/.emacs ~/.emacs-bak
-
-  #+end_src
-
-  And finally
-
-  #+begin_src sh :tangle no
-
-  mv dot-emacs ~/.emacs.d
-
-  #+end_src
-
-  On first run it should install a bunch of packages (this might take a while),
-  and you might have to restart your Emacs the first time. If you experience
-  bugs, please let me know!
+On first run it should install a bunch of packages (this might take a while),
+and you might have to restart your Emacs the first time. If you experience
+bugs, please let me know!
 
 * Meta
 
@@ -318,6 +292,12 @@
 
   #+end_src
 
+Automatically enable line numbers in buffers everytime I enter a "programming" mode
+
+#+begin_src emacs-lisp
+  (add-hook 'prog-mode-hook 'display-line-numbers-mode)
+#+end_src
+
 MarceloEXC talking here: I actually have a ~CUA~-ish type of setup going on in
 terms of normal keybindings.
 
@@ -521,7 +501,7 @@ use nerd-icons instead of all-the-icons (i have some issue with it)
    #+begin_src emacs-lisp
      (when (member "Berkeley Mono" (font-family-list))
             (when (eq system-type 'darwin)
-              (set-face-attribute 'default nil :font "Berkeley Mono-15"))
+              (set-face-attribute 'default nil :font "Berkeley Mono-14" :weight 'normal))
             (when (eq system-type 'gnu/linux)
               (set-face-attribute 'default nil :font "Berkeley Mono-10.5")))
    #+end_src
@@ -646,9 +626,8 @@ Dash board provides a nice welcome.
        (setq ffap-machine-p-known 'reject)  ; Disable remote file name completion
        (setq ffap-url-regexp nil))          ; Disable URL features
 
-     ;; Dashboard configuration
      (use-package dashboard
-       :init  ; Use :init instead of :config for better performance
+       :init 
        (setq dashboard-projects-backend 'project-el
              dashboard-banner-logo-title nil
              dashboard-center-content t
@@ -656,16 +635,7 @@ Dash board provides a nice welcome.
              dashboard-page-separator "\n\n\n"
              dashboard-items '((projects . 15)
                               (recents  . 15)
-                              (bookmarks . 5))
-             ;; Prevent dashboard from loading unnecessary dependencies at startup
-             dashboard-init-info ""              ; Disable initial info message
-             dashboard-set-heading-icons nil     ; Disable heading icons
-             dashboard-set-file-icons nil)       ; Disable file icons initially
-  
-       ;; Load icons later if you need them
-       (with-eval-after-load 'dashboard
-         (setq dashboard-set-heading-icons t
-               dashboard-set-file-icons t))
+                              (bookmarks . 5)))
   
        (dashboard-setup-startup-hook))
    #+end_src
@@ -721,7 +691,7 @@ Use centaur tabs for the tab bar
     (list
      (cond
       ;; Only specific utility modes go to 'Fundamental'
-      ((member (buffer-name) '("*compile*" "*Minibuf-1*" "*dashboard*" "*Messages*" "*helm*" "*scratch*"  "*Async-native-compile-log*" "*Compile-Log*"))
+      ((member (buffer-name) '("*compile*" "*Minibuf-1*" "*dashboard*" "*Messages*" "*helm*" "*scratch*"  "*Async-native-compile-log*" "*Compile-Log*" "*xref*"))
        "Fundamental")
       ;; Everything else goes to 'Main'
       (t "Main"))))
@@ -797,8 +767,9 @@ Add an "X" to the modeline to close the window. Only shows up when there are mor
   ;; Force update of all mode lines
   (force-mode-line-update t)
 #+end_src
-** Treemacs
-Installing treemacs
+** File Navigation
+
+Treemacs is good for project-style navigation
 
 #+begin_src emacs-lisp
 
@@ -812,6 +783,12 @@ Installing treemacs
     :after (treemacs)
     :ensure t
     :config (treemacs-set-scope-type 'Tabs))
+#+end_src
+
+However now I'm really trying it out with sr-speedbar...
+
+#+begin_src emacs-lisp
+  (use-package sr-speedbar)
 #+end_src
 ** TODO Theme
 
@@ -846,12 +823,6 @@ install auto dark
   (+my-set-custom-fonts)
 #+end_src
 
-install autothemer
-
-#+begin_src emacs-lisp
-  (unless (package-installed-p 'autothemer)
-        (package-vc-install '(autothemer :vc-backend Git :url "https://github.com/jasonm23/autothemer")))
-#+end_src
 
 #+begin_src emacs-lisp
   (use-package ef-themes)
@@ -875,9 +846,9 @@ And solaire mode for better readability
 #+end_src
 * macOS specific
 
-  The package [[https://github.com/purcell/exec-path-from-shell][exec-path-from-shell]] synchronizes environment variables from the
-  shell to Emacs. This makes it a lot easier to deal with external programs on
-  macOS.
+The package [[https://github.com/purcell/exec-path-from-shell][exec-path-from-shell]] synchronizes environment variables from the
+shell to Emacs. This makes it a lot easier to deal with external programs on
+macOS.
 
   #+begin_src emacs-lisp
 
@@ -888,8 +859,8 @@ And solaire mode for better readability
 
   #+end_src
 
-  I had some problems with Dired, and this seems to have solved it. I /think/
-  the solutions was from [[https://stackoverflow.com/questions/4076360/error-in-dired-sorting-on-os-x][here]], and my problems were related, but not the same.
+I had some problems with Dired, and this seems to have solved it. I /think/
+the solutions was from [[https://stackoverflow.com/questions/4076360/error-in-dired-sorting-on-os-x][here]], and my problems were related, but not the same.
 
   #+begin_src emacs-lisp
 
@@ -911,6 +882,48 @@ And solaire mode for better readability
 
   #+end_src
 
+Fixing macos scrolling....
+
+#+begin_src emacs-lisp
+    (unless (package-installed-p 'ultra-scroll)
+      (package-vc-install '(ultra-scroll :vc-backend Git :url  "https://github.com/jdtsmith/ultra-scroll")))
+
+  ;; function that returns true if we are running on emacs-mac exclusively
+  (defun carbon-emacs-p ()
+    (string-match-p "Carbon" (emacs-version)))
+
+
+    (use-package ultra-scroll
+      :if (carbon-emacs-p)
+      ;:load-path "~/code/emacs/ultra-scroll-mac" ; if you git clone'd instead of package-vc-install
+      :init
+      (setq scroll-conservatively 3 ; important!
+            scroll-margin 0)
+      :config
+      (ultra-scroll-mode 1))
+
+
+    (defvar minibuffer-ultra-scroll-mac-mode--orig nil
+    "Stores the original value of `ultra-scroll-mac-mode'.")
+
+  (define-minor-mode minibuffer-ultra-scroll-mac-mode
+    "Toggle `ultra-scroll-mac-mode' only in minibuffers."
+    :init-value nil
+    :global t
+    (if minibuffer-ultra-scroll-mac-mode
+        (setq minibuffer-ultra-scroll-mac-mode--orig ultra-scroll-mode
+              ultra-scroll-mode nil)
+      (setq ultra-scroll-mac-mode minibuffer-ultra-scroll-mac-mode--orig)))
+
+  (if (carbon-emacs-p)
+    (add-hook 'minibuffer-setup-hook #'minibuffer-ultra-scroll-mac-mode)
+    (add-hook 'minibuffer-exit-hook (lambda () (minibuffer-ultra-scroll-mac-mode -1)))
+    )
+
+
+#+end_src
+
+  
 * Version control
 
   Have some visual indication where there are uncommitted changes.
@@ -1094,13 +1107,6 @@ Use magit for git
   		magit-diff-refine-hunk 'all))
 #+end_src
 
-Use forge
-
-#+begin_src emacs-lisp
-  (use-package forge
-    :after magit
-    :ensure t)
-#+end_src
 ** Languages
 *** Swift
 
@@ -1684,46 +1690,6 @@ Disable some annoyances...(like delete-selection-mode and context menu mode)
   (delete-selection-mode t)
 #+end_src
 
-Fixing macos scrolling....
-
-#+begin_src emacs-lisp
-      (unless (package-installed-p 'ultra-scroll)
-        (package-vc-install '(ultra-scroll :vc-backend Git :url  "https://github.com/jdtsmith/ultra-scroll")))
-
-    ;; function that returns true if we are running on emacs-mac exclusively
-    (defun carbon-emacs-p ()
-      (string-match-p "Carbon" (emacs-version)))
-
-
-      (use-package ultra-scroll-mac
-        :if (carbon-emacs-p)
-        ;:load-path "~/code/emacs/ultra-scroll-mac" ; if you git clone'd instead of package-vc-install
-        :init
-        (setq scroll-conservatively 3 ; important!
-              scroll-margin 0)
-        :config
-        (ultra-scroll-mac-mode 1))
-
-
-      (defvar minibuffer-ultra-scroll-mac-mode--orig nil
-      "Stores the original value of `ultra-scroll-mac-mode'.")
-
-    (define-minor-mode minibuffer-ultra-scroll-mac-mode
-      "Toggle `ultra-scroll-mac-mode' only in minibuffers."
-      :init-value nil
-      :global t
-      (if minibuffer-ultra-scroll-mac-mode
-          (setq minibuffer-ultra-scroll-mac-mode--orig ultra-scroll-mac-mode
-                ultra-scroll-mac-mode nil)
-        (setq ultra-scroll-mac-mode minibuffer-ultra-scroll-mac-mode--orig)))
-
-    (if (carbon-emacs-p)
-      (add-hook 'minibuffer-setup-hook #'minibuffer-ultra-scroll-mac-mode)
-      (add-hook 'minibuffer-exit-hook (lambda () (minibuffer-ultra-scroll-mac-mode -1)))
-      )
-
-
-#+end_src
 
 
 

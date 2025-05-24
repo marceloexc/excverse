@@ -322,11 +322,18 @@ And then some equivalents for linux systems...
                ("C-f" . +default/search-buffer)))
 #+end_src
 
-And I will a single ESC key to execute ~keyboard-quit~ instead of ESC ESC ESC
+And I will a single ESC key to execute ~keyboard-quit~ instead of ESC ESC ESC...however, I don't want to do ~keyboard-escape-quit~ because then it closes every single one of my windows!
+
+Instead, we use a custom function that I got from here...
 
 #+begin_src emacs-lisp
+  (require 'cl-lib)
+  (defun my-keyboard-escape-quit (fun &rest args)
+    (cl-letf (((symbol-function 'one-window-p) (lambda (&rest _) t)))
+      (apply fun args)))
+  (advice-add 'keyboard-escape-quit :around #'my-keyboard-escape-quit)
+
   (if (display-graphic-p)
-      ;; Graphical environment: ESC -> keyboard-escape-quit
       (global-set-key (kbd "<escape>") 'keyboard-escape-quit)
     ;; Terminal environment: ESC -> C-g
     (global-set-key (kbd "<escape>") 'keyboard-quit))

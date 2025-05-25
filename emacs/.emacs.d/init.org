@@ -324,7 +324,7 @@ And then some equivalents for linux systems...
 
 And I will a single ESC key to execute ~keyboard-quit~ instead of ESC ESC ESC...however, I don't want to do ~keyboard-escape-quit~ because then it closes every single one of my windows!
 
-Instead, we use a custom function that I got from here...
+Instead, we use a custom function that I got [[https://old.reddit.com/r/emacs/comments/e5nady/redefined_esc_esc_esc_to_save_my_sanity_it_worked/][from here]]...
 
 #+begin_src emacs-lisp
   (require 'cl-lib)
@@ -661,9 +661,6 @@ Remove some useless (to me) toolbar items
   (define-key global-map [menu-bar tools semantic] nil t)
   (define-key global-map [menu-bar tools rmail] nil t)
   (define-key global-map [menu-bar tools compose-mail] nil t)
-
-
-  
 #+end_src
 ** Tabs
 
@@ -686,8 +683,6 @@ Use centaur tabs for the tab bar
           ;;centaur-tabs-excluded-prefixes '("*")
           centaur-tabs-exclude-buffers '("*Minibuf-1*" "*which-key*")
           )
-
-
     :bind
     ("C-<prior>" . centaur-tabs-backward)
     ("C-<next>" . centaur-tabs-forward))
@@ -698,7 +693,7 @@ Use centaur tabs for the tab bar
     (list
      (cond
       ;; Only specific utility modes go to 'Fundamental'
-      ((member (buffer-name) '("*compile*" "*Minibuf-1*" "*dashboard*" "*Messages*" "*helm*" "*scratch*"  "*Async-native-compile-log*" "*Compile-Log*" "*xref*"))
+      ((member (buffer-name) '("*compile*" "*Minibuf-1*" "*dashboard*" "*Messages*" "*helm*" "*scratch*"  "*Async-native-compile-log*" "*Compile-Log*" "*xref*" "magit-*"))
        "Fundamental")
       ;; Everything else goes to 'Main'
       (t "Main"))))
@@ -724,14 +719,10 @@ Use centaur tabs for the tab bar
        (string-prefix-p "*tramp" name)
        (string-prefix-p " *Mini" name)
        (string-prefix-p "*straight" name)
-       (string-prefix-p "*which" name)
+       (string-prefix-p "*which-key*" name)
        (string-prefix-p " *temp" name)
        (string-prefix-p "*mybuf" name)
        (string-prefix-p "*Org" name)
-
-       ;; Is not magit buffer.
-       (and (string-prefix-p "magit" name)
-            (not (file-name-extension name)))
        )))
 
   (setq centaur-tabs-buffer-groups-function 'my-centaur-tabs-buffer-groups)
@@ -1115,6 +1106,17 @@ Use magit for git
 #+end_src
 
 ** Languages
+*** ELisp / Common Lisp / Clojure
+
+Really, all I want is just some rainbow parenthesis...
+
+#+begin_src emacs-lisp
+  (use-package rainbow-delimiters
+    :hook (emacs-lisp-mode . rainbow-delimiters-mode)
+    :hook (common-lisp-mode . rainbow-delimiters-mode))
+#+end_src
+
+
 *** Swift
 
 #+begin_src emacs-lisp
@@ -1683,10 +1685,6 @@ Then use general...
         "wa" '(split-window-right :which-key "Vertical Split")
         "ws" '(split-window-below :which-key "Horizontal Split")
         "ww" '(other-window :which-key "Other Window")
-
-
-
-
         )
 #+end_src
 

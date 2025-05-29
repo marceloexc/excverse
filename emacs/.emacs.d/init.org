@@ -599,8 +599,8 @@ Remove some useless (to me) toolbar items
 Change the default toolbar title format (I think having my system name is cool, but I would want it to say ~yggdrasil~, instead of ~yggdrasil.local~, so I guess I'll just remove it)
 
 #+begin_src emacs-lisp
-  (setq frame-title-format '(multiple-frames "%b"
-                   ("" "%b - GNU Emacs")))
+  ;;(setq frame-title-format '(multiple-frames "%b"
+    ;;               ("" "%b - GNU Emacs")))
 #+end_src
 ** Tabs
 
@@ -814,8 +814,10 @@ the solutions was from [[https://stackoverflow.com/questions/4076360/error-in-di
 Fixing macos scrolling....
 
 #+begin_src emacs-lisp
-    (unless (package-installed-p 'ultra-scroll)
-      (package-vc-install '(ultra-scroll :vc-backend Git :url  "https://github.com/jdtsmith/ultra-scroll")))
+  (when (eq system-type 'darwin)
+
+  (unless (package-installed-p 'ultra-scroll)
+      (package-vc-install '(ultra-scroll :vc-backend Git :url  "https://github.com/jdtsmith/ultra-scroll"))))
 
   ;; function that returns true if we are running on emacs-mac exclusively
   (defun carbon-emacs-p ()

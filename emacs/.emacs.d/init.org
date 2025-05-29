@@ -584,16 +584,17 @@ Dash board provides a nice welcome.
 
 Remove some useless (to me) toolbar items 
 #+begin_src emacs-lisp
-  (define-key global-map [menu-bar tools encryption-decryption] nil t)
-
-  (define-key global-map [menu-bar tools calendar] nil t)
-  (define-key global-map [menu-bar tools simple-calculator] nil t)
-  (define-key global-map [menu-bar tools gdb] nil t)
-  (define-key global-map [menu-bar tools gnus] nil t)
-  (define-key global-map [menu-bar tools calc] nil t)
-  (define-key global-map [menu-bar tools semantic] nil t)
-  (define-key global-map [menu-bar tools rmail] nil t)
-  (define-key global-map [menu-bar tools compose-mail] nil t)
+  (when (> emacs-major-version 28)
+    (define-key global-map [menu-bar tools encryption-decryption] nil t)
+    (define-key global-map [menu-bar tools calendar] nil t)
+    (define-key global-map [menu-bar tools simple-calculator] nil t)
+    (define-key global-map [menu-bar tools gdb] nil t)
+    (define-key global-map [menu-bar tools gnus] nil t)
+    (define-key global-map [menu-bar tools calc] nil t)
+    (define-key global-map [menu-bar tools semantic] nil t)
+    (define-key global-map [menu-bar tools rmail] nil t)
+    (define-key global-map [menu-bar tools compose-mail] nil t)
+  )
 #+end_src
 
 Change the default toolbar title format (I think having my system name is cool, but I would want it to say ~yggdrasil~, instead of ~yggdrasil.local~, so I guess I'll just remove it)
@@ -1101,12 +1102,11 @@ Really, all I want is just some rainbow parenthesis...
 
 *** GTK Blueprints
 #+begin_src emacs-lisp
-  (unless (package-installed-p 'blueprint-mode)
-    (package-vc-install '(blueprint-mode :vc-backend Git :url "https://github.com/DrBluefall/blueprint-mode")))
-
-
-  (add-to-list 'eglot-server-programs 
-     '(blueprint-mode . ("blueprint-compiler" "lsp")))
+  (when (> emacs-major-version 28)
+    (unless (package-installed-p 'blueprint-mode)
+      (package-vc-install '(blueprint-mode :vc-backend Git :url "https://github.com/DrBluefall/blueprint-mode")))
+    (add-to-list 'eglot-server-programs 
+                 '(blueprint-mode . ("blueprint-compiler" "lsp"))))
 #+end_src
 *** Processing
 

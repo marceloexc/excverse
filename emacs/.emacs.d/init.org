@@ -1161,6 +1161,7 @@ Really, all I want is just some rainbow parenthesis...
             org-pretty-entities t
             org-startup-folded t
             org-support-shift-select t
+            org-display-remote-inline-images t
             org-src-preserve-indentation nil)
        ;; everything else
 
@@ -1281,10 +1282,12 @@ And use org-tidy
 We will use Denote for all of our notes
 
 #+begin_src emacs-lisp
+  (use-package denote
+    :ensure t
+    :init
+    :config (setq denote-file-name-components-order '(title keywords signature identifier)))
 
-(use-package denote
-  :ensure t
-  :init)
+  (add-hook 'dired-mode-hook 'denote-dired-mode)
 #+end_src
 
 And install ~htmlize~ for exporting ORG to HTML and having our code blocks have syntax highlighting
@@ -1297,8 +1300,18 @@ And install ~htmlize~ for exporting ORG to HTML and having our code blocks have 
 Use ~org-download~ for drag and drop images
 
 #+begin_src emacs-lisp
+  ;;custom annotation tag that removes the initial fileURL, as it is usually too long and might reveal personal information
+
+  (defun my/org-download-annotate-default (link)
+    "Annotate LINK with the time of download."
+    (format "#+DOWNLOADED: at %s\n"
+            (format-time-string "%Y-%m-%d %H:%M:%S")))
+
+
   (use-package org-download
-  :ensure t)
+    :ensure t
+    :config (setq-default org-download-image-dir "./denote-resources"
+                          org-download-annotate-function #'my/org-download-annotate-default))
 #+end_src
 
 and ~org-ros~ for quick screenshots

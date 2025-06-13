@@ -488,6 +488,7 @@ use nerd-icons instead of all-the-icons (i have some issue with it)
   (use-package nerd-icons)
 
   (use-package nerd-icons-dired
+    :defer t
     :hook
     (dired-mode . nerd-icons-dired-mode))
 #+end_src
@@ -543,17 +544,14 @@ use nerd-icons instead of all-the-icons (i have some issue with it)
 
    #+begin_src emacs-lisp
 
-   ;; Minor mode for a nice writing environment
-   (use-package olivetti
-     :defer t
-     :config
-     (setq-default olivetti-body-width 130))
-
-;; make it run automatically
-
-(dolist (f '(org-mode-hook text-mode-hook))
-  (add-hook f #'olivetti-mode))
-
+        ;; Minor mode for a nice writing environment
+        (use-package olivetti
+          :defer t
+          :hook ((org-mode . olivetti-mode)
+                 (text-mode . olivetti-mode))
+          :config
+          (setq-default olivetti-body-width 130))
+     
    #+end_src
 
 ** Dashboard
@@ -609,62 +607,69 @@ Use centaur tabs for the tab bar
 
 #+begin_src emacs-lisp
   (use-package centaur-tabs
-	:demand
-	:config
-	(centaur-tabs-mode t)
-	(setq centaur-tabs-height 24
-		  centaur-tabs-show-navigation-buttons t
-		  centaur-tabs-set-modified-marker t
-		  centaur-tabs-set-bar 'over
-		  centaur-tabs-icon-type 'nerd-icons
-		  centaur-tabs-label-fixed-length 14
-		  centaur-tabs-show-count nil
-		  centaur-tabs-style "bar"
-		  centaur-tabs-set-icons t
-		  ;;centaur-tabs-excluded-prefixes '("*")
-		  centaur-tabs-exclude-buffers '("*Minibuf-1*" "*which-key*")
-		  )
-	:bind
-	("C-<prior>" . centaur-tabs-backward)
-	("C-<next>" . centaur-tabs-forward))
+    :demand
+    :config
+    (centaur-tabs-mode t)
+    (setq centaur-tabs-height 24
+          centaur-tabs-show-navigation-buttons t
+          centaur-tabs-set-modified-marker t
+          centaur-tabs-set-bar 'over
+          centaur-tabs-icon-type 'nerd-icons
+          centaur-tabs-label-fixed-length 14
+          centaur-tabs-show-count nil
+          centaur-tabs-style "bar"
+          centaur-tabs-set-icons t
+          ;;centaur-tabs-excluded-prefixes '("*")
+          centaur-tabs-exclude-buffers '("*Minibuf-1*" "*which-key*")
+          )
+    :bind
+    ("C-<prior>" . centaur-tabs-backward)
+    ("C-<next>" . centaur-tabs-forward))
 
   (defun my-centaur-tabs-buffer-groups ()
-	"Custom groupings for Centaur Tabs."
-	(list
-	 (cond
-	  ;; Only specific utility modes go to 'Fundamental'
-	  ((member (buffer-name) '("*compile*" "*Minibuf-1*" "*dashboard*" "*Messages*" "*helm*" "*Async-native-compile-log*" "*Compile-Log*" "*xref*" "magit-*" "*Completions*"))
-	   "Fundamental")
-	  ;; Everything else goes to 'Main'
-	  (t "Main"))))
+    "Custom groupings for Centaur Tabs."
+    (list
+     (cond
+      ;; Only specific utility modes go to 'Fundamental'
+      ((member (buffer-name) '("*compile*" "*Minibuf-1*" "*dashboard*" "*Messages*" "*helm*" "*Async-native-compile-log*" "*Compile-Log*" "*xref*" "magit-*" "*Completions*"))
+       "Fundamental")
+      ;; Everything else goes to 'Main'
+      (t "Main"))))
 
   (defun centaur-tabs-hide-tab (x)
-	"Do no to show buffer X in tabs."
-	(let ((name (format "%s" x)))
-	  (or
-	   ;; Current window is not dedicated window.
-	   (window-dedicated-p (selected-window))
+    "Do no to show buffer X in tabs."
+    (let ((name (format "%s" x)))
+      (or
+       ;; Current window is not dedicated window.
+       (window-dedicated-p (selected-window))
 
-	   ;; Buffer name not match below blacklist.
-	   (string-prefix-p "*epc" name)
-	   (string-prefix-p "*helm" name)
-	   (string-prefix-p "*Helm" name)
-	   (string-prefix-p "*which" name)
-	   (string-prefix-p "*Compile-Log*" name)
-	   (string-prefix-p "*lsp" name)
-	   (string-prefix-p "*company" name)
-	   (string-prefix-p "*Flycheck" name)
-	   (string-prefix-p "*tramp" name)
-	   (string-prefix-p " *Mini" name)
-	   (string-prefix-p "*straight" name)
-	   (string-prefix-p "*which-key*" name)
-	   (string-prefix-p " *temp" name)
-	   (string-prefix-p "*mybuf" name)
-	   (string-prefix-p "*Org" name)
-	   )))
+       ;; Buffer name not match below blacklist.
+       (string-prefix-p "*epc" name)
+       (string-prefix-p "*helm" name)
+       (string-prefix-p "*Helm" name)
+       (string-prefix-p "*which" name)
+       (string-prefix-p "*Compile-Log*" name)
+       (string-prefix-p "*lsp" name)
+       (string-prefix-p "*company" name)
+       (string-prefix-p "*Flycheck" name)
+       (string-prefix-p "*tramp" name)
+       (string-prefix-p " *Mini" name)
+       (string-prefix-p "*straight" name)
+       (string-prefix-p "*which-key*" name)
+       (string-prefix-p " *temp" name)
+       (string-prefix-p "*mybuf" name)
+       (string-prefix-p "*Org" name)
+       )))
 
   (setq centaur-tabs-buffer-groups-function 'my-centaur-tabs-buffer-groups)
   (setq centaur-tabs-hide-tab-function 'centaur-tabs-hide-tab)
+
+
+  ;; https://github.com/ema2159/centaur-tabs/issues/225#issuecomment-2564425923
+   (defun centaur-tabs-do-close (event)
+       (interactive "e")
+       (centaur-tabs-do-select event))
+
 #+end_src
 ** Mode line
 

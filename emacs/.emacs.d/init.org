@@ -3,6 +3,18 @@
 #+PROPERTY: header-args :tangle yes
 #+STARTUP: overview
 
+* TODO Things to fix in my config
+
+** [ ] Fix ~inactive-minibuffer~ error
+
+Sometimes, when I kill a buffer, the window gets filled up with this weird buffer that can't do anything....
+
+** [ ] Centaur-tabs bugs
+
+I had to disable closing centaur tabs with the ~X~ button and now just usually resort to killing buffers with ~Cmd+W~. However, I'm pretty sure this only works on Emacs-mac, as on other Emacs builds, ~kill-this-buffer~ can't do anything.
+
+** [ ] Delegate window-closing utility in modeline as seperate Emacs package
+
 * About
 
 Welcome to my Emacs configuration! The entire init file is written in Org mode, to keep it literate and easy to modify! I got inspired from [[https://github.com/larstvei/dot-emacs][this config]], and you might see some similarities.

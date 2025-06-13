@@ -1,6 +1,36 @@
-#+title: My .dotfiles (the universe)
+#+title: dotfiles
 
-These .dotfiles apply best on macOS.
+* Quick tips:
+
+** Don't symlink entire ~emacs.d~ folder, only symlink files
+
+#+begin_src shell
+  stow -t "$HOME" --no-folding emacs
+#+end_src
+
+** Don't native compile (useful for ephemeral setups)
+
+Touch a file titled ~.dir-locals.el~ with the contents of:
+
+#+begin_src emacs-lisp
+  ((nil . ((no-native-compile . t))))
+#+end_src
+
+** Installing stuff without sudo privileges
+
+*** homebrew
+
+#+begin_src shell
+  git clone https://github.com/Homebrew/brew homebrew
+
+  eval "$(homebrew/bin/brew shellenv)"
+  brew update --force --quiet
+  chmod -R go-w "$(brew --prefix)/share/zsh"
+#+end_src
+
+*** Node
+
+https://www.johnpapa.net/node-and-npm-without-sudo/
 
 * Firefox
 Uses a custom ~userChrome.css~ which enables a lightweight vertical tabs setup using Sidebery

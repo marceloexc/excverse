@@ -463,6 +463,12 @@ and finally, enable mouse support when using emacs in the terminal (-nw flag)
     (setq pulsar-highlight-face 'pulsar-yellow))
   #+end_src
 
+Set default window dividers
+
+#+begin_src emacs-lisp
+  (window-divider-mode)
+#+end_src
+  
 I also hate the way EMACS treats native scrollbars...
 
 #+begin_src emacs-lisp
@@ -755,7 +761,8 @@ Treemacs is good for project-style navigation
 However now I'm really trying it out with sr-speedbar...
 
 #+begin_src emacs-lisp
-  (use-package sr-speedbar)
+    (use-package sr-speedbar
+      :defer t)
 #+end_src
 ** TODO Theme
 
@@ -789,6 +796,7 @@ install auto dark
   (use-package ef-themes)
   (use-package modus-themes)
   (use-package adwaita-dark-theme)
+  (use-package doric-themes)
   (use-package doom-themes
     :ensure t
     :init
@@ -798,13 +806,6 @@ install auto dark
 
 #+end_src
 
-And solaire mode for better readability
-
-#+begin_src emacs-lisp
-  (use-package solaire-mode
-    :init
-    (solaire-global-mode +1))
-#+end_src
 * macOS specific
 
 The package [[https://github.com/purcell/exec-path-from-shell][exec-path-from-shell]] synchronizes environment variables from the

@@ -1540,7 +1540,7 @@ Otherwise, enable CUA on linux
            ("S-s-M-<right>" . mac-move-tab-right)
            ("S-s-M-<left>" . mac-move-tab-left)))
 
-  (when (eq system-type 'gnu/linux)
+  (when (or (eq system-type 'windows-nt) (eq system-type 'gnu/linux))
     (bind-keys
      ("C-s" . save-buffer)
      ("C-a" . mark-whole-buffer)

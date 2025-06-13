@@ -1317,7 +1317,8 @@ We will use Denote for all of our notes
   (use-package denote
     :ensure t
     :init
-    :config (setq denote-file-name-components-order '(title keywords signature identifier)))
+    :config (setq denote-file-name-components-order '(title keywords signature identifier)
+                  denote-directory "~/Documents/Notes"))
 
   (add-hook 'dired-mode-hook 'denote-dired-mode)
 #+end_src

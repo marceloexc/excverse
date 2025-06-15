@@ -1,10 +1,23 @@
 function fish_prompt --description 'Write out the prompt'
+
+    # Choose a color based on the hostname
+    switch $(prompt_hostname)
+        case yggdrasil
+            set machine_color red
+        case vultr
+            set machine_color yellow
+		case modus
+			set machine_color brown
+        case '*'
+            set machine_color blue
+    end
+
     set -l last_pipestatus $pipestatus
     set -lx __fish_last_status $status # Export for __fish_print_pipestatus.
     set -l normal (set_color normal)
     set -q fish_color_status
     or set -g fish_color_status red
-	set -g prompt_pwd --full-length-dirs=2 --dir-length=1
+    set -g prompt_pwd --full-length-dirs=2 --dir-length=1
 
     # Color the prompt differently when we're root
     set -l color_cwd $fish_color_cwd
@@ -28,5 +41,5 @@ function fish_prompt --description 'Write out the prompt'
     set -l statusb_color (set_color $bold_flag $fish_color_status)
     set -l prompt_status (__fish_print_pipestatus "[" "]" "|" "$status_color" "$statusb_color" $last_pipestatus)
 
-    echo -n -s "("(prompt_hostname)")" ' ' (set_color blue) (prompt_pwd) (fish_vcs_prompt)  " "$prompt_status (set_color red)" ●" $normal " "
+    echo -n -s "("(prompt_hostname)")" ' ' (set_color blue) (prompt_pwd) (fish_vcs_prompt) " "$prompt_status (set_color $machine_color)" ●" $normal " "
 end

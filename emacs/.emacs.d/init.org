@@ -346,6 +346,13 @@ Instead, we use a custom function that I got [[https://old.reddit.com/r/emacs/co
     (global-set-key (kbd "<escape>") 'keyboard-quit))
 #+end_src
 
+and don't copy crap to the clipboard when i do ~option+backspace~
+
+#+begin_src emacs-lisp
+  (setq x-select-enable-primary nil) 
+  (setq x-select-enable-clipboard nil)
+#+end_src
+
 easy dired hacks...
 
 #+begin_src emacs-lisp

@@ -641,8 +641,8 @@ Use centaur tabs for the tab bar
           centaur-tabs-exclude-buffers '("*Minibuf-1*" "*which-key*")
           )
     :bind
-    ("C-<prior>" . centaur-tabs-backward)
-    ("C-<next>" . centaur-tabs-forward))
+    ("M-s-<left>" . centaur-tabs-backward)
+    ("M-s-<right>" . centaur-tabs-forward))
 
   (defun my-centaur-tabs-buffer-groups ()
     "Custom groupings for Centaur Tabs."
@@ -681,13 +681,6 @@ Use centaur tabs for the tab bar
 
   (setq centaur-tabs-buffer-groups-function 'my-centaur-tabs-buffer-groups)
   (setq centaur-tabs-hide-tab-function 'centaur-tabs-hide-tab)
-
-
-  ;; https://github.com/ema2159/centaur-tabs/issues/225#issuecomment-2564425923
-   (defun centaur-tabs-do-close (event)
-       (interactive "e")
-       (centaur-tabs-do-select event))
-
 #+end_src
 ** Mode line
 

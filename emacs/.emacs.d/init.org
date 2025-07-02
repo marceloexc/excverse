@@ -349,8 +349,19 @@ Instead, we use a custom function that I got [[https://old.reddit.com/r/emacs/co
 and don't copy crap to the clipboard when i do ~option+backspace~
 
 #+begin_src emacs-lisp
-  (setq x-select-enable-primary nil) 
-  (setq x-select-enable-clipboard nil)
+  (defun backward-delete-word (arg)
+    "Delete characters backward until encountering the beginning of a word.
+  With argument ARG, do this that many times."
+    (interactive "p")
+    (delete-word (- arg)))
+
+  (defun delete-word (arg)
+    "Delete characters forward until encountering the end of a word.
+  With argument ARG, do this that many times."
+    (interactive "p")
+    (delete-region (point) (progn (forward-word arg) (point))))
+
+  (bind-keys ("M-DEL" . backward-delete-word))
 #+end_src
 
 easy dired hacks...

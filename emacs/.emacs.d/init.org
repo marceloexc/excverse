@@ -1142,6 +1142,19 @@ Really, all I want is just some rainbow parenthesis...
                 auto-mode-alist))
 #+end_src
 
+Some stuff for JSDoc type hinting...
+
+#+begin_src emacs-lisp
+  (unless (package-installed-p 'jsdoc-font-lock-keywords)
+    (package-vc-install '(jsdoc-font-lock-keywords :vc-backend Git :url "https://github.com/KarimAziev/jsdoc-font-lock-keywords")))
+
+  (with-eval-after-load "js"
+    (require 'jsdoc-font-lock-keywords)
+    (defvar jsdoc-font-lock-keywords)
+    (dolist (mode '(js-mode))
+      (font-lock-add-keywords mode jsdoc-font-lock-keywords)))
+#+end_src
+
 #+begin_src emacs-lisp
   (use-package eglot
   :ensure t
@@ -1149,7 +1162,8 @@ Really, all I want is just some rainbow parenthesis...
   (add-to-list 'eglot-server-programs
                '(astro-mode . ("astro-ls" "--stdio"
                                :initializationOptions
-                               (:typescript (:tsdk "./node_modules/typescript/lib")))))
+                               (:typescript (:tsdk "./node_modules/typescript/lib"))))
+               '(js-mode "typescript-language-server"))
   :init
   ;; auto start eglot for astro-mode
   (add-hook 'astro-mode-hook 'eglot-ensure))

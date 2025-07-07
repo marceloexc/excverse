@@ -540,37 +540,44 @@ use nerd-icons instead of all-the-icons (i have some issue with it)
 
 #+begin_src emacs-lisp
   (defun +my--set-common-fonts (family height)
-    (let ((mode-line-box `(:line-width 7 :color ,(face-background 'mode-line) :style nil))
-          (mode-line-inactive-box `(:line-width 7 :color ,(face-background 'mode-line-inactive) :style nil)))
-      ;; Mode line fonts
-      (set-face-attribute 'mode-line nil
-                          :family family
-                          :height height
-                          :weight 'normal
-                          :box mode-line-box)
-      (set-face-attribute 'mode-line-inactive nil
-                          :family family
-                          :height height
-                          :weight 'normal
-                          :box mode-line-inactive-box)
-      ;; Centaur tabs fonts
-      (dolist (face '(centaur-tabs-default
-                      centaur-tabs-selected
-                      centaur-tabs-unselected
-                      centaur-tabs-selected-modified
-                      centaur-tabs-unselected-modified))
-        (set-face-attribute face nil
-                            :family family
-                            :height height
-                            :weight 'normal))))
+	(let ((mode-line-box `(:line-width 7 :color ,(face-background 'mode-line) :style nil))
+		  (mode-line-inactive-box `(:line-width 7 :color ,(face-background 'mode-line-inactive) :style nil)))
+	  ;; Mode line fonts
+	  (set-face-attribute 'mode-line nil
+						  :family family
+						  :height height
+						  :weight 'normal
+						  :box mode-line-box)
+	  (set-face-attribute 'mode-line-inactive nil
+						  :family family
+						  :height height
+						  :weight 'normal
+						  :box mode-line-inactive-box)
+	  ;; Centaur tabs fonts
+	  (dolist (face '(centaur-tabs-default
+					  centaur-tabs-selected
+					  centaur-tabs-unselected
+					  centaur-tabs-selected-modified
+					  centaur-tabs-unselected-modified))
+		(set-face-attribute face nil
+							:family family
+							:height height
+							:weight 'normal))))
+
+  ;; font for eglot inlay type hints
+
+
+  (defun set-eglot-inlay-annotation-font ()
+	  (set-face-attribute 'eglot-inlay-hint-face nil
+					  :family "Sans Serif" :height 0.8 :slant 'italic :extend t))
 
   (defun +my-set-custom-fonts ()
-    (interactive)
-    (cond
-     ((eq system-type 'darwin)
-      (+my--set-common-fonts "SF Pro Text" 130))
-     ((eq system-type 'gnu/linux)
-      (+my--set-common-fonts "Cantarell" 100))))
+	(interactive)
+	(cond
+	 ((eq system-type 'darwin)
+	  (+my--set-common-fonts "SF Pro Text" 130))
+	 ((eq system-type 'gnu/linux)
+	  (+my--set-common-fonts "Cantarell" 100))))
 #+end_src
 
 ** Centering with Olivetti
@@ -1153,6 +1160,9 @@ Some stuff for JSDoc type hinting...
     (defvar jsdoc-font-lock-keywords)
     (dolist (mode '(js-mode))
       (font-lock-add-keywords mode jsdoc-font-lock-keywords)))
+
+
+  (use-package jsdoc)
 #+end_src
 
 #+begin_src emacs-lisp
@@ -1162,11 +1172,26 @@ Some stuff for JSDoc type hinting...
   (add-to-list 'eglot-server-programs
                '(astro-mode . ("astro-ls" "--stdio"
                                :initializationOptions
-                               (:typescript (:tsdk "./node_modules/typescript/lib"))))
-               '(js-mode "typescript-language-server"))
+                               (:typescript (:tsdk "./node_modules/typescript/lib")))))
+  (add-to-list 'eglot-server-programs
+               `((js-mode js-ts-mode tsx-ts-mode typescript-ts-mode typescript-mode)
+                 .
+                 ("typescript-language-server" "--stdio"
+                  :initializationOptions
+                  (:preferences
+                   (:includeInlayParameterNameHints "all"
+                    :includeInlayParameterNameHintsWhenArgumentMatchesName t
+                    :includeInlayFunctionParameterTypeHints t
+                    :includeInlayVariableTypeHints t
+                    :includeInlayVariableTypeHintsWhenTypeMatchesName t
+                    :includeInlayPropertyDeclarationTypeHints t
+                    :includeInlayFunctionLikeReturnTypeHints t
+                    :includeInlayEnumMemberValueHints t)))))
   :init
   ;; auto start eglot for astro-mode
   (add-hook 'astro-mode-hook 'eglot-ensure))
+
+  (set-eglot-inlay-annotation-font)
 #+end_src
 
 *** GTK Blueprints

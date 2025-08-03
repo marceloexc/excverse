@@ -1358,10 +1358,10 @@ content
 
 #+begin_src emacs-lisp
 
-  (use-package org-appear
-      :ensure t
-      :hook (org-mode . org-appear-mode))
-	
+  (use-package org-expose-emphasis-markers
+    :ensure t
+      :hook (org-mode . org-expose-emphasis-markers-mode))
+  	
 #+end_src
 
 And use org-tidy

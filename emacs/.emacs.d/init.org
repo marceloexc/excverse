@@ -794,6 +794,13 @@ However now I'm really trying it out with sr-speedbar...
     (use-package sr-speedbar
       :defer t)
 #+end_src
+
+Get a third opinion from treemacs
+
+#+begin_src emacs-lisp
+  (use-package neotree
+    :defer t)
+#+end_src
 ** TODO Theme
 
 set custom themes as safe (so that we don't get annoyed by a prompt to trust our theme
@@ -1241,6 +1248,7 @@ Some stuff for JSDoc type hinting...
   default).
 
   #+begin_src emacs-lisp
+      (require 'org-mouse) ;; enable cool mouse features!
 
     ;; Outline-based notes management and organizer
     (use-package org
@@ -1338,19 +1346,6 @@ use org-modern to make everything pretty
       )
 
   (with-eval-after-load 'org (global-org-modern-mode))
-#+end_src
-
- Also use ~org-superstar~
-
-Install ~org-toc~
-
-#+begin_src emacs-lisp
-;; Install toc-org for auto Table of Contents
-(use-package toc-org
-  :ensure t
-  :hook (org-mode . toc-org-enable)
-  :config
-  (setq toc-org-hrefify-default "gh"))
 #+end_src
 
 Use ~org-appear~ for better editing with fontified / prettyfied
@@ -1462,8 +1457,6 @@ finally, org mouse
 
 #+begin_src emacs-lisp
 
-  (require 'org-mouse) ;; enable cool mouse features!
-  (org-mode-restart)
 
 #+end_src
 ** Latex

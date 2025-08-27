@@ -1697,15 +1697,17 @@ Then use general...
 
         "d" '(dired :which-key "Dired ")
 
-        "b" '(consult-buffer :which-key "consult-buffer")
+        "b" '(consult-buffer :which-key "Switch Buffer")
 
         ;;f for files
         "f" '(:ignore t :which-key "File")
-        "ff" '(find-file :which-key "find-file")
-        "fr" '(recentf-open :which-key "recentf-open")
+        "ff" '(find-file :which-key "Find File")
+        "fr" '(recentf-open :which-key "Open Recent File")
+        "fd" '(denote-open-or-create :which-key "Open Denote File")
 
         ;;n for notes (org mode, etc)
         "n" '(:ignore t :which-key "Notes")
+        "nc" '(org-capture :which-key "Capture Something")
         "nh" '(org-html-export-to-html :which-key "Export Org file as HTML")
         "ns" '(org-edit-src-code :which-key "Edit Org source code")
         "nm" '(easy-hugo-menu :which-key "Open Easy Hugo Menu")

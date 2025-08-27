@@ -1491,6 +1491,18 @@ We set our default program for latex
   
 #+end_src
 
+use AucTeX instead of the normal LaTeX mode
+
+#+begin_src emacs-lisp
+  (use-package auctex
+    :ensure t
+    :defer t
+    :config
+    (setq TeX-auto-save t)
+    (setq TeX-parse-self t))
+  (setq-default TeX-master nil) 
+#+end_src
+
 add fragtog support
 
 #+begin_src emacs-lisp

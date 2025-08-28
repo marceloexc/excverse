@@ -1292,11 +1292,11 @@ Some stuff for JSDoc type hinting...
                      "NO(n)"))
                   ))
 
-      (custom-theme-set-faces
-           'user
-           `(org-level-3 ((t (:size 17))))
-           `(org-level-2 ((t (:height 1.05))))
-           `(org-level-1 ((t (:height 1.1)))))
+          (custom-theme-set-faces
+               'user
+               `(org-level-3 ((t (:size 17))))
+               `(org-level-2 ((t (:height 1.025 :size 20))))
+               `(org-level-1 ((t (:height 1.05 :size 24)))))
 
     (custom-set-faces
      '(org-meta-line ((t (:height 0.8))))

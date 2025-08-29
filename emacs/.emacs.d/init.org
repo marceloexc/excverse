@@ -1403,6 +1403,7 @@ and ~org-ros~ for quick screenshots
 
 #+begin_src emacs-lisp
   (use-package org-ros
+    :config (setq org-ros-subdirectory "./denote-resources")
     :ensure t)
 #+end_src
 
@@ -1720,6 +1721,7 @@ Then use general...
         "tt" '(treemacs :which-key "Toggle Treemacs")
         "te" '(display-line-numbers-mode :which-key "Toggle Line Numbers")
         "to" '(olivetti-mode :which-key "Toggle Olivetti")
+        "ti" '(org-toggle-inline-images :which-key "Toggle Org Inline Images")
         "tm" '(demap-toggle :which-key "Toggle minimap")
 
         ;;l - Language server (with eglop

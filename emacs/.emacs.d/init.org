@@ -812,6 +812,7 @@ install auto dark
 #+begin_src emacs-lisp
   (use-package auto-dark
     :ensure t
+    :if (display-graphic-p)
     :custom
     (auto-dark-themes '((ef-elea-dark) (modus-operandi-tinted)))
     :config (setq auto-dark-allow-osascript t)

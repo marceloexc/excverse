@@ -677,7 +677,7 @@ Use centaur tabs for the tab bar
     (list
      (cond
       ;; Only specific utility modes go to 'Fundamental'
-      ((member (buffer-name) '("*compile*" "*Minibuf-1*" "*dashboard*" "*Messages*" "*helm*" "*Async-native-compile-log*" "*Compile-Log*" "*xref*" "magit-*" "*Completions*"))
+      ((member (buffer-name) '("*compile*" "*Minibuf-1*" "*dashboard*" "*Messages*" "*helm*" "*Async-native-compile-log*" "*Compile-Log*" "*xref*" "*httpd*" "magit-*" "*Completions*"))
        "Fundamental")
       ;; Everything else goes to 'Main'
       (t "Main"))))
@@ -1140,17 +1140,19 @@ Really, all I want is just some rainbow parenthesis...
 
 #+begin_src emacs-lisp
   (use-package web-mode
-	:ensure t
-	:mode
-	(("\\.phtml\\'" . web-mode)
-	 ("\\.php\\'" . web-mode)
-	 ("\\.tpl\\'" . web-mode)
-	 ("\\.[agj]sp\\'" . web-mode)
-	 ("\\.as[cp]x\\'" . web-mode)
-	 ("\\.erb\\'" . web-mode)
-	 ("\\.mustache\\'" . web-mode)
-	 ("\\.html\\'" . web-mode)
-	 ("\\.djhtml\\'" . web-mode)))
+  	:ensure t
+  	:mode
+  	(("\\.phtml\\'" . web-mode)
+  	 ("\\.php\\'" . web-mode)
+  	 ("\\.tpl\\'" . web-mode)
+  	 ("\\.[agj]sp\\'" . web-mode)
+  	 ("\\.as[cp]x\\'" . web-mode)
+  	 ("\\.erb\\'" . web-mode)
+  	 ("\\.mustache\\'" . web-mode)
+  	 ("\\.html\\'" . web-mode)
+  	 ("\\.djhtml\\'" . web-mode)))
+
+  (use-package js2-mode)
 #+end_src
 
 #+begin_src emacs-lisp
@@ -1203,6 +1205,12 @@ Some stuff for JSDoc type hinting...
   (add-hook 'astro-mode-hook 'eglot-ensure))
 
   (set-eglot-inlay-annotation-font)
+#+end_src
+
+Having a web server available within Emacs
+
+#+begin_src emacs-lisp
+  (use-package simple-httpd :ensure t)
 #+end_src
 
 *** GTK Blueprints

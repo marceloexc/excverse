@@ -1740,6 +1740,7 @@ Then use general...
         "to" '(olivetti-mode :which-key "Toggle Olivetti")
         "ti" '(org-toggle-inline-images :which-key "Toggle Org Inline Images")
         "tm" '(demap-toggle :which-key "Toggle minimap")
+  	  "tn" '(neotree-show :which-key "Toggle Neotree")
 
         ;;l - Language server (with eglop
         "la" '(eglot-code-actions :which-key "Code Actions")

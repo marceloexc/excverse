@@ -142,6 +142,14 @@ bugs, please let me know!
 
   #+end_src
 
+Finally, reload the init file after tangling everything so that we don't have to restart Emacs everytime
+
+#+begin_src emacs-lisp
+  (defun reload-init-file ()
+    (interactive)
+    (load-file user-init-file))
+#+end_src
+  
 ** Faster startup
 
    A common optimization is to temporarily disable garbage collection during

@@ -199,6 +199,17 @@ Finally, reload the init file after tangling everything so that we don't have to
   
 * Sane defaults
 
+Import my $PATH from my current shell (on Mac)
+
+#+begin_src emacs-lisp
+  (use-package exec-path-from-shell
+      :if (memq window-system '(mac ns))
+      :config
+      (exec-path-from-shell-initialize))
+
+
+#+end_src
+
   These are what /I/ consider to be saner defaults.
 
   Set =utf-8= as preferred coding system.
@@ -536,6 +547,13 @@ use nerd-icons instead of all-the-icons (i have some issue with it)
     :hook
     (dired-mode . nerd-icons-dired-mode))
 #+end_src
+
+Compact mode is defined on some parts of the init file...usually it will be placed in ~early-init.el~. If it doesn't exist, we will make sure its not ~void~.
+
+#+begin_src emacs-lisp
+  (unless (boundp 'compact-mode)
+    (setq compact-mode nil))
+#+end_src
 ** Font
 
    #+begin_src emacs-lisp
@@ -548,44 +566,54 @@ use nerd-icons instead of all-the-icons (i have some issue with it)
 
 #+begin_src emacs-lisp
   (defun +my--set-common-fonts (family height)
-	(let ((mode-line-box `(:line-width 7 :color ,(face-background 'mode-line) :style nil))
-		  (mode-line-inactive-box `(:line-width 7 :color ,(face-background 'mode-line-inactive) :style nil)))
-	  ;; Mode line fonts
-	  (set-face-attribute 'mode-line nil
-						  :family family
-						  :height height
-						  :weight 'normal
-						  :box mode-line-box)
-	  (set-face-attribute 'mode-line-inactive nil
-						  :family family
-						  :height height
-						  :weight 'normal
-						  :box mode-line-inactive-box)
-	  ;; Centaur tabs fonts
-	  (dolist (face '(centaur-tabs-default
-					  centaur-tabs-selected
-					  centaur-tabs-unselected
-					  centaur-tabs-selected-modified
-					  centaur-tabs-unselected-modified))
-		(set-face-attribute face nil
-							:family family
-							:height height
-							:weight 'normal))))
+    
+    (let* ((mode-line-box-color (face-background 'mode-line))
+           (mode-line-inactive-box-color (face-background 'mode-line-inactive))
+           (mode-line-box-style nil)
+           (mode-line-inactive-box-style nil))
 
-  ;; font for eglot inlay type hints
+        (if compact-mode
+            (setq mode-line-box-style `( :color ,mode-line-box-color :style nil)
+                  mode-line-inactive-box-style `( :color ,mode-line-inactive-box-color :style nil))
+          (setq mode-line-box-style `(:line-width 7 :color ,mode-line-box-color :style nil)
+                mode-line-inactive-box-style `(:line-width 7 :color ,mode-line-inactive-box-color :style nil)))
 
+      ;; Mode line fonts
+      (set-face-attribute 'mode-line nil
+                          :family family
+                          :height height
+                          :weight 'normal
+                          :box mode-line-box-style) ; Use the determined style
+      (set-face-attribute 'mode-line-inactive nil
+                          :family family
+                          :height height
+                          :weight 'normal
+                          :box mode-line-inactive-box-style) ; Use the determined style
+
+      ;; Centaur tabs fonts
+      (dolist (face '(centaur-tabs-default
+                      centaur-tabs-selected
+                      centaur-tabs-unselected
+                      centaur-tabs-selected-modified
+                      centaur-tabs-unselected-modified))
+        (set-face-attribute face nil
+                            :family family
+                            :height height
+                            :weight 'normal))))
 
   (defun set-eglot-inlay-annotation-font ()
-	  (set-face-attribute 'eglot-inlay-hint-face nil
-					  :family "Sans Serif" :height 0.8 :slant 'italic :extend t))
+    "Set the font for Eglot inlay type hints."
+    (set-face-attribute 'eglot-inlay-hint-face nil
+                        :family "Sans Serif" :height 0.8 :slant 'italic :extend t))
 
   (defun +my-set-custom-fonts ()
-	(interactive)
-	(cond
-	 ((eq system-type 'darwin)
-	  (+my--set-common-fonts "SF Pro Text" 130))
-	 ((eq system-type 'gnu/linux)
-	  (+my--set-common-fonts "Cantarell" 100))))
+    "Set custom fonts based on the operating system."
+    (interactive)
+    (cond
+     ((eq system-type 'darwin)
+      (+my--set-common-fonts "SF Pro Text" 130))
+     ((eq system-type 'gnu/linux)
+      (+my--set-common-fonts "Cantarell" 100))))
 #+end_src
 
 ** Centering with Olivetti
@@ -644,8 +672,8 @@ Remove some useless (to me) toolbar items
 Change the default toolbar title format (I think having my system name is cool, but I would want it to say ~yggdrasil~, instead of ~yggdrasil.local~, so I guess I'll just remove it)
 
 #+begin_src emacs-lisp
-  ;;(setq frame-title-format '(multiple-frames "%b"
-    ;;               ("" "%b - GNU Emacs")))
+  (setq frame-title-format '(multiple-frames "%b"
+                  ("" "%b - GNU Emacs")))
 #+end_src
 ** Tabs
 
@@ -656,8 +684,7 @@ Use centaur tabs for the tab bar
     :demand
     :config
     (centaur-tabs-mode t)
-    (setq centaur-tabs-height 24
-          centaur-tabs-show-navigation-buttons t
+    (setq centaur-tabs-show-navigation-buttons t
           centaur-tabs-set-modified-marker t
           centaur-tabs-set-bar 'over
           centaur-tabs-icon-type 'nerd-icons
@@ -668,6 +695,9 @@ Use centaur tabs for the tab bar
           ;;centaur-tabs-excluded-prefixes '("*")
           centaur-tabs-exclude-buffers '("*Minibuf-1*" "*which-key*")
           )
+    (if compact-mode
+  	(setq centaur-tabs-height 20)
+  	(setq centaur-tabs-height 24))
     :bind
     ("M-s-<left>" . centaur-tabs-backward)
     ("M-s-<right>" . centaur-tabs-forward))
@@ -848,19 +878,6 @@ install auto dark
 #+end_src
 
 * macOS specific
-
-The package [[https://github.com/purcell/exec-path-from-shell][exec-path-from-shell]] synchronizes environment variables from the
-shell to Emacs. This makes it a lot easier to deal with external programs on
-macOS.
-
-  #+begin_src emacs-lisp
-
-  (use-package exec-path-from-shell
-    :if (memq window-system '(mac ns))
-    :config
-    (exec-path-from-shell-initialize))
-
-  #+end_src
 
 I had some problems with Dired, and this seems to have solved it. I /think/
 the solutions was from [[https://stackoverflow.com/questions/4076360/error-in-dired-sorting-on-os-x][here]], and my problems were related, but not the same.
@@ -1176,6 +1193,12 @@ Some stuff for JSDoc type hinting...
 
 
   (use-package jsdoc)
+#+end_src
+
+PHP!
+
+#+begin_src emacs-lisp
+  (use-package php-mode)
 #+end_src
 
 #+begin_src emacs-lisp

@@ -561,7 +561,7 @@ Compact mode is defined on some parts of the init file...usually it will be plac
    #+begin_src emacs-lisp
      (when (member "Berkeley Mono" (font-family-list))
             (when (eq system-type 'darwin)
-              (set-face-attribute 'default nil :font "Berkeley Mono-14" :weight 'normal))
+              (set-face-attribute 'default nil :font "Berkeley Mono-12" :weight 'normal))
             (when (eq system-type 'gnu/linux)
               (set-face-attribute 'default nil :font "Berkeley Mono-10.5")))
    #+end_src
@@ -577,8 +577,8 @@ Compact mode is defined on some parts of the init file...usually it will be plac
         (if compact-mode
             (setq mode-line-box-style `( :color ,mode-line-box-color :style nil)
                   mode-line-inactive-box-style `( :color ,mode-line-inactive-box-color :style nil))
-          (setq mode-line-box-style `(:line-width 7 :color ,mode-line-box-color :style nil)
-                mode-line-inactive-box-style `(:line-width 7 :color ,mode-line-inactive-box-color :style nil)))
+          (setq mode-line-box-style `(:line-width 5 :color ,mode-line-box-color :style nil)
+                mode-line-inactive-box-style `(:line-width 5 :color ,mode-line-inactive-box-color :style nil)))
 
       ;; Mode line fonts
       (set-face-attribute 'mode-line nil
@@ -613,7 +613,7 @@ Compact mode is defined on some parts of the init file...usually it will be plac
     (interactive)
     (cond
      ((eq system-type 'darwin)
-      (+my--set-common-fonts "SF Pro Text" 130))
+      (+my--set-common-fonts "SF Pro Text" 120))
      ((eq system-type 'gnu/linux)
       (+my--set-common-fonts "Cantarell" 100))))
 #+end_src
@@ -659,6 +659,7 @@ Dash board provides a nice welcome.
 Remove some useless (to me) toolbar items 
 #+begin_src emacs-lisp
   (when (> emacs-major-version 28)
+    (define-key global-map [menu-bar options] nil)
     (define-key global-map [menu-bar tools encryption-decryption] nil t)
     (define-key global-map [menu-bar tools calendar] nil t)
     (define-key global-map [menu-bar tools simple-calculator] nil t)
@@ -854,7 +855,7 @@ install auto dark
     :ensure t
     :if (display-graphic-p)
     :custom
-    (auto-dark-themes '((ef-elea-dark) (modus-operandi-tinted)))
+    (auto-dark-themes '((ef-bio) (modus-operandi-tinted)))
     :config (setq auto-dark-allow-osascript t)
     :hook (auto-dark-dark-mode . (lambda () (+my-set-custom-fonts)))
           (auto-dark-light-mode . (lambda () (+my-set-custom-fonts)))
@@ -1315,7 +1316,8 @@ Having a web server available within Emacs
        ;; everything else
 
        (setq org-indirect-buffer-display 'current-window
-                  org-enforce-todo-dependencies nil
+             org-enforce-todo-dependencies nil
+    		 org-html-html5-fancy t ; use html5 when exporting
                   org-fontify-done-headline t
                   org-fontify-quote-and-verse-blocks t
                   org-fontify-whole-heading-line t
@@ -1699,7 +1701,8 @@ Otherwise, enable CUA on linux
            ("s-|" . mac-toggle-tab-group-overview)
            ("s-M-t" . mac-move-tab-to-new-frame)
            ("S-s-M-<right>" . mac-move-tab-right)
-           ("S-s-M-<left>" . mac-move-tab-left)))
+           ("S-s-M-<left>" . mac-move-tab-left)
+  		 ("s-=" . global-scale-up)))
 
   (when (or (eq system-type 'windows-nt) (eq system-type 'gnu/linux))
     (bind-keys

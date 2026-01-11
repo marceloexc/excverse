@@ -185,15 +185,17 @@ Finally, reload the init file after tangling everything so that we don't have to
 
   #+begin_src emacs-lisp
 
-  (setq package-archives
-        '(("GNU ELPA"     . "https://elpa.gnu.org/packages/")
-          ("MELPA Stable" . "https://stable.melpa.org/packages/")
-          ("MELPA"        . "https://melpa.org/packages/"))
-        package-archive-priorities
-        '(("GNU ELPA"     . 10)
-          ("MELPA"        . 5)
-          ("MELPA Stable" . 0)))
-  
+    (setq package-archives
+          '(("GNU ELPA"     . "https://elpa.gnu.org/packages/")
+            ("MELPA Stable" . "https://stable.melpa.org/packages/")
+            ("MELPA"        . "https://melpa.org/packages/")
+    		("NONGNU" . "https://elpa.nongnu.org/nongnu/"))
+          package-archive-priorities
+          '(("GNU ELPA"     . 10)
+            ("MELPA"        . 5)
+            ("MELPA Stable" . 0)
+    		("NONGNU" . 5)))
+
 
   #+end_src
   
@@ -1269,6 +1271,16 @@ Having a web server available within Emacs
                 (message "Supercollider running! "))))
 
 
+#+end_src
+*** Kotlin
+#+begin_src emacs-lisp
+  (use-package kotlin-mode)
+#+end_src
+** Terminal
+*** eat
+
+#+begin_src emacs-lisp
+  (use-package eat)
 #+end_src
 * Word Processing
 ** Org

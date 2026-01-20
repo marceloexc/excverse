@@ -1318,7 +1318,12 @@ Having a web server available within Emacs
 *** eat
 
 #+begin_src emacs-lisp
-  (use-package eat)
+  (use-package eat
+    :config
+    (when (eq system-type 'darwin)
+    (define-key eat-semi-char-mode-map (kbd "C-h")  #'eat-self-input)
+    (define-key eat-semi-char-mode-map (kbd "<backspace>") (kbd "C-h")))
+    )
 #+end_src
 * Word Processing
 ** Org

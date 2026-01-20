@@ -1758,12 +1758,14 @@ Then use general...
 
         ;;n for notes (org mode, etc)
         "n" '(:ignore t :which-key "Notes")
-        "nc" '(org-capture :which-key "Capture Something")
+  	  "na" '(org-agenda-list :which-key "Show Agenda")
+  	  "nc" '(org-capture :which-key "Capture Something")
         "nh" '(org-html-export-to-html :which-key "Export Org file as HTML")
         "ns" '(org-edit-src-code :which-key "Edit Org source code")
         "nm" '(easy-hugo-menu :which-key "Open Easy Hugo Menu")
         "nt" '(org-todo :which-key "Set TODO Keyword")
         "nd" '(org-deadline :which-key "Set Org Deadline")
+  	  "ni" '(org-toggle-inline-images :which-key "Toggle Inline Images")
         "ne" '(org-emphasize :which-key "Emphasize selected text")
         "nl" '(org-insert-link :whick-key "Insert Org Link")
 

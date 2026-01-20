@@ -462,6 +462,43 @@ and finally, enable mouse support when using emacs in the terminal (-nw flag)
 #+begin_src emacs-lisp
 (xterm-mouse-mode)
 #+end_src
+
+when dragging and dropping, try to use the relative path if possible.
+
+#+begin_src emacs-lisp
+  (defun my/dnd-get-local-file-name-relative (uri &optional must-exist)
+    "Like `dnd-get-local-file-name', but returns relative paths when possible."
+    ;; this is kind of sloppy
+    (message "[dnd] input uri: %S" uri)
+
+    (let* ((f
+            (cond
+             ((string-match "^file:///" uri)
+              (substring uri (1- (match-end 0))))
+             ((string-match "^file:" uri)
+              (substring uri (match-end 0)))))
+           (coding
+            (if (equal system-type 'windows-nt)
+                'utf-8
+              (or file-name-coding-system
+                  default-file-name-coding-system))))
+
+      (when f
+        (setq f (decode-coding-string (dnd--unescape-uri f) coding)))
+
+      (when (and f must-exist (not (file-readable-p f)))
+        (setq f nil))
+
+      (when (and f buffer-file-name)
+        (let ((base-dir (file-name-directory buffer-file-name)))
+          (when (file-in-directory-p f base-dir)
+            (setq f (file-relative-name f base-dir))
+            (message "[dnd] relativized path: %S" f))))
+
+      (message "[dnd] final result: %S" f)
+      f))
+  (advice-add 'dnd-get-local-file-name :override #'my/dnd-get-local-file-name-relative)
+#+end_src
 * Visual
   Here im adding a way to have my popup winodws controlled once and for al
   #+begin_src emacs-lisp
@@ -1490,6 +1527,26 @@ Create a function to scale down every single image in an org document
               (widen))
             (message "Width attributes added to images in the selected region.")))
       (message "No region selected. Please select a region first.")))
+#+end_src
+
+adding a "loading:lazy" attribute to images when exporting to HTML
+
+#+begin_src emacs-lisp
+  (defun my/org-add-lazy-loading-to-images (beg end)
+    "Add '#+attr_html: :loading lazy' before Org image links in region."
+    (interactive "r")
+    (save-excursion
+      (let ((image-regexp
+             "\\[\\[\\(file:\\|https?://\\)?:?.*?\\(\\.png\\|\\.jpg\\|\\.jpeg\\|\\.gif\\|\\.svg\\)\\]\\(\\[.*?\\]\\)?\\]"))
+        (goto-char end)
+        (while (re-search-backward image-regexp beg t)
+          (goto-char (line-beginning-position))
+          (let ((insert-pos (point)))
+            (forward-line -1)
+            (unless (looking-at-p "^#\\+attr_html:.*:loading[[:space:]]+lazy")
+              (goto-char insert-pos)
+              (insert "#+attr_html: :loading lazy\n")))
+          (goto-char (match-beginning 0))))))
 #+end_src
 
 Hiding keylines:

@@ -452,8 +452,7 @@ add minions mode for a non cluttered menu bar
   (use-package minions
     :ensure t
     :config
-    (setq
-      minions-direct '(flycheck-mode pyvenv-mode))
+    (setq minions-prominent-modes '(org-tidy-mode))
     (minions-mode 1))
 #+end_src
 
@@ -1453,10 +1452,8 @@ content
 And use org-tidy
 
 #+begin_src emacs-lisp
-  (use-package org-tidy
-  :ensure t
-  :hook
-  (org-mode . org-tidy-mode))
+  (use-package org-hide-drawers
+  :hook (org-mode . org-hide-drawers-mode))
 #+end_src
 
 We will use Denote for all of our notes

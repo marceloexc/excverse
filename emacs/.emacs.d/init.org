@@ -1405,6 +1405,7 @@ Set some default directories when note taking
 #+begin_src emacs-lisp
   (with-eval-after-load 'org
     (setq org-directory "~/Documents/Notes")
+    (setq org-icalendar-combined-agenda-file "~/Documents/Calendar.ics")
     (setq org-default-notes-file (concat org-directory "/captured.org")))
   ;; this will ALWAYS be how my structure will be!
 
@@ -1562,11 +1563,10 @@ Hiding keylines:
 
 #+end_src
 
-finally, org mouse
+set org mode to automaitcally add UUID's to property drawers when exporting to iCalendar, so that it merges properly when importing into my calendar app
 
 #+begin_src emacs-lisp
-
-
+  (setq org-icalendar-store-UID t)
 #+end_src
 ** Latex
 We set our default program for latex

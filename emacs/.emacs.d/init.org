@@ -446,6 +446,16 @@ docview scrolling should be continuous (i.e., when scrolling through PDFs)
   (setq doc-view-continuous t)
 #+end_src
 
+install ripgrep and rg
+
+#+begin_src emacs-lisp
+      (use-package ripgrep
+    	:defer t)
+
+      (use-package rg
+  	  :defer t)
+#+end_src
+
 add minions mode for a non cluttered menu bar
 
 #+begin_src emacs-lisp
@@ -592,6 +602,16 @@ Compact mode is defined on some parts of the init file...usually it will be plac
   (unless (boundp 'compact-mode)
     (setq compact-mode nil))
 #+end_src
+
+use indent guides when programming!
+
+#+begin_src emacs-lisp
+  (use-package highlight-indent-guides
+    :defer t
+    :hook ((prog-mode . highlight-indent-guides-mode))
+    :config (setq highlight-indent-guides-method 'character))
+#+end_src
+
 ** Font
 
    #+begin_src emacs-lisp
@@ -681,12 +701,14 @@ Dash board provides a nice welcome.
        (setq dashboard-projects-backend 'project-el
              dashboard-banner-logo-title nil
              dashboard-center-content t
+     		dashboard-filter-agenda-entry 'dashboard-no-filter-agenda
              dashboard-set-footer nil
              dashboard-page-separator "\n\n\n"
-             dashboard-items '((projects . 15)
+             dashboard-items '((agenda . 10)
+     						 (projects . 15)
                               (recents  . 15)
                               (bookmarks . 5)))
-  
+
        (dashboard-setup-startup-hook))
    #+end_src
 
@@ -1493,11 +1515,73 @@ Use ~org-download~ for drag and drop images
                           org-download-annotate-function #'my/org-download-annotate-default))
 #+end_src
 
+quickly mark Org ~TODO~'s as ~DONE~
+
+#+begin_src emacs-lisp
+  ;; https://stackoverflow.com/questions/25930097/emacs-org-mode-quickly-mark-todo-as-done
+
+  ; Source - https://stackoverflow.com/a
+  ; Posted by Sigma, modified by community. See post 'Timeline' for change history
+  ; Retrieved 2026-01-28, License - CC BY-SA 3.0
+  
+  (defun my-org-todo-toggle ()
+    (interactive)
+    (let ((state (org-get-todo-state))
+          post-command-hook)
+      (if (string= state "TODO")
+          (org-todo "DONE")
+        (org-todo "TODO"))
+      (run-hooks 'post-command-hook)
+      ))
+
+  (define-key org-mode-map (kbd "s-<return>") 'my-org-todo-toggle)
+#+end_src
+
+fix a bug (maybe it's a bug, maybe its expected functionality?) that places a property drawer when exporting to iCal anywhere. For iCal to work, the property drawer has to be the first thing after the org heading.
+
+#+begin_src emacs-lisp
+  (defadvice org-icalendar-create-uid (around fix-properties-drawer-position activate)
+    "Ensure properties drawer is placed immediately after heading, before any planning info."
+    (let (modified-flag)
+      (org-map-entries
+       (lambda ()
+         (let ((entry (org-element-at-point)))
+           (unless (org-element-property :ID entry)
+             (org-id-get-create)
+             (setq modified-flag t)
+             ;; Fix: Move properties drawer to correct position
+             (org-back-to-heading t)
+             (forward-line 1)
+             (let ((drawer-start nil)
+                   (drawer-end nil)
+                   (planning-line nil))
+               ;; Find the properties drawer and any planning line
+               (save-excursion
+                 (while (and (not (org-at-heading-p))
+                             (not (eobp)))
+                   (cond
+                    ((looking-at "^[ \t]*:PROPERTIES:")
+                     (setq drawer-start (point))
+                     (re-search-forward "^[ \t]*:END:" nil t)
+                     (setq drawer-end (point)))
+                    ((looking-at org-planning-line-re)
+                     (setq planning-line (point))))
+                   (forward-line 1)))
+               ;; If drawer exists after planning line, move it before
+               (when (and drawer-start planning-line (> drawer-start planning-line))
+                 (let ((drawer-text (delete-and-extract-region drawer-start (1+ drawer-end))))
+                   (goto-char planning-line)
+                   (insert drawer-text)))))))
+       nil nil 'comment)
+      (when (and bell modified-flag)
+        (message "ID properties created in file \"%s\"" file)
+        (sit-for 2))))
+#+end_src
+
 and ~org-ros~ for quick screenshots
 
 #+begin_src emacs-lisp
   (use-package org-ros
-    :config (setq org-ros-subdirectory "./denote-resources")
     :ensure t)
 #+end_src
 
@@ -1619,6 +1703,16 @@ add fragtog support
   :after org  )
 
   (add-hook 'org-mode-hook 'org-fragtog-mode)
+#+end_src
+
+use ~pdf-tools~ instead of ~doc-view~
+
+#+begin_src emacs-lisp
+  (use-package pdf-tools
+     :defer t
+     :config
+         (pdf-tools-install)
+         (setq-default pdf-view-display-size 'fit-page))
 #+end_src
 ** Markdown
 
@@ -1761,7 +1855,8 @@ Otherwise, enable CUA on linux
            ("s-M-t" . mac-move-tab-to-new-frame)
            ("S-s-M-<right>" . mac-move-tab-right)
            ("S-s-M-<left>" . mac-move-tab-left)
-  		 ("s-=" . global-scale-up)))
+  		 ("s-=" . global-scale-up)
+  		 ("<f5>" . recompile)))
 
   (when (or (eq system-type 'windows-nt) (eq system-type 'gnu/linux))
     (bind-keys

@@ -1242,20 +1242,21 @@ Really, all I want is just some rainbow parenthesis...
 *** Web
 
 #+begin_src emacs-lisp
-  (use-package web-mode
-  	:ensure t
-  	:mode
-  	(("\\.phtml\\'" . web-mode)
-  	 ("\\.php\\'" . web-mode)
-  	 ("\\.tpl\\'" . web-mode)
-  	 ("\\.[agj]sp\\'" . web-mode)
-  	 ("\\.as[cp]x\\'" . web-mode)
-  	 ("\\.erb\\'" . web-mode)
-  	 ("\\.mustache\\'" . web-mode)
-  	 ("\\.html\\'" . web-mode)
-  	 ("\\.djhtml\\'" . web-mode)))
+    (use-package web-mode
+    	:ensure t
+    	:mode
+    	(("\\.phtml\\'" . web-mode)
+    	 ("\\.php\\'" . web-mode)
+    	 ("\\.tpl\\'" . web-mode)
+    	 ("\\.[agj]sp\\'" . web-mode)
+    	 ("\\.as[cp]x\\'" . web-mode)
+    	 ("\\.erb\\'" . web-mode)
+    	 ("\\.mustache\\'" . web-mode)
+    	 ("\\.html\\'" . web-mode)
+    	 ("\\.djhtml\\'" . web-mode)))
 
-  (use-package js2-mode)
+  (use-package js2-mode
+    :defer t)
 #+end_src
 
 #+begin_src emacs-lisp
@@ -1284,7 +1285,8 @@ Some stuff for JSDoc type hinting...
 PHP!
 
 #+begin_src emacs-lisp
-  (use-package php-mode)
+  (use-package php-mode
+    :defer t)
 #+end_src
 
 #+begin_src emacs-lisp
@@ -1896,7 +1898,7 @@ Otherwise, enable CUA on linux
            ("s-v" . yank)
            ("s-z" . undo-tree-undo)
            ("s-Z" . undo-tree-redo)
-           ("s-w" . kill-this-buffer)
+           ("s-w" . kill-current-buffer)
            ("s-{" . mac-previous-tab)
            ("s-}" . mac-next-tab)
            ("s-q" . kill-emacs)

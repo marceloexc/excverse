@@ -1264,13 +1264,16 @@ PHP!
 
 #+begin_src emacs-lisp
   (use-package eglot
-  :ensure t
-  :config
-  (add-to-list 'eglot-server-programs
+    :ensure t
+    :config
+    (setq eglot-report-progress nil)
+    (setq eglot-events-buffer-config '(:size 0 :format full))
+    (setq eglot-events-buffer-size 0)
+    (add-to-list 'eglot-server-programs
                '(astro-mode . ("astro-ls" "--stdio"
                                :initializationOptions
                                (:typescript (:tsdk "./node_modules/typescript/lib")))))
-  (add-to-list 'eglot-server-programs
+    (add-to-list 'eglot-server-programs
                `((js-mode js-ts-mode tsx-ts-mode typescript-ts-mode typescript-mode)
                  .
                  ("typescript-language-server" "--stdio"
@@ -1334,6 +1337,36 @@ Having a web server available within Emacs
 *** Kotlin
 #+begin_src emacs-lisp
   (use-package kotlin-mode)
+#+end_src
+*** Embedded
+
+Arduino
+
+#+begin_src emacs-lisp
+  ;; https://old.reddit.com/r/emacs/comments/17n4ti6/how_to_configure_arduino_lsp/
+
+  (define-derived-mode arduino-mode c-mode "arduino"
+    "My own mode which is a wrapper for c-mode for editing arduino files.")
+
+
+  (add-to-list 'auto-mode-alist '("\\.ino\\'" . arduino-mode))
+      (add-hook 'arduino-mode-hook #'eglot-ensure)
+      (add-to-list 'eglot-server-programs 
+                   '(arduino-mode . ("arduino-language-server"
+                                     "-clangd" "/usr/bin/clangd"
+                                     "-cli" "/opt/homebrew/bin/arduino-cli"
+                                     "-cli-config" "~/Library/Arduino15/arduino-cli.yaml"
+                                     "-fqbn" "teensy:avr:teensy40")))
+
+  ;; use the arduino-cli minor mode
+
+  (use-package arduino-cli-mode
+    :defer t
+    :hook arduino-mode
+    ;; :mode "\\.ino\\'"
+    :custom
+    (arduino-cli-warnings 'all)
+    (arduino-cli-verify t))
 #+end_src
 ** Terminal
 *** eat

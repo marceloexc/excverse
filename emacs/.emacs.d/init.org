@@ -606,10 +606,7 @@ Compact mode is defined on some parts of the init file...usually it will be plac
 use indent guides when programming!
 
 #+begin_src emacs-lisp
-  (use-package highlight-indent-guides
-    :defer t
-    :hook ((prog-mode . highlight-indent-guides-mode))
-    :config (setq highlight-indent-guides-method 'character))
+  (add-hook 'highlight-indentation-mode 'prog-mode)
 #+end_src
 
 ** Font
@@ -1076,21 +1073,49 @@ Use projectile
   #+end_src
 
    #+begin_src emacs-lisp
-     (use-package company
-       :ensure t
-       :hook (after-init . global-company-mode) ; Enable globally after startup
-       :bind ("M-/" . company-complete)       ; Quick trigger key
-       :custom
-       (company-minimum-prefix-length 2)       ; Start suggesting after 2 chars
-       (company-idle-delay 0.2)                ; Faster suggestions (default: 0.5)
-       (company-selection-wrap-around t)       ; Wrap around candidate list
-       (company-tooltip-limit 10)              ; Show fewer candidates initially
-       (company-dabbrev-downcase nil)          ; Case-sensitive suggestions
-       (company-require-match 'never)          ; Allow arbitrary input
-       (company-show-numbers t)                ; Show numbers for quick selection
-       (company-frontends                      ; Cleaner UI
-        '(company-pseudo-tooltip-frontend      ; Default popup
-          company-echo-metadata-frontend)))    ; Show docs in echo area
+     ;; (use-package company
+     ;;   :ensure t
+     ;;   :hook (after-init . global-company-mode) ; Enable globally after startup
+     ;;   :bind ("M-/" . company-complete)       ; Quick trigger key
+     ;;   :custom
+     ;;   (company-minimum-prefix-length 2)       ; Start suggesting after 2 chars
+     ;;   (company-idle-delay 0.2)                ; Faster suggestions (default: 0.5)
+     ;;   (company-selection-wrap-around t)       ; Wrap around candidate list
+     ;;   (company-tooltip-limit 10)              ; Show fewer candidates initially
+     ;;   (company-dabbrev-downcase nil)          ; Case-sensitive suggestions
+     ;;   (company-require-match 'never)          ; Allow arbitrary input
+     ;;   (company-show-numbers t)                ; Show numbers for quick selection
+     ;;   (company-frontends                      ; Cleaner UI
+     ;;    '(company-pseudo-tooltip-frontend      ; Default popup
+     ;;      company-echo-metadata-frontend)))    ; Show docs in echo area
+
+
+     (use-package corfu
+       ;; Optional customizations
+       ;; :custom
+       ;; (corfu-cycle t)                ;; Enable cycling for `corfu-next/previous'
+       ;; (corfu-quit-at-boundary nil)   ;; Never quit at completion boundary
+       ;; (corfu-quit-no-match nil)      ;; Never quit, even if there is no match
+       ;; (corfu-preview-current nil)    ;; Disable current candidate preview
+       ;; (corfu-preselect 'prompt)      ;; Preselect the prompt
+       ;; (corfu-on-exact-match 'insert) ;; Configure handling of exact matches
+
+       ;; Enable Corfu only for certain modes. See also `global-corfu-modes'.
+       ;; :hook ((prog-mode . corfu-mode)
+       ;;        (shell-mode . corfu-mode)
+       ;;        (eshell-mode . corfu-mode))
+
+       :init
+
+       ;; Recommended: Enable Corfu globally.  Recommended since many modes provide
+       ;; Capfs and Dabbrev can be used globally (M-/).  See also the customization
+       ;; variable `global-corfu-modes' to exclude certain modes.
+       (global-corfu-mode)
+
+       ;; Enable optional extension modes:
+       ;; (corfu-history-mode)
+       ;; (corfu-popupinfo-mode)
+       )
    #+end_src
 
    I use corfu in concert with [[https://github.com/oantolin/orderless][orderless]]. 
@@ -1186,12 +1211,12 @@ Use magit for git
     (call-interactively 'centaur-tabs-local-mode)
     (call-interactively 'centaur-tabs-local-mode))
 
-  (use-package magit
-    :ensure t
-    :config
-    (setq magit-display-buffer-function #'magit-display-buffer-fullframe-status-v1
-          magit-diff-refine-hunk 'all)
-    (add-hook 'magit-status-mode-hook 'toggle-centaur-tabs-local-mode))
+  ;; (use-package magit
+  ;;   :ensure t
+  ;;   :config
+  ;;   (setq magit-display-buffer-function #'magit-display-buffer-fullframe-status-v1
+  ;;         magit-diff-refine-hunk 'all)
+  ;;   (add-hook 'magit-status-mode-hook 'toggle-centaur-tabs-local-mode))
 
 
 #+end_src

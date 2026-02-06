@@ -606,7 +606,20 @@ Compact mode is defined on some parts of the init file...usually it will be plac
 use indent guides when programming!
 
 #+begin_src emacs-lisp
-  (add-hook 'highlight-indentation-mode 'prog-mode)
+  (use-package indent-bars
+    :custom
+    (indent-bars-no-descend-lists 'skip) ; prevent extra bars in nested lists + skip intermediate bars
+    ;; (indent-bars-treesit-support t)
+    (indent-bars-treesit-ignore-blank-lines-types '("module"))
+    ;; Add other languages as needed; check the wiki
+    ;; (indent-bars-treesit-scope '((python function_definition class_definition for_statement
+        ;; if_statement with_statement while_statement)))
+    ;; Note: wrap likely not be needed if no-descend-list is enough
+    ;;(indent-bars-treesit-wrap '((python argument_list parameters ; for python, as an example
+    ;;				      list list_comprehension
+    ;;				      dictionary dictionary_comprehension
+    ;;				      parenthesized_expression subscript)))
+    :hook ((prog-mode) . indent-bars-mode))
 #+end_src
 
 ** Font
@@ -621,30 +634,37 @@ use indent guides when programming!
 
 #+begin_src emacs-lisp
   (defun +my--set-common-fonts (family height)
-    
     (let* ((mode-line-box-color (face-background 'mode-line))
            (mode-line-inactive-box-color (face-background 'mode-line-inactive))
            (mode-line-box-style nil)
            (mode-line-inactive-box-style nil))
-
-        (if compact-mode
-            (setq mode-line-box-style `( :color ,mode-line-box-color :style nil)
-                  mode-line-inactive-box-style `( :color ,mode-line-inactive-box-color :style nil))
-          (setq mode-line-box-style `(:line-width 5 :color ,mode-line-box-color :style nil)
-                mode-line-inactive-box-style `(:line-width 5 :color ,mode-line-inactive-box-color :style nil)))
-
-      ;; Mode line fonts
+      (if compact-mode
+          (setq mode-line-box-style `(:color ,mode-line-box-color :style nil)
+                mode-line-inactive-box-style `(:color ,mode-line-inactive-box-color :style nil))
+        (setq mode-line-box-style `(:line-width 5 :color ,mode-line-box-color :style nil)
+              mode-line-inactive-box-style `(:line-width 5 :color ,mode-line-inactive-box-color :style nil)))
+    
+      ;; Mode line fonts - handle both old and new Emacs versions
       (set-face-attribute 'mode-line nil
                           :family family
                           :height height
                           :weight 'normal
-                          :box mode-line-box-style) ; Use the determined style
+                          :box mode-line-box-style)
       (set-face-attribute 'mode-line-inactive nil
                           :family family
                           :height height
                           :weight 'normal
-                          :box mode-line-inactive-box-style) ; Use the determined style
-
+                          :box mode-line-inactive-box-style)
+    
+      ;; Emacs 29+: set mode-line-active face
+      (when (facep 'mode-line-active)
+        (set-face-attribute 'mode-line-active nil
+                            :family family
+                            :height height
+                            :weight 'normal
+                            :inherit 'unspecified  ; Break theme inheritance!
+                            :box mode-line-box-style))
+    
       ;; Centaur tabs fonts
       (dolist (face '(centaur-tabs-default
                       centaur-tabs-selected
@@ -654,7 +674,9 @@ use indent guides when programming!
         (set-face-attribute face nil
                             :family family
                             :height height
-                            :weight 'normal))))
+                            :weight 'normal))
+    
+      (force-mode-line-update t)))
 
   (defun set-eglot-inlay-annotation-font ()
     "Set the font for Eglot inlay type hints."
@@ -908,13 +930,17 @@ install auto dark
 #+begin_src emacs-lisp
   (use-package auto-dark
     :ensure t
-    :if (display-graphic-p)
     :custom
-    (auto-dark-themes '((ef-bio) (modus-operandi-tinted)))
-    :config (setq auto-dark-allow-osascript t)
-    :hook (auto-dark-dark-mode . (lambda () (+my-set-custom-fonts)))
-          (auto-dark-light-mode . (lambda () (+my-set-custom-fonts)))
-  
+    (auto-dark-themes '((ef-bio) (doric-earth)))
+    (auto-dark-polling-interval-seconds 5)
+    (auto-dark-allow-osascript nil)
+    (auto-dark-allow-powershell nil)
+    ;; (auto-dark-detection-method nil) ;; dangerous to be set manually
+    :hook
+    (auto-dark-dark-mode . (lambda () (+my-set-custom-fonts)))
+    (auto-dark-light-mode . (lambda ()
+          (+my-set-custom-fonts)
+          ))
     :init (auto-dark-mode))
 
   (+my-set-custom-fonts)
@@ -922,16 +948,24 @@ install auto dark
 
 
 #+begin_src emacs-lisp
+  (use-package modus-themes
+    :ensure t
+    :demand t
+    :init)
+
   (use-package ef-themes)
-  (use-package modus-themes)
-  (use-package adwaita-dark-theme)
+
+  ;; (use-pa
+  ;;  ckage adwaita-dark-theme)
+  ;; (
   (use-package doric-themes)
   (use-package doom-themes
     :ensure t
     :init
     (doom-themes-org-config))
-  (require 'ef-themes)
   (require 'modus-themes)
+
+  (require 'ef-themes)
 
 #+end_src
 
@@ -1073,49 +1107,21 @@ Use projectile
   #+end_src
 
    #+begin_src emacs-lisp
-     ;; (use-package company
-     ;;   :ensure t
-     ;;   :hook (after-init . global-company-mode) ; Enable globally after startup
-     ;;   :bind ("M-/" . company-complete)       ; Quick trigger key
-     ;;   :custom
-     ;;   (company-minimum-prefix-length 2)       ; Start suggesting after 2 chars
-     ;;   (company-idle-delay 0.2)                ; Faster suggestions (default: 0.5)
-     ;;   (company-selection-wrap-around t)       ; Wrap around candidate list
-     ;;   (company-tooltip-limit 10)              ; Show fewer candidates initially
-     ;;   (company-dabbrev-downcase nil)          ; Case-sensitive suggestions
-     ;;   (company-require-match 'never)          ; Allow arbitrary input
-     ;;   (company-show-numbers t)                ; Show numbers for quick selection
-     ;;   (company-frontends                      ; Cleaner UI
-     ;;    '(company-pseudo-tooltip-frontend      ; Default popup
-     ;;      company-echo-metadata-frontend)))    ; Show docs in echo area
-
-
-     (use-package corfu
-       ;; Optional customizations
-       ;; :custom
-       ;; (corfu-cycle t)                ;; Enable cycling for `corfu-next/previous'
-       ;; (corfu-quit-at-boundary nil)   ;; Never quit at completion boundary
-       ;; (corfu-quit-no-match nil)      ;; Never quit, even if there is no match
-       ;; (corfu-preview-current nil)    ;; Disable current candidate preview
-       ;; (corfu-preselect 'prompt)      ;; Preselect the prompt
-       ;; (corfu-on-exact-match 'insert) ;; Configure handling of exact matches
-
-       ;; Enable Corfu only for certain modes. See also `global-corfu-modes'.
-       ;; :hook ((prog-mode . corfu-mode)
-       ;;        (shell-mode . corfu-mode)
-       ;;        (eshell-mode . corfu-mode))
-
-       :init
-
-       ;; Recommended: Enable Corfu globally.  Recommended since many modes provide
-       ;; Capfs and Dabbrev can be used globally (M-/).  See also the customization
-       ;; variable `global-corfu-modes' to exclude certain modes.
-       (global-corfu-mode)
-
-       ;; Enable optional extension modes:
-       ;; (corfu-history-mode)
-       ;; (corfu-popupinfo-mode)
-       )
+     (use-package company
+       :ensure t
+       :hook (after-init . global-company-mode) ; Enable globally after startup
+       :bind ("M-/" . company-complete)       ; Quick trigger key
+       :custom
+       (company-minimum-prefix-length 2)       ; Start suggesting after 2 chars
+       (company-idle-delay 0.2)                ; Faster suggestions (default: 0.5)
+       (company-selection-wrap-around t)       ; Wrap around candidate list
+       (company-tooltip-limit 10)              ; Show fewer candidates initially
+       (company-dabbrev-downcase nil)          ; Case-sensitive suggestions
+       (company-require-match 'never)          ; Allow arbitrary input
+       (company-show-numbers t)                ; Show numbers for quick selection
+       (company-frontends                      ; Cleaner UI
+        '(company-pseudo-tooltip-frontend      ; Default popup
+          company-echo-metadata-frontend)))    ; Show docs in echo area
    #+end_src
 
    I use corfu in concert with [[https://github.com/oantolin/orderless][orderless]]. 
@@ -1148,33 +1154,35 @@ Use projectile
 This is also a custom function i stole from doom emacs to have quick and easy CMD+F
 
 #+begin_src emacs-lisp
+  (defun +default/search-buffer ()
+    "Conduct a text search on the current buffer.
+  If a selection is active and multi-line, perform a search restricted to that
+  region.
+  If a selection is active and not multi-line, use the selection as the initial
+  input and search the whole buffer for it."
+    (interactive)
+    (if (derived-mode-p 'org-mode)
+        (org-fold-show-all))
+    (let (start end multiline-p)
+      (save-restriction
+        (when (region-active-p)
+          (setq start (region-beginning)
+                end   (region-end)
+                multiline-p (/= (line-number-at-pos start)
+                                (line-number-at-pos end)))
+          (deactivate-mark)
+          (when multiline-p
+            (narrow-to-region start end)))
+        (if (and (featurep 'vertico)
+                 (fboundp 'consult-line))
+            (if (and start end (not multiline-p))
+                (consult-line
+                 (replace-regexp-in-string
+                  " " "\\\\ "
+                  (rxt-quote-pcre
+                   (buffer-substring-no-properties start end))))
+              (call-interactively #'consult-line))))))
 
-(defun +default/search-buffer ()
-  "Conduct a text search on the current buffer.
-If a selection is active and multi-line, perform a search restricted to that
-region.
-If a selection is active and not multi-line, use the selection as the initial
-input and search the whole buffer for it."
-  (interactive)
-  (let (start end multiline-p)
-    (save-restriction
-      (when (region-active-p)
-        (setq start (region-beginning)
-              end   (region-end)
-              multiline-p (/= (line-number-at-pos start)
-                              (line-number-at-pos end)))
-        (deactivate-mark)
-        (when multiline-p
-          (narrow-to-region start end)))
-      (if (and (featurep 'vertico)
-               (fboundp 'consult-line))
-          (if (and start end (not multiline-p))
-              (consult-line
-               (replace-regexp-in-string
-                " " "\\\\ "
-                (rxt-quote-pcre
-                 (buffer-substring-no-properties start end))))
-            (call-interactively #'consult-line))))))
 #+end_src
 * Spelling
 

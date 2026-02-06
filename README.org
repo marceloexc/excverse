@@ -8,6 +8,11 @@
   stow -t "$HOME" --no-folding emacs
 #+end_src
 
+** Don't track ~init.el~ after stowing it
+
+#+begin_src shell
+  git update-index --assume-unchanged emacs/.emacs.d/init.el
+#+end_src
 ** Don't native compile (useful for ephemeral setups)
 
 Touch a file titled ~.dir-locals.el~ with the contents of:

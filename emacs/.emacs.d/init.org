@@ -283,6 +283,13 @@ Import my $PATH from my current shell (on Mac)
 
   #+end_src
 
+dont startup emacs with such a small window:
+
+#+begin_src emacs-lisp
+  (if (window-system)
+      (set-frame-height (selected-frame) 60))
+#+end_src
+  
   To avoid file system clutter we put all auto saved files in a single
   directory.
 
@@ -639,11 +646,11 @@ use indent guides when programming!
            (mode-line-box-style nil)
            (mode-line-inactive-box-style nil))
       (if compact-mode
-          (setq mode-line-box-style `(:color ,mode-line-box-color :style nil)
+          (setq mode-line-box-style `(:color, mode-line-box-color :style nil)
                 mode-line-inactive-box-style `(:color ,mode-line-inactive-box-color :style nil))
         (setq mode-line-box-style `(:line-width 5 :color ,mode-line-box-color :style nil)
               mode-line-inactive-box-style `(:line-width 5 :color ,mode-line-inactive-box-color :style nil)))
-    
+
       ;; Mode line fonts - handle both old and new Emacs versions
       (set-face-attribute 'mode-line nil
                           :family family
@@ -655,16 +662,16 @@ use indent guides when programming!
                           :height height
                           :weight 'normal
                           :box mode-line-inactive-box-style)
-    
+
       ;; Emacs 29+: set mode-line-active face
       (when (facep 'mode-line-active)
         (set-face-attribute 'mode-line-active nil
                             :family family
                             :height height
                             :weight 'normal
-                            :inherit 'unspecified  ; Break theme inheritance!
+                            ;; :inherit 'unspecified  ; Break theme inheritance!
                             :box mode-line-box-style))
-    
+
       ;; Centaur tabs fonts
       (dolist (face '(centaur-tabs-default
                       centaur-tabs-selected
@@ -675,7 +682,7 @@ use indent guides when programming!
                             :family family
                             :height height
                             :weight 'normal))
-    
+
       (force-mode-line-update t)))
 
   (defun set-eglot-inlay-annotation-font ()
@@ -920,9 +927,31 @@ set custom themes as safe (so that we don't get annoyed by a prompt to trust our
 
 #+begin_src emacs-lisp
 
-  (custom-set-variables
-   '(custom-safe-themes t))
+    (custom-set-variables
+     '(custom-safe-themes t))
 
+      (use-package modus-themes
+        :ensure t
+        :demand t
+        :init)
+
+  (use-package ef-themes
+    :ensure t
+    :demand t
+    :init)
+
+      (use-package adwaita-dark-theme)
+      (use-package doric-themes)
+      (use-package doom-themes
+        :ensure t
+        :init
+        (doom-themes-org-config))
+      (require 'modus-themes)
+
+      (require 'ef-themes)
+
+  (modus-themes-load-theme 'modus-operandi-tinted)
+  (ef-themes-load-theme 'ef-bio)
 #+end_src
 
 install auto dark
@@ -931,7 +960,7 @@ install auto dark
   (use-package auto-dark
     :ensure t
     :custom
-    (auto-dark-themes '((ef-bio) (doric-earth)))
+    (auto-dark-themes '((ef-bio) (modus-operandi-tinted)))
     (auto-dark-polling-interval-seconds 5)
     (auto-dark-allow-osascript nil)
     (auto-dark-allow-powershell nil)
@@ -944,29 +973,6 @@ install auto dark
     :init (auto-dark-mode))
 
   (+my-set-custom-fonts)
-#+end_src
-
-
-#+begin_src emacs-lisp
-  (use-package modus-themes
-    :ensure t
-    :demand t
-    :init)
-
-  (use-package ef-themes)
-
-  ;; (use-pa
-  ;;  ckage adwaita-dark-theme)
-  ;; (
-  (use-package doric-themes)
-  (use-package doom-themes
-    :ensure t
-    :init
-    (doom-themes-org-config))
-  (require 'modus-themes)
-
-  (require 'ef-themes)
-
 #+end_src
 
 * macOS specific

@@ -482,38 +482,37 @@ and finally, enable mouse support when using emacs in the terminal (-nw flag)
 when dragging and dropping, try to use the relative path if possible.
 
 #+begin_src emacs-lisp
-  (defun my/dnd-get-local-file-name-relative (uri &optional must-exist)
-    "Like `dnd-get-local-file-name', but returns relative paths when possible."
-    ;; this is kind of sloppy
-    (message "[dnd] input uri: %S" uri)
+  (defun my/dnd-get-local-file-name-relative (orig-fn uri &optional must-exist)
+    "Like `dnd-get-local-file-name', but return relative paths in Org buffers."
+    (if (derived-mode-p 'org-mode)
+        (progn
+          (message "[dnd] input uri: %S" uri)
+          (let* ((f
+                  (cond
+                   ((string-match "^file:///" uri)
+                    (substring uri (1- (match-end 0))))
+                   ((string-match "^file:" uri)
+                    (substring uri (match-end 0)))))
+                 (coding
+                  (if (equal system-type 'windows-nt)
+                      'utf-8
+                    (or file-name-coding-system
+                        default-file-name-coding-system))))
+            (when f
+              (setq f (decode-coding-string (dnd--unescape-uri f) coding)))
+            (when (and f must-exist (not (file-readable-p f)))
+              (setq f nil))
+            (when (and f buffer-file-name)
+              (let ((base-dir (file-name-directory buffer-file-name)))
+                (when (file-in-directory-p f base-dir)
+                  (setq f (file-relative-name f base-dir))
+                  (message "[dnd] relativized path: %S" f))))
+            (message "[dnd] final result: %S" f)
+            f))
+      ;; not Org mode → behave exactly like Emacs normally would
+      (funcall orig-fn uri must-exist)))
 
-    (let* ((f
-            (cond
-             ((string-match "^file:///" uri)
-              (substring uri (1- (match-end 0))))
-             ((string-match "^file:" uri)
-              (substring uri (match-end 0)))))
-           (coding
-            (if (equal system-type 'windows-nt)
-                'utf-8
-              (or file-name-coding-system
-                  default-file-name-coding-system))))
-
-      (when f
-        (setq f (decode-coding-string (dnd--unescape-uri f) coding)))
-
-      (when (and f must-exist (not (file-readable-p f)))
-        (setq f nil))
-
-      (when (and f buffer-file-name)
-        (let ((base-dir (file-name-directory buffer-file-name)))
-          (when (file-in-directory-p f base-dir)
-            (setq f (file-relative-name f base-dir))
-            (message "[dnd] relativized path: %S" f))))
-
-      (message "[dnd] final result: %S" f)
-      f))
-  (advice-add 'dnd-get-local-file-name :override #'my/dnd-get-local-file-name-relative)
+  (advice-add 'dnd-get-local-file-name :around #'my/dnd-get-local-file-name-relative)
 #+end_src
 * Visual
   Here im adding a way to have my popup winodws controlled once and for al

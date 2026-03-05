@@ -478,39 +478,44 @@ and finally, enable mouse support when using emacs in the terminal (-nw flag)
 #+end_src
 
 when dragging and dropping, try to use the relative path if possible.
-
 #+begin_src emacs-lisp
-  (defun my/dnd-get-local-file-name-relative (orig-fn uri &optional must-exist)
-    "Like `dnd-get-local-file-name', but return relative paths in Org buffers."
-    (if (derived-mode-p 'org-mode)
-        (progn
-          (message "[dnd] input uri: %S" uri)
-          (let* ((f
-                  (cond
-                   ((string-match "^file:///" uri)
-                    (substring uri (1- (match-end 0))))
-                   ((string-match "^file:" uri)
-                    (substring uri (match-end 0)))))
-                 (coding
-                  (if (equal system-type 'windows-nt)
-                      'utf-8
-                    (or file-name-coding-system
-                        default-file-name-coding-system))))
-            (when f
-              (setq f (decode-coding-string (dnd--unescape-uri f) coding)))
-            (when (and f must-exist (not (file-readable-p f)))
-              (setq f nil))
-            (when (and f buffer-file-name)
-              (let ((base-dir (file-name-directory buffer-file-name)))
-                (when (file-in-directory-p f base-dir)
-                  (setq f (file-relative-name f base-dir))
-                  (message "[dnd] relativized path: %S" f))))
-            (message "[dnd] final result: %S" f)
-            f))
-      ;; not Org mode → behave exactly like Emacs normally would
-      (funcall orig-fn uri must-exist)))
+  (defun my/org-dnd-relative-fix (orig-fn &rest args)
+    ;; In Emacs 29 macOS:
+    ;; args = (URI ACTION)
+    ;; where URI should be a list but may be a string.
 
-  (advice-add 'dnd-get-local-file-name :around #'my/dnd-get-local-file-name-relative)
+    (let* ((uri   (nth 0 args))
+           (action (nth 1 args)))
+
+      ;; 1️⃣ Normalize URI to list
+      (when (stringp uri)
+        (setq uri (list uri)))
+
+      ;; 2️⃣ Relativize file URIs
+      (when (and buffer-file-name (listp uri))
+        (let ((base-dir (file-name-directory buffer-file-name)))
+          (setq uri
+                (mapcar
+                 (lambda (u)
+                   (if (string-prefix-p "file:" u)
+                       (let* ((path (substring u 5))
+                              (decoded (decode-coding-string
+                                        (dnd--unescape-uri path)
+                                        (or file-name-coding-system
+                                            default-file-name-coding-system)))
+                              (abs (expand-file-name decoded)))
+                         (if (file-in-directory-p abs base-dir)
+                             (concat "file:"
+                                     (file-relative-name abs base-dir))
+                           u))
+                     u))
+                 uri))))
+
+      ;; 3️⃣ Call original with corrected args
+      (apply orig-fn (list uri action))))
+
+  (advice-add 'org--dnd-multi-local-file-handler
+              :around #'my/org-dnd-relative-fix)
 #+end_src
 * Visual
   Here im adding a way to have my popup winodws controlled once and for al

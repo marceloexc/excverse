@@ -737,10 +737,9 @@ Dash board provides a nice welcome.
      		dashboard-filter-agenda-entry 'dashboard-no-filter-agenda
              dashboard-set-footer nil
              dashboard-page-separator "\n\n\n"
-             dashboard-items '((agenda . 10)
+             dashboard-items '((bookmarks . 5)
      						 (projects . 15)
-                              (recents  . 15)
-                              (bookmarks . 5)))
+                              (recents  . 15)))
 
        (dashboard-setup-startup-hook))
    #+end_src

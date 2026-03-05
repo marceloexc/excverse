@@ -1194,6 +1194,17 @@ This is also a custom function i stole from doom emacs to have quick and easy CM
               (call-interactively #'consult-line))))))
 
 #+end_src
+
+as well as recursively searching a project with consult.
+
+#+begin_src emacs-lisp
+  (defun +default/project-el-rg-search ()
+    "Search directory using consult-ripgrep. With live-preview."
+    (interactive)
+    (let ((consult-ripgrep-command 
+           "rg --multiline --null --ignore-case --line-buffered --color=always --max-columns=500 --no-heading --line-number --no-ignore-vcs -e ARG OPTS"))
+      (consult-ripgrep (project-root (project-current t)) "")))
+#+end_src
 * Spelling
 
 Install ~undo-tree~
@@ -1949,6 +1960,7 @@ Otherwise, enable CUA on linux
            ("s-}" . mac-next-tab)
            ("s-q" . kill-emacs)
            ("s-f" . +default/search-buffer)
+  		 ("S-<escape>" . +default/project-el-rg-search)
            ("s-`" . other-window)
            ("s-/" . comment-line)
            ("S-s-<left>" . mac-previous-tab)
@@ -1962,7 +1974,9 @@ Otherwise, enable CUA on linux
            ("S-s-M-<right>" . mac-move-tab-right)
            ("S-s-M-<left>" . mac-move-tab-left)
   		 ("s-=" . global-scale-up)
-  		 ("<f5>" . recompile)))
+  		 ("<f5>" . project-compile)
+  		 ("<f10>" . mac-toggle-frame-fullscreen)
+  		 ("<f6>" . tool-bar-mode)))
 
   (when (or (eq system-type 'windows-nt) (eq system-type 'gnu/linux))
     (bind-keys
@@ -2015,7 +2029,9 @@ Then use general...
         "ff" '(find-file :which-key "Find File")
         "fr" '(recentf-open :which-key "Open Recent File")
         "fd" '(denote-open-or-create :which-key "Open Denote File")
-
+  	  "fp" '(project-find-dir :which-key "Open project.el Directory")
+  	  "fb" '(list-bookmarks :which-key "Find in Bookmarks")
+  	  
         ;;n for notes (org mode, etc)
         "n" '(:ignore t :which-key "Notes")
   	  "na" '(org-agenda-list :which-key "Show Agenda")

@@ -1285,6 +1285,11 @@ Really, all I want is just some rainbow parenthesis...
     	 ("\\.djhtml\\'" . web-mode)))
 
   (use-package js2-mode
+    :ensure t
+    :mode
+    (("\\.js\\'" . js2-mode)))
+
+  (use-package rjsx-mode
     :defer t)
 #+end_src
 
@@ -1415,7 +1420,14 @@ Having a web server available within Emacs
 #+end_src
 *** Kotlin
 #+begin_src emacs-lisp
-  (use-package kotlin-mode)
+  (use-package kotlin-mode
+    :mode (("\\.kt\\'"  . kotlin-mode)
+           ("\\.kts\\'" . kotlin-mode))
+    :hook (kotlin-mode . eglot-ensure))
+
+  (with-eval-after-load 'eglot
+    (add-to-list 'eglot-server-programs
+                 '((kotlin-mode kotlin-ts-mode) . ("kotlin-language-server"))))
 #+end_src
 *** Embedded
 
@@ -1549,9 +1561,8 @@ Set some default directories when note taking
   ;; this will ALWAYS be how my structure will be!
 
   (setq org-capture-templates
-        '(("t" "Quick Thoughts" entry
-           (file "~/Documents/Notes/Captured.org")
-           "* %?\nEntered on %U\n")))
+        '(("t" "Quick Thoughts" entry (file "~/Documents/Notes/Captured.org")
+           "\n* TODO %?\nEntered on %U\n\n")))
 
 #+end_src
 
@@ -1861,6 +1872,12 @@ use ~pdf-tools~ instead of ~doc-view~
     (use-package easy-hugo
       :init
       (setq easy-hugo-server-flags "-D"))
+#+end_src
+* Chatbot & LLMs
+cant believe i need to have a separate heading for this now..
+
+#+begin_src emacs-lisp
+  (use-package gptel)
 #+end_src
 * global-scale-mode
 

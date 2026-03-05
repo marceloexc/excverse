@@ -1302,13 +1302,36 @@ PHP!
     :defer t)
 #+end_src
 
+testing...
+#+begin_src emacs-lisp
+  (use-package yasnippet
+    :hook (prog-mode . yas-minor-mode)
+    :custom
+    (yas-verbosity 0)
+    :config
+    (setq yas-minor-mode-map (make-sparse-keymap))  
+    (setq yas-minor-mode nil))
+
+  ;; no menu bar item for yasnippet
+  (with-eval-after-load 'yasnippet
+    (define-key yas-minor-mode-map [menu-bar yasnippet] nil))
+
+  (with-eval-after-load 'company
+    (define-key company-active-map (kbd "TAB") #'company-complete-selection)
+    (define-key company-active-map (kbd "<tab>") #'company-complete-selection)
+    (define-key company-active-map (kbd "RET") #'company-complete-selection)
+    (define-key company-active-map (kbd "<return>") #'company-complete-selection))
+#+end_src
+
+
 #+begin_src emacs-lisp
   (use-package eglot
     :ensure t
     :config
-    (setq eglot-report-progress nil)
+    ;; (setq eglot-report-progress nil)
+    ;; (setq eglot-connect-timeout 300) 
     (setq eglot-events-buffer-config '(:size 0 :format full))
-    (setq eglot-events-buffer-size 0)
+    ;; (setq eglot-events-buffer-size 0)
     (add-to-list 'eglot-server-programs
                '(astro-mode . ("astro-ls" "--stdio"
                                :initializationOptions
@@ -1407,6 +1430,11 @@ Arduino
     :custom
     (arduino-cli-warnings 'all)
     (arduino-cli-verify t))
+
+  (add-hook 'arduino-mode-hook
+            (lambda ()
+              (setq-local eglot-ignored-server-capabilities
+                          '(:documentOnTypeFormattingProvider))))
 #+end_src
 ** Terminal
 *** eat

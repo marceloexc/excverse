@@ -283,7 +283,9 @@ dont startup emacs with such a small window:
 
 #+begin_src emacs-lisp
   (if (window-system)
-      (set-frame-height (selected-frame) 60))
+      (setq initial-frame-alist
+        '((width . 120)    ;; columns
+          (height . 45))))  ;; rows)
 #+end_src
   
   To avoid file system clutter we put all auto saved files in a single

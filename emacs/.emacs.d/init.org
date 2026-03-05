@@ -1068,19 +1068,6 @@ Fixing macos scrolling....
 
   #+end_src
 
-** TODO Rename the parent header as "Project Management"
-
-Use projectile 
-#+begin_src emacs-lisp
-  (use-package projectile
-    :diminish projectile-mode
-    :config (projectile-mode)
-    :bind-keymap
-    ("C-c p" . projectile-command-map)
-    :init
-    (setq projectile-switch-project-action #'projectile-dired))
-#+end_src
-
 * Completion UI
 
 ** Basic Completion packages (vertico, marginalia, etc)

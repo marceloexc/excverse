@@ -160,6 +160,11 @@ Finally, reload the init file after tangling everything so that we don't have to
 
      (kill-buffer "*scratch*")
 
+     ;; get path from Termux when on Android
+     (when (eq system-type 'android)
+       (setenv "PATH" (format "%s:%s" "/data/data/com.termux/files/usr/bin"
+     						 (getenv "PATH")))
+       (push "/data/data/com.termux/files/usr/bin" exec-path))
    #+end_src
    
 ** Packages
@@ -713,6 +718,14 @@ use indent guides when programming!
     (cond
      ((eq system-type 'darwin)
       (+my--set-common-fonts "SF Pro Text" 120))
+
+     ((eq system-type 'android)
+  	(+my--set-common-fonts "Roboto" 120))
+
+
+     ((eq system-type 'windows-nt)
+  	(+my--set-common-fonts "Segoe UI" 90))
+     
      ((eq system-type 'gnu/linux)
       (+my--set-common-fonts "Cantarell" 100))))
 #+end_src
@@ -2000,7 +2013,10 @@ Otherwise, enable CUA on linux
   		 ("<f10>" . mac-toggle-frame-fullscreen)
   		 ("<f6>" . tool-bar-mode)))
 
-  (when (or (eq system-type 'windows-nt) (eq system-type 'gnu/linux))
+  (when
+  	(or (eq system-type 'windows-nt)
+  		(eq system-type 'android)
+  		(eq system-type 'gnu/linux))
     (bind-keys
      ("C-s" . save-buffer)
      ("C-a" . mark-whole-buffer)
@@ -2102,5 +2118,11 @@ Disable some annoyances...(like delete-selection-mode and context menu mode)
   (context-menu-mode 1)
   (delete-selection-mode t)
 #+end_src
+* Finishing touches
 
+If on android, scale the text a bit...
 
+#+begin_src emacs-lisp
+  (when (eq system-type 'android)
+    (global-scale-up) (global-scale-up))
+#+end_src

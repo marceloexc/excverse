@@ -993,7 +993,8 @@ install auto dark
 
 #+begin_src emacs-lisp
   (use-package auto-dark
-    :ensure t
+    :if window-system
+    :init
     :custom
     (auto-dark-themes '((ef-bio) (modus-operandi-tinted)))
     (auto-dark-polling-interval-seconds 5)
@@ -1814,6 +1815,26 @@ adding a "loading:lazy" attribute to images when exporting to HTML
               (goto-char insert-pos)
               (insert "#+attr_html: :loading lazy\n")))
           (goto-char (match-beginning 0))))))
+#+end_src
+
+Make blogging a bit easier by automatically copying a relative filename org link to the clipboard from ~image-dired~
+
+#+begin_src emacs-lisp
+  (defun image-dired-copy-org-link (&optional arg)
+    "Copy names of marked (or next ARG) files as Org file links.
+  Preserves the same filename behavior as `image-dired-copy-filename-as-kill`."
+    (interactive "P")
+    (image-dired-copy-filename-as-kill arg)
+    (let ((text (current-kill 0)))
+      (kill-new
+       (mapconcat
+        (lambda (f) (format "[[file:%s]]" f))
+        (split-string text "\n")
+        "\n"))))
+
+  (with-eval-after-load 'image-dired
+    (define-key image-dired-thumbnail-mode-map (kbd "w")
+                #'image-dired-copy-org-link))
 #+end_src
 
 Hiding keylines:

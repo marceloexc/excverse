@@ -479,43 +479,48 @@ and finally, enable mouse support when using emacs in the terminal (-nw flag)
 
 when dragging and dropping, try to use the relative path if possible.
 #+begin_src emacs-lisp
-  (defun my/org-dnd-relative-fix (orig-fn &rest args)
-    ;; In Emacs 29 macOS:
-    ;; args = (URI ACTION)
-    ;; where URI should be a list but may be a string.
-
-    (let* ((uri   (nth 0 args))
-           (action (nth 1 args)))
-
-      ;; 1️⃣ Normalize URI to list
-      (when (stringp uri)
-        (setq uri (list uri)))
-
-      ;; 2️⃣ Relativize file URIs
-      (when (and buffer-file-name (listp uri))
-        (let ((base-dir (file-name-directory buffer-file-name)))
-          (setq uri
-                (mapcar
-                 (lambda (u)
-                   (if (string-prefix-p "file:" u)
-                       (let* ((path (substring u 5))
-                              (decoded (decode-coding-string
-                                        (dnd--unescape-uri path)
-                                        (or file-name-coding-system
-                                            default-file-name-coding-system)))
-                              (abs (expand-file-name decoded)))
-                         (if (file-in-directory-p abs base-dir)
-                             (concat "file:"
-                                     (file-relative-name abs base-dir))
-                           u))
-                     u))
-                 uri))))
-
-      ;; 3️⃣ Call original with corrected args
-      (apply orig-fn (list uri action))))
+  (defun my/org-dnd-normalize-uri-arg (orig-fn uri action)
+    "On Emacs 29/macOS, DND may pass URI as a string instead of a list."
+    (funcall orig-fn (if (listp uri) uri (list uri)) action))
 
   (advice-add 'org--dnd-multi-local-file-handler
-              :around #'my/org-dnd-relative-fix)
+              :around #'my/org-dnd-normalize-uri-arg)
+
+  (defun my/org--rewrite-final-file-link (s)
+    "Rewrite final Org file links to [[file:relative/path]] in file-backed Org buffers."
+    (if (or (not (derived-mode-p 'org-mode))
+            (not buffer-file-name)
+            (not (stringp s)))
+        s
+      (let ((base (file-name-directory buffer-file-name)))
+        (replace-regexp-in-string
+         (rx "[["
+             (optional "file:")
+             (group "/" (*? (not (any "]"))))
+             (optional "]["
+                       (group (*? anything))
+                       "]")
+             "]]")
+         (lambda (m)
+           (string-match
+            (rx "[["
+                (optional "file:")
+                (group "/" (*? (not (any "]"))))
+                (optional "]["
+                          (group (*? anything))
+                          "]")
+                "]]")
+            m)
+           (let* ((abs  (match-string 1 m))
+                  (desc (match-string 2 m))
+                  (rel  (file-relative-name abs base)))
+             (if desc
+                 (format "[[file:%s][%s]]" rel desc)
+               (format "[[file:%s]]" rel))))
+         s t t))))
+
+  (advice-add 'org-link-make-string-for-buffer
+              :filter-return #'my/org--rewrite-final-file-link)
 #+end_src
 * Visual
   Here im adding a way to have my popup winodws controlled once and for al

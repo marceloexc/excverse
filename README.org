@@ -1,19 +1,27 @@
-#+title: dotfiles
+* ~yggdrasil~
 
-* Quick tips:
+[[file:img/desktop.jpeg]]
 
-** Don't symlink entire ~emacs.d~ folder, only symlink files
+- editor :: emacs
+- shell :: fish
+- terminal :: ghostty 
+
+I'm using GNU stow for this
+
+** Quick tips:
+
+- Don't symlink entire ~emacs.d~ folder, only symlink files
 
 #+begin_src shell
   stow -t "$HOME" --no-folding emacs
 #+end_src
 
-** Don't track ~init.el~ after stowing it
+- Don't track ~init.el~ after stowing it
 
 #+begin_src shell
   git update-index --assume-unchanged emacs/.emacs.d/init.el
 #+end_src
-** Don't native compile (useful for ephemeral setups)
+- Don't native compile elisp (ephemeral setups)
 
 Touch a file titled ~.dir-locals.el~ with the contents of:
 
@@ -21,9 +29,9 @@ Touch a file titled ~.dir-locals.el~ with the contents of:
   ((nil . ((no-native-compile . t))))
 #+end_src
 
-** Installing stuff without sudo privileges
+- Installing stuff without sudo privileges
 
-*** homebrew
+**** homebrew
 
 #+begin_src shell
   git clone https://github.com/Homebrew/brew homebrew
@@ -33,35 +41,6 @@ Touch a file titled ~.dir-locals.el~ with the contents of:
   chmod -R go-w "$(brew --prefix)/share/zsh"
 #+end_src
 
-*** Node
+**** Node
 
 https://www.johnpapa.net/node-and-npm-without-sudo/
-
-* Firefox
-Uses a custom ~userChrome.css~ which enables a lightweight vertical tabs setup using Sidebery
-#+attr_html: :width 500px
-#+attr_latex: :width 500px
-[[file:img/firefox1.png]]
-
-#+attr_html: :width 500px
-#+attr_latex: :width 500px
-[[file:img/firefox2.png]]
-
-
-#+attr_html: :width 500px
-#+attr_latex: :width 500px
-[[file:img/firefox3.png]]
-* DOOM Emacs
-Uses a setup that pertains to features from the ~emacs-mac~ brew package.
-
-#+attr_html: :width 500px
-#+attr_latex: :width 500px
-[[file:img/emacs1.png]]
-
-#+attr_html: :width 500px
-#+attr_latex: :width 500px
-[[file:img/emacs2.png]]
-
-#+attr_html: :width 500px
-#+attr_latex: :width 500px
-[[file:img/emacs3.png]]

@@ -655,6 +655,12 @@ use indent guides when programming!
               (set-face-attribute 'default nil :font "Berkeley Mono-12" :weight 'normal))
             (when (eq system-type 'gnu/linux)
               (set-face-attribute 'default nil :font "Berkeley Mono-10.5")))
+
+     ;; Berkeley Mono renders really poorly on windows for whatever reason
+     ;; i've found that Consolas works best.
+
+     (when (eq system-type 'windows-nt)
+       (ps-set-face-attribute 'default nil :font "Consolas-9.25"))
    #+end_src
 
 #+begin_src emacs-lisp
@@ -1014,12 +1020,14 @@ the solutions was from [[https://stackoverflow.com/questions/4076360/error-in-di
 
   #+begin_src emacs-lisp
 
-  (use-package ls-lisp
-    :ensure nil
-    :if (memq window-system '(mac ns))
-    :config
-    (setq ls-lisp-use-insert-directory-program nil))
-  
+    (use-package ls-lisp
+      :ensure nil
+      :if (memq window-system '(mac ns))
+      :config
+      (setq ls-lisp-use-insert-directory-program nil))
+
+    (setq use-package-compute-statistics t)
+
   #+end_src
 
   It is useful to be able to occasionally open the file associated with a
@@ -2121,7 +2129,7 @@ Then use general...
         "ff" '(find-file :which-key "Find File")
         "fr" '(recentf-open :which-key "Open Recent File")
         "fd" '(denote-open-or-create :which-key "Open Denote File")
-  	  "fp" '(project-find-dir :which-key "Open project.el Directory")
+  	  "fp" '(project-switch-project :which-key "Open project.el Directory")
   	  "fb" '(list-bookmarks :which-key "Find in Bookmarks")
   	  
         ;;n for notes (org mode, etc)

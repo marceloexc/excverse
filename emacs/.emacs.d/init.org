@@ -1610,12 +1610,12 @@ Set some default directories when note taking
   (with-eval-after-load 'org
     (setq org-directory "~/Documents/Notes")
     (setq org-icalendar-combined-agenda-file "~/Documents/Calendar.ics")
-    (setq org-default-notes-file (concat org-directory "/captured.org")))
+    (setq org-default-notes-file (concat org-directory "/Captured.org")))
   ;; this will ALWAYS be how my structure will be!
 
   (setq org-capture-templates
-        '(("t" "Quick Thoughts" entry (file "~/Documents/Notes/Captured.org")
-           "\n* TODO %?\nEntered on %U\n\n")))
+  	  '(("t" "Quick Thoughts" entry (file "~/Documents/Notes/Captured.org") "* TODO %?\nEntered on %U\n")
+  		("d" "Done" entry (file "~/Documents/Notes/Done.org") "* TODO %?\nDEADLINE: %(org-insert-time-stamp (org-read-date nil t \"+1w\"))\n")))
 
 #+end_src
 
@@ -1634,10 +1634,7 @@ use org-modern to make everything pretty
       (setq org-modern-fold-stars '(("◉" . "◉")
                                  ("○" . "○")
                                  ("◇" . "◇")
-                                 ("✿" . "✿")))
-
-
-      )
+                                 ("✿" . "✿"))))
 
   (with-eval-after-load 'org (global-org-modern-mode))
 #+end_src

@@ -4,6 +4,7 @@ function fish_prompt --description 'Write out the prompt'
     switch $(prompt_hostname)
         case yggdrasil
             set machine_color red
+			set fish_greeting "Welcome to Darwin!\n"
         case vultr
             set machine_color yellow
 		case modus

@@ -530,10 +530,6 @@ when dragging and dropping, try to use the relative path if possible.
 * Visual
   Here im adding a way to have my popup winodws controlled once and for al
   #+begin_src emacs-lisp
-      (use-package popwin
-            :ensure t
-            :config
-            (popwin-mode 1))
 
       (use-package pulsar
     :ensure t
@@ -1284,17 +1280,18 @@ Really, all I want is just some rainbow parenthesis...
 *** Swift
 
 #+begin_src emacs-lisp
-  (use-package swift-mode)
+  (use-package swift-mode
+    :defer t
+    :mode (("\\.swift\\'". swift-mode)))
 #+end_src
 
 *** Web
 
 #+begin_src emacs-lisp
     (use-package web-mode
-    	:ensure t
+    	:defer t
     	:mode
-    	(("\\.phtml\\'" . web-mode)
-    	 ("\\.php\\'" . web-mode)
+    	(
     	 ("\\.tpl\\'" . web-mode)
     	 ("\\.[agj]sp\\'" . web-mode)
     	 ("\\.as[cp]x\\'" . web-mode)
@@ -1339,7 +1336,11 @@ PHP!
 
 #+begin_src emacs-lisp
   (use-package php-mode
-    :defer t)
+    :defer t
+    :config
+    (setq php-mode-coding-style 'psr2
+  		php-mode-template-compatibility nil
+  		php-imenu-generic-expression 'php-imenu-generic-expression-simple))
 #+end_src
 
 testing...
@@ -1432,6 +1433,7 @@ Having a web server available within Emacs
 *** Kotlin
 #+begin_src emacs-lisp
   (use-package kotlin-mode
+    :defer t
     :mode (("\\.kt\\'"  . kotlin-mode)
            ("\\.kts\\'" . kotlin-mode))
     :hook (kotlin-mode . eglot-ensure))
@@ -1443,8 +1445,8 @@ Having a web server available within Emacs
 *** Rust
 
 #+begin_src emacs-lisp
-  (use-package rust-mode)
-
+  (use-package rust-mode
+    :mode "\\.rs\\'")
 
   ;;; this is from here: https://gist.github.com/casouri/0ad2c6e58965f6fd2498a91fc9c66501
   (defun setup-rust ()

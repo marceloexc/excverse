@@ -660,7 +660,7 @@ use indent guides when programming!
      ;; i've found that Consolas works best.
 
      (when (eq system-type 'windows-nt)
-       (ps-set-face-attribute 'default nil :font "Consolas-9.25"))
+       (set-face-attribute 'default nil :font "Consolas-9.25"))
    #+end_src
 
 #+begin_src emacs-lisp

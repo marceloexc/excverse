@@ -816,8 +816,7 @@ Use centaur tabs for the tab bar
           centaur-tabs-show-count nil
           centaur-tabs-style "bar"
           centaur-tabs-set-icons t
-          ;;centaur-tabs-excluded-prefixes '("*")
-          centaur-tabs-exclude-buffers '("*Minibuf-1*" "*which-key*")
+          centaur-tabs-exclude-buffers '("*Minibuf-1*" "*which-key*" "*InactiveMinibuffer*" "*Inactive Minibuffer*")
           )
     (if compact-mode
   	(setq centaur-tabs-height 20)

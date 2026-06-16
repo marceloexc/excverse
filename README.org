@@ -1,4 +1,10 @@
-* ~yggdrasil~
+* dotfiles
+
+managed by the GNU ~stow~ symlink farm. stow is generally available on most *BSD platforms 
+
+for setup on windows, use ~wsl~
+
+*** ~yggdrasil~
 
 [[file:img/desktop.jpeg]]
 
@@ -20,7 +26,7 @@
 - iina
 #+HTML: </details>
 
-* ~soulsilver~
+*** ~edifice~
 
 [[file:img/windows.jpeg]]
 
@@ -39,15 +45,25 @@
 - jpegview
 - mpc-hc
 #+HTML:</details>
+
+*** firefox extensions
+
+- [[https://addons.mozilla.org/en-US/firefox/addon/old-reddit-redirect/][orr]]
+- [[https://addons.mozilla.org/en-US/firefox/addon/ublock-origin/][ublock origin]]
+- [[https://addons.mozilla.org/en-US/firefox/addon/leechblock-ng/][leechblock]]
+- [[https://addons.mozilla.org/en-US/firefox/addon/auto-tab-discard/][auto tab discard]]
+- [[https://addons.mozilla.org/en-US/firefox/addon/consent-o-matic/][consent]]
+- [[https://addons.mozilla.org/en-US/firefox/addon/unduck-search/][unduck]]
+
 * Quick tips:
 
-- Don't symlink entire ~emacs.d~ folder, only symlink files
+don't symlink entire ~emacs.d~ folder, only symlink files
 
 #+begin_src shell
   stow -t "$HOME" --no-folding emacs
 #+end_src
 
-- Don't track ~init.el~ after stowing it
+don't track emacs' ~init.el~ after stowing it
 
 #+begin_src shell
   git update-index --assume-unchanged emacs/.emacs.d/init.el

@@ -825,6 +825,13 @@ Use centaur tabs for the tab bar
     ("M-s-<left>" . centaur-tabs-backward)
     ("M-s-<right>" . centaur-tabs-forward))
 
+  ;; for some reason, Emacs on windows can just never be able to display icons,
+  ;; so we'll just disable them from showing up
+
+  (when (eq system-type 'windows-nt)
+  	(setq centaur-tabs-set-icons nil
+  		  centaur-tabs-show-navigation-buttons nil))
+
   (defun my-centaur-tabs-buffer-groups ()
     "Custom groupings for Centaur Tabs."
     (list
@@ -915,7 +922,7 @@ Treemacs is good for project-style navigation
     (let ((sf-pro '(:family "SF Pro Text" :height 130)))
       (mapc (lambda (face)
               (when (facep face)
-                (set-face-attribute face nil :family "SF Pro Text" :height 130)))
+                (set-face-attribute face nil :family "SF Pro Text")))
             '(treemacs-directory-face
               treemacs-directory-collapsed-face
               treemacs-file-face

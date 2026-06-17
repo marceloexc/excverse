@@ -598,6 +598,13 @@ I also hate the way EMACS treats native scrollbars...
     (mlscroll-mode 1))
 #+end_src
 
+use breadcrumb mode
+
+#+begin_src emacs-lisp
+  (use-package breadcrumb
+    :hook (eglot--managed-mode . breadcrumb-local-mode))
+#+end_src
+
 And disable the ones that come with the GUI
 
 #+begin_src emacs-lisp
@@ -701,6 +708,16 @@ use indent guides when programming!
                             :height height
                             :weight 'normal))
 
+  	;; breadcrumb faces (only get eval after loading)
+  	(with-eval-after-load 'breadcrumb
+  	  (dolist (face '(breadcrumb-face
+  					  breadcrumb-project-leaf-face
+  					  breadcrumb-imenu-leaf-face))
+  		(when (facep face)
+  		  (set-face-attribute face nil
+  							  :family family
+  							  :height height
+  							  :weight 'normal))))
       (force-mode-line-update t)))
 
   (defun set-eglot-inlay-annotation-font ()

@@ -833,13 +833,26 @@ Use centaur tabs for the tab bar
     ("M-s-<right>" . centaur-tabs-forward))
 
   (defun my-centaur-tabs-buffer-groups ()
-    "Custom groupings for Centaur Tabs."
+    "Custom groupings for Centaur Tabs with eglot hidden."
     (list
      (cond
-      ;; Only specific utility modes go to 'Fundamental'
-      ((member (buffer-name) '("*compile*" "*Minibuf-1*" "*dashboard*" "*Messages*" "*helm*" "*Async-native-compile-log*" "*Compile-Log*" "*xref*" "*httpd*" "magit-*" "*Completions*"))
+      ;; Hide or isolate eglot buffers
+      ((string-prefix-p "*eglot" (downcase (buffer-name)))
+       "Eglot")
+
+      ;; Explicit utility buffers → Fundamental
+      ((or (member (buffer-name)
+                   '("*compile*" "*Minibuf-1*" "*dashboard*" "*Messages*"
+                     "*helm*" "*Async-native-compile-log*" "*Compile-Log*"
+                     "*xref*" "*httpd*" "*Completions*"))
+           (string-prefix-p "magit-" (buffer-name)))
        "Fundamental")
-      ;; Everything else goes to 'Main'
+
+      ;; Other star buffers  Tools
+      ;; ((string-prefix-p "*" (buffer-name))
+       ;; "Tools")
+
+      ;; everything else goes to main
       (t "Main"))))
 
   (defun centaur-tabs-hide-tab (x)
@@ -2060,6 +2073,8 @@ Otherwise, enable CUA on linux
            ("s-v" . yank)
            ("s-z" . undo-tree-undo)
            ("s-Z" . undo-tree-redo)
+  		 ("s-<right>" . move-end-of-line)
+  		 ("s-<left>" . move-beginning-of-line)
            ("s-w" . kill-current-buffer)
            ("s-{" . mac-previous-tab)
            ("s-}" . mac-next-tab)

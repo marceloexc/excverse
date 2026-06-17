@@ -209,8 +209,6 @@ Import my $PATH from my current shell (on Mac)
       :if (memq window-system '(mac ns))
       :config
       (exec-path-from-shell-initialize))
-
-
 #+end_src
 
   These are what /I/ consider to be saner defaults.
@@ -218,10 +216,8 @@ Import my $PATH from my current shell (on Mac)
   Set =utf-8= as preferred coding system.
 
   #+begin_src emacs-lisp
-
   (set-language-environment "UTF-8")
   (prefer-coding-system 'utf-8)
-
   #+end_src
 
   We can set variables to whatever value we'd like using =setq=.
@@ -528,61 +524,59 @@ when dragging and dropping, try to use the relative path if possible.
               :filter-return #'my/org--rewrite-final-file-link)
 #+end_src
 * Visual
-  Here im adding a way to have my popup winodws controlled once and for al
+
+Pulsar and ~winpulse~ are two different pulsars. one pulses the line, the other pulses the entire window
+
   #+begin_src emacs-lisp
 
-      (use-package pulsar
-    :ensure t
-    :config
-    ;; Define the commands that trigger the pulse effect
-    (setq pulsar-pulse-functions
-          '(recenter-top-bottom
-            move-to-window-line-top-bottom
-            reposition-window
-            bookmark-jump
-            other-window
-            delete-window
-            delete-other-windows
-            forward-page
-            backward-page
-            scroll-up-command
-            scroll-down-command
-            windmove-right
-            windmove-left
-            windmove-up
-            windmove-down
-            org-cycle
-            kill-region
-            yank
-            undo-tree-undo
-            org-next-visible-heading
-            org-previous-visible-heading
-            org-forward-heading-same-level
-            org-backward-heading-same-level
-            outline-next-visible-heading
-            outline-previous-visible-heading
-            outline-forward-same-level
-            outline-backward-same-level))
+    (use-package pulsar
+      :ensure t
+      :config
+      ;; Define the commands that trigger the pulse effect
+      (setq pulsar-pulse-functions
+            '(recenter-top-bottom
+              move-to-window-line-top-bottom
+              reposition-window
+              bookmark-jump
+              other-window
+              delete-window
+              delete-other-windows
+              forward-page
+              backward-page
+              scroll-up-command
+              scroll-down-command
+              windmove-right
+              windmove-left
+              windmove-up
+              windmove-down
+              org-cycle
+              kill-region
+              yank
+              undo-tree-undo
+              org-next-visible-heading
+              org-previous-visible-heading
+              org-forward-heading-same-level
+              org-backward-heading-same-level
+              outline-next-visible-heading
+              outline-previous-visible-heading
+              outline-forward-same-level
+              outline-backward-same-level))
 
-    ;; Set the pulse duration
-    (setq pulsar-delay 0.1) ;; duration in seconds
+      ;; Set the pulse duration
+      (setq pulsar-delay 0.1) ;; duration in seconds
 
-    ;; Enable pulsar mode globally
-    (pulsar-global-mode 1)
+      ;; Enable pulsar mode globally
+      (pulsar-global-mode 1)
 
-    ;; Optional: Set pulsar face colors (if desired)
-    (setq pulsar-face 'pulsar-magenta)
-    (setq pulsar-highlight-face 'pulsar-yellow))
-  #+end_src
+      ;; Optional: Set pulsar face colors (if desired)
+      (setq pulsar-face 'pulsar-magenta)
+      (setq pulsar-highlight-face 'pulsar-yellow))
 
-use winpulse to pulse the active window
-
-#+begin_src emacs-lisp
-  (use-package winpulse
-    :vc (:url "https://github.com/xenodium/winpulse"
-         :rev :newest)
-    :config
-    (winpulse-mode +1))
+    (use-package winpulse
+      :vc (:url "https://github.com/xenodium/winpulse"
+    			:rev :newest)
+      :config
+      (winpulse-mode +1))
 #+end_src
   
 Set default window dividers
@@ -958,6 +952,7 @@ Get a third opinion from treemacs
   (use-package neotree
     :defer t)
 #+end_src
+
 ** TODO Theme
 
 set custom themes as safe (so that we don't get annoyed by a prompt to trust our theme

@@ -427,11 +427,6 @@ easy dired hacks...
     (add-hook 'dired-mode-hook 'all-the-icons-dired-mode))
 #+end_src
 
-enable flyspell mode for word spell checking
-#+begin_src emacs-lisp
-  ;; (flyspell-mode 1)
-#+end_src
-
 We will also disable compilation warnings since they get VERY annoying
 
 #+begin_src emacs-lisp

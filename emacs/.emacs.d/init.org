@@ -1389,8 +1389,8 @@ testing...
   (use-package eglot
     :ensure t
     :config
-    ;; (setq eglot-report-progress nil)
-    ;; (setq eglot-connect-timeout 300) 
+    (setq eglot-report-progress nil)
+    (setq eglot-connect-timeout 300) 
     (setq eglot-events-buffer-config '(:size 0 :format full))
     ;; (setq eglot-events-buffer-size 0)
     (add-to-list 'eglot-server-programs
@@ -1458,9 +1458,8 @@ Having a web server available within Emacs
            ("\\.kts\\'" . kotlin-mode))
     :hook (kotlin-mode . eglot-ensure))
 
-  (with-eval-after-load 'eglot
-    (add-to-list 'eglot-server-programs
-                 '((kotlin-mode kotlin-ts-mode) . ("kotlin-language-server"))))
+  (add-to-list 'eglot-server-programs
+               '((kotlin-mode) . ("kotlin-lsp" "--stdio")))
 #+end_src
 *** Rust
 

@@ -656,7 +656,7 @@ use indent guides when programming!
      ;; i've found that Consolas works best.
 
      (when (eq system-type 'windows-nt)
-       (ps-set-face-attribute 'default nil :font "Consolas-9.25"))
+       (set-face-attribute 'default nil :font "Consolas-9.25"))
    #+end_src
 
 #+begin_src emacs-lisp
@@ -822,8 +822,7 @@ Use centaur tabs for the tab bar
           centaur-tabs-show-count nil
           centaur-tabs-style "bar"
           centaur-tabs-set-icons t
-          ;;centaur-tabs-excluded-prefixes '("*")
-          centaur-tabs-exclude-buffers '("*Minibuf-1*" "*which-key*")
+          centaur-tabs-exclude-buffers '("*Minibuf-1*" "*which-key*" "*InactiveMinibuffer*" "*Inactive Minibuffer*")
           )
     (if compact-mode
   	(setq centaur-tabs-height 20)
@@ -831,6 +830,13 @@ Use centaur tabs for the tab bar
     :bind
     ("M-s-<left>" . centaur-tabs-backward)
     ("M-s-<right>" . centaur-tabs-forward))
+
+  ;; for some reason, Emacs on windows can just never be able to display icons,
+  ;; so we'll just disable them from showing up
+
+  (when (eq system-type 'windows-nt)
+  	(setq centaur-tabs-set-icons nil
+  		  centaur-tabs-show-navigation-buttons nil))
 
   (defun my-centaur-tabs-buffer-groups ()
     "Custom groupings for Centaur Tabs with eglot hidden."
@@ -935,7 +941,7 @@ Treemacs is good for project-style navigation
     (let ((sf-pro '(:family "SF Pro Text" :height 130)))
       (mapc (lambda (face)
               (when (facep face)
-                (set-face-attribute face nil :family "SF Pro Text" :height 130)))
+                (set-face-attribute face nil :family "SF Pro Text")))
             '(treemacs-directory-face
               treemacs-directory-collapsed-face
               treemacs-file-face
@@ -1387,9 +1393,7 @@ testing...
 
   (with-eval-after-load 'company
     (define-key company-active-map (kbd "TAB") #'company-complete-selection)
-    (define-key company-active-map (kbd "<tab>") #'company-complete-selection)
-    (define-key company-active-map (kbd "RET") #'company-complete-selection)
-    (define-key company-active-map (kbd "<return>") #'company-complete-selection))
+    (define-key company-active-map (kbd "<tab>") #'company-complete-selection))
 #+end_src
 
 

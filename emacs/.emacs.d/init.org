@@ -3,18 +3,6 @@
 #+PROPERTY: header-args :tangle yes
 #+STARTUP: overview
 
-* TODO Things to fix in my config
-
-** [ ] Fix ~inactive-minibuffer~ error
-
-Sometimes, when I kill a buffer, the window gets filled up with this weird buffer that can't do anything....
-
-** [ ] Centaur-tabs bugs
-
-I had to disable closing centaur tabs with the ~X~ button and now just usually resort to killing buffers with ~Cmd+W~. However, I'm pretty sure this only works on Emacs-mac, as on other Emacs builds, ~kill-this-buffer~ can't do anything.
-
-** [ ] Delegate window-closing utility in modeline as seperate Emacs package
-
 * About
 
 Welcome to my Emacs configuration! The entire init file is written in Org mode, to keep it literate and easy to modify! I got inspired from [[https://github.com/larstvei/dot-emacs][this config]], and you might see some similarities.
@@ -1278,29 +1266,24 @@ Install ~undo-tree~
 
    #+end_src
 * Programming
-** Git
-
-Use magit for git
+** Language Server setup
 
 #+begin_src emacs-lisp
-  ;; make tabs appear in magit buffers
-  (defun toggle-centaur-tabs-local-mode()
-    (interactive)
-    (call-interactively 'centaur-tabs-local-mode)
-    (call-interactively 'centaur-tabs-local-mode))
-
-  ;; (use-package magit
-  ;;   :ensure t
-  ;;   :config
-  ;;   (setq magit-display-buffer-function #'magit-display-buffer-fullframe-status-v1
-  ;;         magit-diff-refine-hunk 'all)
-  ;;   (add-hook 'magit-status-mode-hook 'toggle-centaur-tabs-local-mode))
+  (use-package eglot
+    :ensure t
+    :config
+    (setq eglot-report-progress nil)
+    (setq eglot-connect-timeout 300) 
+    (setq eglot-events-buffer-config '(:size 0 :format full))
+    ;; (setq eglot-events-buffer-size 0)
+    :init)
 
 
+  (set-eglot-inlay-annotation-font)
 #+end_src
 
 ** Languages
-*** ELisp / Common Lisp / Clojure
+*** Lisp(s)
 
 Really, all I want is just some rainbow parenthesis...
 
@@ -1310,14 +1293,6 @@ Really, all I want is just some rainbow parenthesis...
     :hook (common-lisp-mode . rainbow-delimiters-mode))
 #+end_src
 
-
-*** Swift
-
-#+begin_src emacs-lisp
-  (use-package swift-mode
-    :defer t
-    :mode (("\\.swift\\'". swift-mode)))
-#+end_src
 
 *** Web
 
@@ -1341,13 +1316,36 @@ Really, all I want is just some rainbow parenthesis...
 
   (use-package rjsx-mode
     :defer t)
+
+  (add-to-list 'eglot-server-programs
+                 `((js-mode js-ts-mode tsx-ts-mode typescript-ts-mode typescript-mode)
+                   .
+                   ("typescript-language-server" "--stdio"
+                    :initializationOptions
+                    (:preferences
+                     (:includeInlayParameterNameHints "all"
+                      :includeInlayParameterNameHintsWhenArgumentMatchesName t
+                      :includeInlayFunctionParameterTypeHints t
+                      :includeInlayVariableTypeHints t
+                      :includeInlayVariableTypeHintsWhenTypeMatchesName t
+                      :includeInlayPropertyDeclarationTypeHints t
+                      :includeInlayFunctionLikeReturnTypeHints t
+                      :includeInlayEnumMemberValueHints t)))))
 #+end_src
 
+There's no really /true/ ~astro-mode~ so we're just using a derived ~web-mode~, alongside the LSP
 #+begin_src emacs-lisp
   (define-derived-mode astro-mode web-mode "astro")
   (setq auto-mode-alist
         (append '((".*\\.astro\\'" . astro-mode))
                 auto-mode-alist))
+
+  (add-to-list 'eglot-server-programs
+               '(astro-mode . ("astro-ls" "--stdio"
+                               :initializationOptions
+                               (:typescript (:tsdk "./node_modules/typescript/lib")))))
+
+  (add-hook 'astro-mode-hook 'eglot-ensure)
 #+end_src
 
 Some stuff for JSDoc type hinting...
@@ -1396,40 +1394,6 @@ testing...
     (define-key company-active-map (kbd "<tab>") #'company-complete-selection))
 #+end_src
 
-
-#+begin_src emacs-lisp
-  (use-package eglot
-    :ensure t
-    :config
-    (setq eglot-report-progress nil)
-    (setq eglot-connect-timeout 300) 
-    (setq eglot-events-buffer-config '(:size 0 :format full))
-    ;; (setq eglot-events-buffer-size 0)
-    (add-to-list 'eglot-server-programs
-               '(astro-mode . ("astro-ls" "--stdio"
-                               :initializationOptions
-                               (:typescript (:tsdk "./node_modules/typescript/lib")))))
-    (add-to-list 'eglot-server-programs
-               `((js-mode js-ts-mode tsx-ts-mode typescript-ts-mode typescript-mode)
-                 .
-                 ("typescript-language-server" "--stdio"
-                  :initializationOptions
-                  (:preferences
-                   (:includeInlayParameterNameHints "all"
-                    :includeInlayParameterNameHintsWhenArgumentMatchesName t
-                    :includeInlayFunctionParameterTypeHints t
-                    :includeInlayVariableTypeHints t
-                    :includeInlayVariableTypeHintsWhenTypeMatchesName t
-                    :includeInlayPropertyDeclarationTypeHints t
-                    :includeInlayFunctionLikeReturnTypeHints t
-                    :includeInlayEnumMemberValueHints t)))))
-  :init
-  ;; auto start eglot for astro-mode
-  (add-hook 'astro-mode-hook 'eglot-ensure))
-
-  (set-eglot-inlay-annotation-font)
-#+end_src
-
 Having a web server available within Emacs
 
 #+begin_src emacs-lisp
@@ -1462,6 +1426,7 @@ Having a web server available within Emacs
 
 
 #+end_src
+
 *** Kotlin
 #+begin_src emacs-lisp
   (use-package kotlin-mode
@@ -1473,6 +1438,20 @@ Having a web server available within Emacs
   (add-to-list 'eglot-server-programs
                '((kotlin-mode) . ("kotlin-lsp" "--stdio")))
 #+end_src
+
+*** Swift
+
+#+begin_src emacs-lisp
+  (use-package swift-mode
+      :ensure t
+      :mode "\\.swift\\'"
+      :interpreter "swift"
+  	:hook (swift-mode . eglot-ensure))
+
+  (add-to-list 'eglot-server-programs
+  			 '((swift-mode) . ("sourcekit-lsp")))
+#+end_src
+
 *** Rust
 
 #+begin_src emacs-lisp

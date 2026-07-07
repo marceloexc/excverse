@@ -461,6 +461,12 @@ and finally, enable mouse support when using emacs in the terminal (-nw flag)
 (xterm-mouse-mode)
 #+end_src
 
+allow for the user to open the current folder in which the buffer lies
+
+  #+begin_src emacs-lisp
+    (use-package reveal-in-folder)
+  #+end_src
+  
 when dragging and dropping, try to use the relative path if possible.
 #+begin_src emacs-lisp
   (defun my/org-dnd-normalize-uri-arg (orig-fn uri action)
@@ -1043,17 +1049,7 @@ the solutions was from [[https://stackoverflow.com/questions/4076360/error-in-di
     (setq use-package-compute-statistics t)
 
   #+end_src
-
-  It is useful to be able to occasionally open the file associated with a
-  buffer in macOS Finder.
-
-  #+begin_src emacs-lisp
-
-  (use-package reveal-in-osx-finder
-    :if (memq window-system '(mac ns)))
-
-  #+end_src
-
+  
 Fixing macos scrolling....
 
 #+begin_src emacs-lisp

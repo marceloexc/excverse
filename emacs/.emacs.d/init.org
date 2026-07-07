@@ -2107,6 +2107,8 @@ Otherwise, enable CUA on linux
      ("C-/" . comment-line)
      ("C-n" . make-frame-command)))
 
+  (bind-keys
+   ("M-o" . other-window))
 
   (when (not (display-graphic-p))
     (setq xterm-extra-capabilities '(meta))

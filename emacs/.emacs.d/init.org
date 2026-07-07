@@ -2098,7 +2098,7 @@ Otherwise, enable CUA on linux
      ("C-v" . yank)
      ("C-z" . undo-tree-undo)
      ("C-Z" . undo-tree-redo)
-     ("C-w" . kill-buffer)
+     ("C-w" . kill-current-buffer)
      ("C-{" . previous-buffer)
      ("C-}" . next-buffer)
      ("C-q" . save-buffers-kill-terminal)

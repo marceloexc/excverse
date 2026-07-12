@@ -94,19 +94,29 @@ Since I use so many machines, I do use ~GNU stow~ to manage my dotfiles and have
   To avoid doing this each time a change is made we can add a function to the
   =after-save-hook= ensuring to always tangle and byte-compile the
   =org=-document after changes.
-
+  
   #+begin_src emacs-lisp
-  (defun tangle-init ()
-    "If the current buffer is init.org the code-blocks are
-  tangled, and the tangled file is compiled."
-    (when (equal (buffer-file-name)
-                 (expand-file-name (concat user-emacs-directory "init.org")))
-      ;; Avoid running hooks when tangling.
-      (let ((prog-mode-hook nil))
-        (org-babel-tangle)
-        (byte-compile-file (concat user-emacs-directory "init.el")))))
+    (defun tangle-init ()
+      "Tangle and byte-compile `init.org`."
+      (interactive)
+      (let* ((init-org (expand-file-name "init.org" user-emacs-directory))
+             (init-el  (expand-file-name "init.el" user-emacs-directory)))
+        (unless (file-exists-p init-org)
+          (user-error "Cannot find %s" init-org))
+        (with-current-buffer (find-file-noselect init-org)
+          ;; Avoid running hooks while tangling.
+          (let ((prog-mode-hook nil))
+            (org-babel-tangle)
+            (byte-compile-file init-el)))
+        (message "Tangled and compiled %s" init-org)))
 
-  (add-hook 'after-save-hook 'tangle-init)
+    (defun tangle-init-after-save ()
+      "Automatically tangle `init.org` after saving it."
+      (when (equal (buffer-file-name)
+                   (expand-file-name "init.org" user-emacs-directory))
+        (tangle-init)))
+
+    (add-hook 'after-save-hook #'tangle-init-after-save)
   #+end_src
 
   I'd like to keep a few settings private, so we load a =private.el= if it
@@ -1288,8 +1298,15 @@ Really, all I want is just some rainbow parenthesis...
     :hook (emacs-lisp-mode . rainbow-delimiters-mode)
     :hook (common-lisp-mode . rainbow-delimiters-mode))
 #+end_src
+*** Clojure
 
+#+begin_src emacs-lisp
+  (use-package clojure-mode
+    :ensure t)
 
+  (use-package cider
+    :ensure t)
+#+end_src
 *** Web
 
 #+begin_src emacs-lisp

@@ -1494,6 +1494,17 @@ Having a web server available within Emacs
   (add-to-list 'eglot-server-programs
                '(rust-mode . (eglot-rust-analyzer "rust-analyzer")))
 #+end_src
+
+*** Go
+
+#+begin_src emacs-lisp
+  (use-package go-mode
+    :mode "\\.go\\'")
+
+  (add-to-list 'eglot-server-programs
+  			 '((go-mode) . ("gopls")))
+#+end_src
+
 *** Embedded
 
 Arduino

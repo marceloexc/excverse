@@ -351,7 +351,7 @@ And then some equivalents for linux systems...
                ("C-v" . yank)
                ("C-z" . undo-tree-undo)
                ("C-w" . kill-buffer)
-               ("C-f" . +default/search-buffer)))
+               ("C-f" . +exc/search-buffer)))
 #+end_src
 
 And I will a single ESC key to execute ~keyboard-quit~ instead of ESC ESC ESC...however, I don't want to do ~keyboard-escape-quit~ because then it closes every single one of my windows!
@@ -779,11 +779,36 @@ Dash board provides a nice welcome.
        (dashboard-setup-startup-hook))
    #+end_src
 
-** Toolbar
+** Toolbar & Menubar
 
 Remove some useless (to me) toolbar items 
 #+begin_src emacs-lisp
+  (define-key tool-bar-map [new-file] nil)
+  (define-key tool-bar-map [cut] nil)
+  (define-key tool-bar-map [copy] nil)
+  (define-key tool-bar-map [paste] nil)
+
+  (tool-bar-add-item
+   "index"
+   #'treemacs
+   'treemacs
+   :help "Toggle Treemacs Sidebar")
+
+  (define-key tool-bar-map [isearch-forward] nil)
+  (tool-bar-add-item
+   "search"
+   #'+exc/search-buffer
+   'isearch-forward
+   :help "Search")
+
+  ;; (tool-bar-add-item
+  ;;    "sort-criteria"
+  ;;    #'treemacs
+  ;;    'treemacs
+  ;;    :help "Toggle Treemacs Sidebar")
+
   (when (> emacs-major-version 28)
+    (define-key global-map [menu-bar insert-file] nil)
     (define-key global-map [menu-bar options] nil)
     (define-key global-map [menu-bar tools encryption-decryption] nil t)
     (define-key global-map [menu-bar tools calendar] nil t)
@@ -1209,7 +1234,7 @@ Fixing macos scrolling....
 This is also a custom function i stole from doom emacs to have quick and easy CMD+F
 
 #+begin_src emacs-lisp
-  (defun +default/search-buffer ()
+  (defun +exc/search-buffer ()
     "Conduct a text search on the current buffer.
   If a selection is active and multi-line, perform a search restricted to that
   region.
@@ -2088,7 +2113,7 @@ Otherwise, enable CUA on linux
            ("s-{" . mac-previous-tab)
            ("s-}" . mac-next-tab)
            ("s-q" . kill-emacs)
-           ("s-f" . +default/search-buffer)
+           ("s-f" . +exc/search-buffer)
   		 ("S-<escape>" . +default/project-el-rg-search)
            ("s-`" . other-window)
            ("s-/" . comment-line)
@@ -2128,7 +2153,7 @@ Otherwise, enable CUA on linux
      ("C-{" . previous-buffer)
      ("C-}" . next-buffer)
      ("C-q" . save-buffers-kill-terminal)
-     ("C-f" . +default/search-buffer)
+     ("C-f" . +exc/search-buffer)
      ("C-`" . other-window)
      ("C-/" . comment-line)
      ("C-n" . make-frame-command)))

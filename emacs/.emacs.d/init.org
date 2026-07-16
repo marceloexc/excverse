@@ -1016,9 +1016,6 @@ set custom themes as safe (so that we don't get annoyed by a prompt to trust our
       (require 'modus-themes)
 
       (require 'ef-themes)
-
-  (modus-themes-load-theme 'modus-operandi-tinted)
-  (ef-themes-load-theme 'ef-bio)
 #+end_src
 
 install auto dark
@@ -1032,15 +1029,20 @@ install auto dark
     (auto-dark-polling-interval-seconds 5)
     (auto-dark-allow-osascript nil)
     (auto-dark-allow-powershell nil)
-    ;; (auto-dark-detection-method nil) ;; dangerous to be set manually
     :hook
     (auto-dark-dark-mode . (lambda () (+my-set-custom-fonts)))
     (auto-dark-light-mode . (lambda ()
           (+my-set-custom-fonts)
           ))
     :init (auto-dark-mode))
-
   (+my-set-custom-fonts)
+#+end_src
+
+if we're on a terminal, use something as a mediator instead
+
+#+begin_src emacs-lisp
+  (when (not (display-graphic-p))
+    (load-theme 'wombat))
 #+end_src
 
 * macOS specific

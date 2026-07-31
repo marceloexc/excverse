@@ -2156,7 +2156,9 @@ Otherwise, enable CUA on linux
      ("C-f" . +exc/search-buffer)
      ("C-`" . other-window)
      ("C-/" . comment-line)
-     ("C-n" . make-frame-command)))
+     ("C-n" . make-frame-command)
+     ("C-<home>" . centaur-tabs-backward)
+     ("C-<end>" . centaur-tabs-forward)))
 
   (bind-keys
    ("M-o" . other-window))

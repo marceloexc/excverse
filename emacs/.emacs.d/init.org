@@ -1476,7 +1476,7 @@ Having a web server available within Emacs
     :hook (kotlin-mode . eglot-ensure))
 
   (add-to-list 'eglot-server-programs
-               '((kotlin-mode) . ("kotlin-lsp" "--stdio")))
+               '((kotlin-mode) . ("kmp-lsp" "--stdio")))
 #+end_src
 
 *** Swift

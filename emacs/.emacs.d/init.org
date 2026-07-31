@@ -943,7 +943,7 @@ Add an "X" to the modeline to close the window. Only shows up when there are mor
         (propertize " ☒ "
                     'local-map my/close-window-modeline-map
                     'mouse-face 'mode-line-highlight
-                    'face '(:foreground "red" :height 150)
+                    'face '(:foreground "red")
                     'help-echo "Click to close this window")
       ""))
 

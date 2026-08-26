@@ -1908,6 +1908,16 @@ Hiding keylines:
 
 #+end_src
 
+make the Org calendar open in a brand new buffer, and to never reuse it's
+
+#+begin_src emacs-lisp
+  (add-to-list 'display-buffer-alist
+               '("\\*Calendar\\*"
+  			   (display-buffer-below-selected)
+                 (window-height . 0.3)))
+
+#+end_src
+
 set org mode to automaitcally add UUID's to property drawers when exporting to iCalendar, so that it merges properly when importing into my calendar app
 
 #+begin_src emacs-lisp

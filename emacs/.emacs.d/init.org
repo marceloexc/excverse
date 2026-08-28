@@ -338,9 +338,9 @@ terms of normal keybindings.
   ;; when on mac
   (when (eq system-type 'darwin)
     (setq mac-command-modifier 'meta) ; set cmd to meta
-    (setq mac-option-modifier nil)
-    (add-to-list 'default-frame-alist '(ns-transparent-titlebar . t)) ; configure title bar
-    (add-to-list 'default-frame-alist '(ns-appearance . 'nil)))
+    (setq mac-option-modifier nil))
+    ;(add-to-list 'default-frame-alist '(ns-transparent-titlebar . t)) ; configure title bar
+   ; (add-to-list 'default-frame-alist '(ns-appearance . 'nil)))
 #+end_src
 
 And then some equivalents for linux systems...
@@ -1325,7 +1325,8 @@ Really, all I want is just some rainbow parenthesis...
 #+begin_src emacs-lisp
   (use-package rainbow-delimiters
     :hook (emacs-lisp-mode . rainbow-delimiters-mode)
-    :hook (common-lisp-mode . rainbow-delimiters-mode))
+    :hook (common-lisp-mode . rainbow-delimiters-mode)
+    :hook (clojure-mode . rainbow-delimiters-mode))
 #+end_src
 *** Clojure
 
@@ -1335,7 +1336,17 @@ Really, all I want is just some rainbow parenthesis...
 
   (use-package cider
     :ensure t)
+
+  (use-package smartparens
+    :ensure t
+    :hook (clojure-mode emacs-lisp-mode common-lisp-mode)
+    :config
+    (require 'smartparens-config))
+
+  (add-to-list 'eglot-server-programs
+  			 '(clojure-mode . ("clojure-lsp")))
 #+end_src
+
 *** Web
 
 #+begin_src emacs-lisp
@@ -1910,6 +1921,16 @@ Hiding keylines:
 
 #+end_src
 
+make the Org calendar open in a brand new buffer, and to never reuse it's
+
+#+begin_src emacs-lisp
+  (add-to-list 'display-buffer-alist
+               '("\\*Calendar\\*"
+  			   (display-buffer-below-selected)
+                 (window-height . 0.3)))
+
+#+end_src
+
 set org mode to automaitcally add UUID's to property drawers when exporting to iCalendar, so that it merges properly when importing into my calendar app
 
 #+begin_src emacs-lisp
@@ -1971,11 +1992,21 @@ add fragtog support
 use ~pdf-tools~ instead of ~doc-view~
 
 #+begin_src emacs-lisp
+  ;; https://github.com/vedang/pdf-tools/issues/353#issue-4263269430
+
+  (defun my/pdf-hook ()
+    (message "pdf-view-hook running")
+    (auto-revert-mode)
+    (setq-local cursor-type 'box)
+    (setq-local blink-cursor-blinks 0)
+    (blink-cursor-mode 1))
+
   (use-package pdf-tools
-     :defer t
-     :config
-         (pdf-tools-install)
-         (setq-default pdf-view-display-size 'fit-page))
+    :ensure t
+    :defer nil
+    :config
+    (pdf-loader-install)
+    :hook (pdf-view-mode . my/pdf-hook))
 #+end_src
 ** Markdown
 

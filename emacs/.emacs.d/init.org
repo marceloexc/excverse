@@ -787,6 +787,7 @@ Remove some useless (to me) toolbar items
   (define-key tool-bar-map [cut] nil)
   (define-key tool-bar-map [copy] nil)
   (define-key tool-bar-map [paste] nil)
+  (define-key tool-bar-map [separator-2] nil)
 
   (tool-bar-add-item
    "index"
@@ -967,30 +968,31 @@ Treemacs is good for project-style navigation
     :config (progn (setq treemacs-follow-mode t
                          treemacs-filewatch-mode t
                          treemacs-fringe-indicator-mode t))
-    (let ((sf-pro '(:family "SF Pro Text" :height 130)))
-      (mapc (lambda (face)
-              (when (facep face)
-                (set-face-attribute face nil :family "SF Pro Text")))
-            '(treemacs-directory-face
-              treemacs-directory-collapsed-face
-              treemacs-file-face
-              treemacs-root-face
-              treemacs-root-unreadable-face
-              treemacs-root-remote-face
-              treemacs-root-remote-unreadable-face
-              treemacs-root-remote-disconnected-face
-              treemacs-tags-face
-              treemacs-help-title-face
-              treemacs-help-column-face
-              treemacs-term-node-face
-              treemacs-on-success-pulse-face
-              treemacs-on-failure-puse-face
-              treemacs-marked-file-face
-              treemacs-fringe-indicator-face
-              treemacs-header-button-face
-              treemacs-git-commit-diff-face
-              treemacs-window-background-face
-              treemacs-hl-line-face)))
+    (dolist (face '(treemacs-directory-face
+                  treemacs-directory-collapsed-face
+                  treemacs-file-face
+                  treemacs-root-face
+                  treemacs-root-unreadable-face
+                  treemacs-root-remote-face
+                  treemacs-root-remote-unreadable-face
+                  treemacs-root-remote-disconnected-face
+                  treemacs-tags-face
+                  treemacs-help-title-face
+                  treemacs-help-column-face
+                  treemacs-term-node-face
+                  treemacs-on-success-pulse-face
+                  treemacs-on-failure-puse-face
+                  treemacs-marked-file-face
+                  treemacs-fringe-indicator-face
+                  treemacs-header-button-face
+                  treemacs-git-commit-diff-face
+                  treemacs-window-background-face
+                  treemacs-hl-line-face))
+    (when (facep face)
+      (set-face-attribute
+       face nil
+       :family (face-attribute 'mode-line :family nil 'default)
+       :height (face-attribute 'mode-line :height nil 'default))))
     :init)
 
   (use-package treemacs-tab-bar ;;treemacs-tab-bar if you use tab-bar-mode
